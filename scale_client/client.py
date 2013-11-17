@@ -18,7 +18,7 @@ MQTT_HOSTNAME = "m10.cloudmqtt.com"
 MQTT_HOSTPORT = 14664
 MQTT_USERNAME = "mqytlrad"
 MQTT_PASSWORD = "Q_C2GjJvRQrZ"
-CEL_DAEMON_PATH = ""
+CEL_DAEMON_PATH = "temprature-streams"
 
 # Create message queue
 queue = Queue(QUEUE_SIZE)
@@ -43,16 +43,18 @@ vs_heartbeat = HBVirtualSensor(
 	interval = 5
 )
 ls_vs.append(vs_heartbeat)
-for vs_j in ls_vs:
-	vs_j.daemon = True
-	vs_j.start()
 vs_temperature = TemperatureVirtualSensor(
 	queue,
 	DeviceDescriptor("cel0"),
 	daemon_path = CEL_DAEMON_PATH,
 	threshold = 24.0
 )
+vs_temperature.connect()
 ls_vs.append(vs_temperature)
+
+for vs_j in ls_vs:
+        vs_j.daemon = True
+        vs_j.start()
 
 # Loop forever
 while True:
