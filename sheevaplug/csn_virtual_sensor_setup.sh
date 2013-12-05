@@ -21,5 +21,5 @@ update-rc.d csnd defaults
 /etc/init.d/csnd start
 cd
 
-echo "127.0.0.1 csn.cacr.caltech.edu" >> /etc/hosts 
+echo "127.0.0.1 csn-server.appspot.com" >> /etc/hosts 
 csn-config set-location 34.13834 -118.12443 1
