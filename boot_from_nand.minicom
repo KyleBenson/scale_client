@@ -1,0 +1,6 @@
+send "setenv mtdids nand0=orion_nand"
+send "setenv mtdparts mtdparts=orion_nand:0xa0000@0x0(u-boot),0x400000@0x100000(uImage),0x1fb00000@0x500000(rootfs)"
+send "setenv bootcmd_ubi 'ubi part nand0,2; ubifsmount ubi0:rootfs; ubifsload 0x1100000 /boot/uInitrd; ubifsload 0x800000 /boot/uImage'"
+send "setenv bootcmd 'setenv bootargs "console=ttyS0,115200 ubi.mtd=2 root=ubi0:rootfs rootfstype=ubifs"; run bootcmd_ubi; bootm 0x00800000 0x01100000'"
+send "saveenv"
+send "reset"
