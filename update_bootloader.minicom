@@ -1,0 +1,12 @@
+print "Downloading new bootloader..."
+send "tftpboot 0x0800000 u-boot.kwb"
+sleep 2
+send "nand erase 0x0 0x60000"
+sleep 2
+send "nand write 0x0800000 0x0 0x60000"
+sleep 2
+print "Rebooting to verify update works..."
+send "reset"
+sleep 3
+print "Interrupting boot sequence!"
+send ""
