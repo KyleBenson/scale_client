@@ -1,0 +1,22 @@
+TEMPered is a library for working with the temperature sensors we're using.  The source code is available at: https://github.com/edorfaus/TEMPered
+
+NOTE: you'll need to install HIDAPI before TEMPered.
+
+OUR MODIFICATIONS
+
+After cloning TEMPered:
+  - Add the temperature-streams.c files to examples
+  - Replace the CMakeLists.txt under examples with the one provided here
+  - Change the install location to '/usr' instead of '/usr/local'
+
+MAKING DEB FILE
+
+cmake .
+make
+dh_make --createorig
+# modify the debian/* files as necessary to build it properly and have it install to /usr
+dpkg-buildpackage
+
+OUR ADDITIONS
+
+The tempy.py file provides a simple Python script for wrapping the temperature-streams program so that the temperature can be read and used within Python.
