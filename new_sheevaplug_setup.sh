@@ -2,11 +2,7 @@
 
 # sets up a newly installed Sheevaplug, including connecting it to the salt-master
 
-MASTER_ADDRESS=SALT_MASTER_IP
-
-# this doesn't work as saltstack.org doesn't have ARMEL support
-#wget --no-check-certificate http://bootstrap.saltstack.org -O install_salt.sh
-#sudo sh install_salt.sh git develop
+MASTER_ADDRESS=SALT_MASTER_IP # <--- CHANGE THIS !!!!!!
 
 #TODO: this automatically
 echo 'Make sure we blew away the old file for original plug eth0!'
@@ -28,15 +24,11 @@ apt-get update
 apt-get install -y python-m2crypto python-pip python-dev git python-sphinx\
  python-requests python-yaml python-zmq dctrl-tools msgpack-python
 
-# install salt from source using dpkg
-git clone https://github.com/saltstack/salt.git
-cd salt
-debian/rules binary
-cd ..
+# install salt using dpkg files that you built with build_salt_debs.sh
 dpkg -i salt-common_*.deb salt-minion*.deb
 apt-get -f install
 
-# setup minion
+# point minion to the master, run it, and set to run on startup
 echo "master: $MASTER_ADDRESS" > /etc/salt/minion
 salt-minion -d
 
