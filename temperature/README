@@ -1,6 +1,7 @@
 TEMPered is a library for working with the temperature sensors we're using.  The source code is available at: https://github.com/edorfaus/TEMPered
 
-NOTE: you'll need to install HIDAPI before TEMPered.
+NOTES: you'll need to install HIDAPI before TEMPered.
+       you may need to work some magic to set the root uid/gid on the temperature-streams program once it's installed...
 
 OUR MODIFICATIONS
 
