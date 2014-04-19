@@ -76,6 +76,9 @@ void read_device( struct tempered_device_list *dev )
 
 int main( void )
 {
+  //IMPORTANT: we want unbuffered output so each line of sensor data is read in real-time
+  setbuf(stdout, NULL);
+
   char *error = NULL;
   if ( !tempered_init( &error ) )
     {
