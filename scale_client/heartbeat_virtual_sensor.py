@@ -22,11 +22,10 @@ class HeartbeatVirtualSensor(VirtualSensor):
 			return True
 
 	def report_event(self, data):
-		if data == True:
-			self._queue.put(
-				SensedEvent(
-					sensor = self.device.device,
-					msg = "I am running",
-					priority = 700
-				)
+		self._queue.put(
+			SensedEvent(
+				sensor = self.device.device,
+				msg = "I am running",
+				priority = 700
 			)
+		)
