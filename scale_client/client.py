@@ -53,8 +53,8 @@ vs_temperature.connect()
 ls_vs.append(vs_temperature)
 
 for vs_j in ls_vs:
-        vs_j.daemon = True
-        vs_j.start()
+	vs_j.daemon = True
+	vs_j.start()
 
 # Loop forever
 while True:
