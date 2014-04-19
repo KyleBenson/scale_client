@@ -43,11 +43,10 @@ class TemperatureVirtualSensor(USBVirtualSensor):
 
 	def report_event(self, data):
 		temperature = data
-		if temperature > self._threshold:
-			self._queue.put(
-				SensedEvent(
-					sensor = self.device.device,
-					msg = u"High temperature: %.2f\N{DEGREE SIGN}C" % temperature,
-					priority = 50
-				)
+		self._queue.put(
+			SensedEvent(
+				sensor = self.device.device,
+				msg = u"High temperature: %.2f\N{DEGREE SIGN}C" % temperature,
+				priority = 50
 			)
+		)
