@@ -15,9 +15,9 @@ from temperature_virtual_sensor import TemperatureVirtualSensor
 
 QUEUE_SIZE = 4096
 MQTT_HOSTNAME = "m10.cloudmqtt.com"
-MQTT_HOSTPORT = 14664
-MQTT_USERNAME = "mqytlrad"
-MQTT_PASSWORD = "Q_C2GjJvRQrZ"
+MQTT_HOSTPORT = 11094
+MQTT_USERNAME = "vbjsfwul"
+MQTT_PASSWORD = "xottyHH5j9v2"
 CEL_DAEMON_PATH = "temprature-streams"
 
 # Create message queue
