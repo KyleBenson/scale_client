@@ -27,9 +27,3 @@ class CsnVirtualSensor(VirtualSensor):
 		print data
 		event = SensedEvent(self.device.device, "Pick detected", 70)
 		self._queue.put(event)
-
-	def run(self):
-		while True:
-			data = self.read()
-			if self.policy_check(data):
-				self.report_event(data)
