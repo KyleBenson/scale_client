@@ -53,11 +53,11 @@ vs_temperature = TemperatureVirtualSensor(
 vs_temperature.connect()
 ls_vs.append(vs_temperature)
 
-vs_csn = CsnVirtualSensor(
+#vs_csn = CsnVirtualSensor(
 	queue,
 	DeviceDescriptor("accel"))
-vs_csn.connect()
-ls_vs.append(vs_csn)
+#vs_csn.connect()
+#ls_vs.append(vs_csn)
 
 for vs_j in ls_vs:
 	vs_j.daemon = True
