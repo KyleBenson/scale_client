@@ -12,6 +12,7 @@ from virtual_sensor import VirtualSensor
 from heartbeat_virtual_sensor import HeartbeatVirtualSensor as HBVirtualSensor
 from usb_virtual_sensor import USBVirtualSensor
 from temperature_virtual_sensor import TemperatureVirtualSensor
+from csn_virtual_sensor import CsnVirtualSensor
 
 QUEUE_SIZE = 4096
 MQTT_HOSTNAME = "m10.cloudmqtt.com"
@@ -51,6 +52,12 @@ vs_temperature = TemperatureVirtualSensor(
 )
 vs_temperature.connect()
 ls_vs.append(vs_temperature)
+
+vs_csn = CsnVirtualSensor(
+	queue,
+	DeviceDescriptor("accel"))
+vs_csn.connect()
+ls_vs.append(vs_csn)
 
 for vs_j in ls_vs:
 	vs_j.daemon = True

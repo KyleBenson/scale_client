@@ -1,14 +1,19 @@
 from __future__ import print_function
 import subprocess, re
 
-cmd = 'temperature-streams'
-result = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+#cmd = '/root/SmartAmericaSensors/temperature/temperature-streams'
+cmd = 'ls /dev'
+result = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 #NOTE: we assume the temperature is in Celsius and don't scan for the degree symbol
 exp = re.compile(r'Device ([^:]*): Sensor ([0-9]*): Temperature: ([0-9\.]*)')
 
+line = result.stdout.readline()
+
+print(line)
 #NOTE: for line in result.stdout doesn't do "real-time" updates in Py2
 for line in iter(result.stdout.readline, ''):
+    print("test")
     match = exp.match(line)
     try:
         temperature = float(match.group(3))
