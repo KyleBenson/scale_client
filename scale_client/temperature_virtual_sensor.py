@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 import subprocess
 import re
@@ -19,7 +18,7 @@ class TemperatureVirtualSensor(USBVirtualSensor):
 		self._regexp = re.compile(r'Device ([^:]*): Sensor ([0-9]*): Temperature: ([0-9\.]*)')
 
 	def type(self):
-		return "USB Temperature Sensor"
+		return "Temperature Sensor"
 
 	def connect(self):
 		self._result = subprocess.Popen(

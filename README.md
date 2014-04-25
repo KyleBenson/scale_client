@@ -1,4 +1,4 @@
 SensorsConfig
 =============
 
-SaltStack configuration for the SmartAmerica/CSN/SAF/I-Sensorium sensor devices.
+Software, configuration files, and scripts for the SmartAmerica/CSN/SAF/I-Sensorium sensor devices.
