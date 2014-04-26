@@ -19,11 +19,11 @@ class VirtualSensor(Thread):
 	def policy_check(self, data):
 		raise NotImplementedError()
 
-	def report_event(self, data):
-		raise NotImplementedError()
+	def report_event(self, ls_event):
+		for event in ls_event:
+			self._queue.put(event)
 
 	def run(self):
 		while True:
 			data = self.read()
-			if self.policy_check(data):
-				self.report_event(data)
+			self.report_event(self.policy_check(data))

@@ -22,7 +22,6 @@ class TemperatureVirtualSensor(USBVirtualSensor):
 
 	def connect(self):
 		self._result = subprocess.Popen(
-#			self._daemon_path,
 			['temperature-streams'],
 			shell=True,
 			stdout=subprocess.PIPE
@@ -35,22 +34,16 @@ class TemperatureVirtualSensor(USBVirtualSensor):
 			temperature = float(match.group(3))
 		except AttributeError as e:
 			print('Error parsing temperature: %s' % e)
-#		Notice: Next Statement is just used for debug temp Sensor
-#		print(u'Temperature: %.2f\N{DEGREE SIGN}C' % temperature)
 		return temperature
 
 	def policy_check(self, data):
-		temperature = data
-		if temperature > self._threshold:
-			return True
-
-	def report_event(self, data):
-		temperature = data
-		self._queue.put(
-			SensedEvent(
-				sensor = self.device.device,
-#				msg = u'%.2f\N{DEGREE SIGN}C' % temperature,
-				msg = "High Temperature: " + str(temperature),
-				priority = 50
+		ls_event = []
+		if data > self._threshold:
+			ls_event.append(
+				SensedEvent(
+					sensor = self.device.device,
+					msg = "High Temperature: " + str(data),
+					priority = 50
+				)
 			)
-		)
+		return ls_event

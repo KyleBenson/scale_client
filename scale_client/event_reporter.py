@@ -1,6 +1,9 @@
 import threading
+import time
 from threading import Thread
 from sensed_event import SensedEvent
+from mqtt_publisher import MQTTPublisher
+from sigfox_publisher import SigfoxPublisher
 
 class EventReporter(Thread):
 	def __init__(self, queue):
@@ -17,4 +20,12 @@ class EventReporter(Thread):
 
 			for pb_j in self._ls_pb:
 				# Reporter logics
-				pb_j.send(event)
+				if(isinstance(pb_j, MQTTPublisher)):
+					pb_j.send(event)
+
+				#check if it is sigfox publisher
+				if(isinstance(pb_j, SigfoxPublisher)):
+					pb_j.send(event)
+					time.sleep(1)
+					pb_j.receive()
+	

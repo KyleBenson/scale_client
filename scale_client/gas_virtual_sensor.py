@@ -22,16 +22,14 @@ class GasVirtualSensor(AnalogVirtualSensor):
                 return adcout
 
 	def policy_check(self, data):
+		ls_event = []
 		if data > self._threshold:
-			return True
-		else:
-			return False
-
-	def report_event(self, data):
-		self._queue.put(
-			SensedEvent(
-				sensor = self.device.device,
-				msg = "Gas Detected",
-				priority = 50
+			ls_event.append(
+				SensedEvent(
+					sensor = self.device.device,
+					msg = "Gas Detected",
+					priority = 50
+				)
 			)
-		)
+		return ls_event
+

@@ -2,6 +2,9 @@
 ##2. change the permission of your device, using "chmod o+rw". In my machine, it is "sudo chmod o+rw /dev/ttyUSB0"
 
 
+
+
+
 from publisher import Publisher
 from sensed_event import SensedEvent
 import time
@@ -38,6 +41,7 @@ class SigfoxPublisher(Publisher):
                     return False
 		if(not self._ser.isOpen()):
                     self._ser.open()
+		print("Sigfox adapter connected")
 		return True
 
 	def send(self, event):
@@ -49,32 +53,32 @@ class SigfoxPublisher(Publisher):
 		try:
                     #self._ser.write(topic+"||"+msg+'\r\n')
                     #use the above paras to send actual sensor data    
-                    self._ser.write("AT$SS=0123456789abcdef"+'\r\n')
+                    self._ser.write("AT$SS=0123456789abcdef"+"\r\n")
                 except Exception as err: 
                     self._ex_handler(err)
                     return False
                 
-		print "SigFox message published to " + topic
 		return True
+
 	def receive(self):
                 #read message from the sigfox adapter
                 ret='' #return message read
                 while self._ser.inWaiting()>0:
                     ret+=self._ser.read(1)
+		print ("read from sigfox adapter: "+ret)
                 return ret
                     
 def main():
+
         sig=SigfoxPublisher("pre","suf")
 
         if(sig.connect()):
             event=SensedEvent("SampleSensor", "SampleMSG", 1)
             sig.send(event)#convert event to sigfox format here!
             time.sleep(1)
-            print(sig.receive())
+            sig.receive()
         else:
             exit
-        
-
 
 if __name__ == "__main__":
     main()         

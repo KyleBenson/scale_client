@@ -15,6 +15,7 @@ logging.basicConfig(filename='/var/log/csn_virtual_server', level=logging.DEBUG)
 
 import api_handler
 import util
+import os
 
 from messages import common_pb2, event_pb2
 
@@ -22,6 +23,10 @@ from messages import common_pb2, event_pb2
 # Display time as a delta in seconds until delta is more than a year in size.
 # Then, dislpay the system time for comparison.
 DISPLAY_TIME_AS_DELTA_THRESHOLD = datetime.timedelta(days=365).total_seconds()
+
+# SCALE client hard-coded parameters
+FIFO_FILE = "/var/run/scale_vs_csn.fifo"
+SCALE_VS_MAGIC_LN = "$$$_SCALE_VS_MAGIC_LN_$$$"
 
 
 class EventHandler(api_handler.ProtobufHandler):
@@ -111,4 +116,12 @@ class EventHandler(api_handler.ProtobufHandler):
 
 	logging.info('Event data %s', self.request_pb)
 	print (self.request_pb);
-        _raw_event_queue.put(self.request_pb)
+        # _raw_event_queue.put(self.request_pb)
+
+	try:
+		os.mkfifo(FIFO_FILE)
+	except OSError:
+		pass
+	pipe_to_vs = open(FIFO_FILE, "w")
+	pipe_to_vs.write(str(self.request_pb)+SCALE_VS_MAGIC_LN)
+	pipe_to_vs.close()

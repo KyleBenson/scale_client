@@ -18,14 +18,13 @@ class HeartbeatVirtualSensor(VirtualSensor):
 		return True
 
 	def policy_check(self, data):
+		ls_event = []
 		if data == True:
-			return True
-
-	def report_event(self, data):
-		self._queue.put(
-			SensedEvent(
-				sensor = self.device.device,
-				msg = "I am running",
-				priority = 700
+			ls_event.append(
+				SensedEvent(
+					sensor = self.device.device,
+					msg = "I am running",
+					priority = 700
+				)
 			)
-		)
+		return ls_event

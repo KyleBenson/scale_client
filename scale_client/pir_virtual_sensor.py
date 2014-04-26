@@ -23,26 +23,22 @@ class PIRVirtualSensor(GPIOVirtualSensor):
 		return input_value
 
 	def policy_check(self, data):
+		ls_event = []
 		if self._state == PIRVirtualSensor.IDLE:
-	                if data == 0:
-        	                return False
-              		if data == 1:
-                       		self._state = PIRVirtualSensor.ACTIVE
-                       		return True
-
-        	if self._state == PIRVirtualSensor.ACTIVE:
-                	if data == 0:
-                        	self._state = PIRVirtualSensor.IDLE
-                        	return False
-                	if data == 1:
-                        	return False
-
-
-	def report_event(self, data):
-		self._queue.put(
-			SensedEvent(
-				sensor = self.device.device,
-				msg = "Movement Detected",
-				priority = 50
-			)
-		)
+			if data == 0:
+				pass
+			if data == 1:
+				self._state = PIRVirtualSensor.ACTIVE
+				ls_event.append(
+					SensedEvent(
+						sensor = self.device.device,
+						msg = "Movement Detected",
+						priority = 50
+					)
+				)
+		if self._state == PIRVirtualSensor.ACTIVE:
+			if data == 0:
+				self._state = PIRVirtualSensor.IDLE
+			if data == 1:
+				pass
+		return ls_event

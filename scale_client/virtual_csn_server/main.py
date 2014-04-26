@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # coding=utf-8
 
 """
@@ -8,6 +9,9 @@ Routing module.
 import webapp2
 import webapp2_extras.routes
 import event_server
+
+#XXX
+print "Loading HTTP server module"
 
 APP_CONFIG = {
     'webapp2_extras.sessions': {
@@ -67,6 +71,9 @@ base_app = webapp2.WSGIApplication([
 
 def main():
     from paste import httpserver
+
+    #XXX
+    print "Starting local HTTP server"
     httpserver.serve(base_app, host='127.0.0.1', port='80')
 
 if __name__ == '__main__':

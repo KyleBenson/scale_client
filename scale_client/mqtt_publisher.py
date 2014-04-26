@@ -27,7 +27,12 @@ class MQTTPublisher(Publisher):
 
 	def send(self, event):
 		# Make message from a sensed event
-		topic = self._topic_prefix + "/" + event.sensor + "/" + self._topic_suffix
+		topic = ""
+		if self._topic_prefix != "":
+			topic += self._topic_prefix + "/"
+		topic += event.sensor
+		if self._topic_suffix != "":
+			topic += "/" + self._topic+suffix
 		msg = event.msg + " @" + str(event.timestamp)
 
 		# Publish message

@@ -8,6 +8,7 @@ from device_descriptor import DeviceDescriptor
 from event_reporter import EventReporter
 from publisher import Publisher
 from mqtt_publisher import MQTTPublisher
+from sigfox_publisher import SigfoxPublisher 
 from virtual_sensor import VirtualSensor
 from heartbeat_virtual_sensor import HeartbeatVirtualSensor as HBVirtualSensor
 from usb_virtual_sensor import USBVirtualSensor
@@ -29,12 +30,19 @@ reporter = EventReporter(queue)
 reporter.daemon = True
 reporter.start()
 
-# Create publishers
+# Create MQTT publishers
 pb_mqtt = MQTTPublisher(
 	topic_prefix = "scale/test"
 )
 if pb_mqtt.connect(MQTT_HOSTNAME, MQTT_HOSTPORT, MQTT_USERNAME, MQTT_PASSWORD):
 	reporter.append_publisher(pb_mqtt)
+
+# Create Sigfox publisher
+pb_sigfox = SigfoxPublisher(
+	topic_prefix = "scale/test"
+)
+if (pb_sigfox.connect()):
+	reporter.append_publisher(pb_sigfox)
 
 # Create and start virtual sensors
 ls_vs = []
@@ -53,11 +61,11 @@ vs_temperature = TemperatureVirtualSensor(
 vs_temperature.connect()
 ls_vs.append(vs_temperature)
 
-#vs_csn = CsnVirtualSensor(
+vs_csn = CsnVirtualSensor(
 	queue,
 	DeviceDescriptor("accel"))
-#vs_csn.connect()
-#ls_vs.append(vs_csn)
+vs_csn.connect()
+ls_vs.append(vs_csn)
 
 for vs_j in ls_vs:
 	vs_j.daemon = True
