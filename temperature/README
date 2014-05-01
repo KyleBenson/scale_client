@@ -2,7 +2,15 @@ TEMPered is a library for working with the temperature sensors we're using.  The
 
 NOTES: you'll need to install HIDAPI before TEMPered. Get the source here:
 git clone git://github.com/signal11/hidapi.git
-       you may need to work some magic to set the root uid/gid on the temperature-streams program once it's installed...
+Build it with:
+
+apt-get install -y libudev-dev libusb-1.0-0-dev libfox-1.6-dev autotools-dev autoconf automake libtool
+./bootstrap
+./configure
+make
+make install
+
+you may need to work some magic to set the root uid/gid on the temperature-streams program once it's installed...
 
 OUR MODIFICATIONS
 
