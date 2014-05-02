@@ -1,32 +1,59 @@
-TEMPered is a library for working with the temperature sensors we're using.  The source code is available at: https://github.com/edorfaus/TEMPered
+TEMPered is a library for working with the temperature sensors we're using. You'll need to install HIDAPI before TEMPered.
 
-NOTES: you'll need to install HIDAPI before TEMPered. Get the source here:
-git clone git://github.com/signal11/hidapi.git
-Build it with:
+BUILDING HIDAPI
 
+git clone https://github.com/signal11/hidapi.git
+cd hidapi
 apt-get install -y libudev-dev libusb-1.0-0-dev libfox-1.6-dev autotools-dev autoconf automake libtool
 ./bootstrap
-./configure
+./configure --prefix=/usr #use /usr prefix if building .deb package
 make
 make install
 
-you may need to work some magic to set the root uid/gid on the temperature-streams program once it's installed...
+To build .deb package:
 
-OUR MODIFICATIONS
+cd ..
+mv hidapi hidapi-0.8.0-rc1
+cd hidapi*
+dh_make --createorig
 
-After cloning TEMPered:
-  - Add the temperature-streams.c files to examples
-  - Replace the CMakeLists.txt under examples with the one provided here
-  - Change the install location to '/usr' instead of '/usr/local'
+Now, edit the debian/control file to fix the "hidapiBROKEN" string and to add the 3 above lib dependencies
+remove "usr/share/pkgconfig/*" line from "debian/hidapi-dev.install" file
+
+# finally, do:
+dpkg-buildpackage
+
+
+BUILDING TEMPered
+
+git clone https://github.com/edorfaus/TEMPered.git
+mv TEMPered/ tempered-1.0
+cp SmartAmericaSensors/temperature/temperature-streams.c TEMPered-1.0/examples/
+cp SmartAmericaSensors/temperature/examples_CMakeLists.txt TEMPered-1.0/examples/CMakeLists.txt
+cd TEMPered-1.0
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr .
+make
 
 MAKING DEB FILE
 
-cmake .
-make
 dh_make --createorig
-# modify the debian/* files as necessary to build it properly and have it install to /usr
+
+Now, edit the debian/control file to fix the "temperedBROKEN" string and to add the hidapi1 lib dependency
+remove "usr/lib/lib*.a" line from "debian/tempered-dev.install" file
+may have to remove "install_manifest.txt" file
+remove "usr/lib/pkgconfig/*" line from "debian/tempered-dev.install" file
+add "usr/bin/*" to "debian/tempered1.install" 
+
+# finally, do:
 dpkg-buildpackage
+
+After installing TEMPered:
+  you may need to work some magic to set the root uid/gid on the temperature-streams program once it's installed:
+
+sudo chmod 4755 /usr/bin/temperature-streams
 
 OUR ADDITIONS
 
 The tempy.py file provides a simple Python script for wrapping the temperature-streams program so that the temperature can be read and used within Python.
+
+Modifications: a file under TEMPered's examples directory has been modified to support the additional temperature-streams.c file
