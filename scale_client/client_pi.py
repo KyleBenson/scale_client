@@ -32,8 +32,11 @@ reporter.daemon = True
 reporter.start()
 
 # Create publishers
+file_hostname = open("/etc/hostname", "r")
+str_hostname = file_hostname.readline().rstrip()
+file_hostname.close()
 pb_mqtt = MQTTPublisher(
-	topic_prefix = "scale/test"
+	topic_prefix = "scale/test/" + str_hostname
 )
 if pb_mqtt.connect(MQTT_HOSTNAME, MQTT_HOSTPORT, MQTT_USERNAME, MQTT_PASSWORD):
 	reporter.append_publisher(pb_mqtt)
@@ -46,7 +49,8 @@ vs_heartbeat = HBVirtualSensor(
 	DeviceDescriptor("hb0"),
 	interval = 10
 )
-ls_vs.append(vs_heartbeat)
+if vs_heartbeat.connect():
+	ls_vs.append(vs_heartbeat)
 
 #Create PIR Motion Virtual Sensor
 vs_pir = PIRVirtualSensor(
@@ -54,8 +58,8 @@ vs_pir = PIRVirtualSensor(
 	DeviceDescriptor("pir0"),
 	gpio_pin = 17
 )
-vs_pir.connect()
-ls_vs.append(vs_pir)
+if vs_pir.connect():
+	ls_vs.append(vs_pir)
 
 #Create Light Virtual Sensor
 vs_light = LightVirtualSensor(
@@ -64,8 +68,8 @@ vs_light = LightVirtualSensor(
 	analog_port = 3,
 	threshold = 400
 )
-vs_light.connect()
-ls_vs.append(vs_light)
+if vs_light.connect():
+	ls_vs.append(vs_light)
 
 #Create Gas Virtual Sensor
 vs_gas = GasVirtualSensor(
@@ -74,8 +78,8 @@ vs_gas = GasVirtualSensor(
 	analog_port = 0,
 	threshold = 500
 )
-vs_gas.connect()
-ls_vs.append(vs_gas)
+if vs_gas.connect():
+	ls_vs.append(vs_gas)
 
 # Start all the sensors
 for vs_j in ls_vs:

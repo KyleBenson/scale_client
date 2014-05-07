@@ -8,7 +8,8 @@ class GPIOVirtualSensor(VirtualSensor):
 		self._GPIO = GPIO
 
 	def connect(self):
-                # use P1 GPIO pin numbering convention
-                self._GPIO.setmode(GPIO.BCM)
-                # set up GPIO channel
-                self._GPIO.setup(self._pin, GPIO.IN)
+		# use P1 GPIO pin numbering convention
+		self._GPIO.setmode(GPIO.BCM)
+		# set up GPIO channel
+		self._GPIO.setup(self._pin, GPIO.IN)
+		return True

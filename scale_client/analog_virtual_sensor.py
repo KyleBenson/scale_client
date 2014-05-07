@@ -10,4 +10,10 @@ class AnalogVirtualSensor(VirtualSensor):
 		self._spi = spidev.SpiDev()
 
 	def connect(self):
-		self._spi.open(0,0)
+		try:
+			self._spi.open(0,0)
+		except IOError:
+			print "Failed to open analog device: " + self.device.device
+
+			return False
+		return True

@@ -26,6 +26,7 @@ class TemperatureVirtualSensor(USBVirtualSensor):
 			shell=True,
 			stdout=subprocess.PIPE
 		)
+		return True
 
 	def read(self):
 		line = next(iter(self._result.stdout.readline, '')) 

@@ -26,19 +26,21 @@ class CsnVirtualSensor(VirtualSensor):
 			os.mkfifo(FIFO_FILE)
 		except OSError, e:
 			print "Failed to create FIFO between SCALE and CSN Server: %s" % e
-			pass
+		#	pass
+			return False
 	#	server_thread = Thread(target = main)
 	#	server_thread.daemon = True
 	#	server_thread.start()
 		subprocess.Popen(
 			["/root/SmartAmericaSensors/scale_client/virtual_csn_server/main.py"],
 		)
+		return True
 
 	def read(self):
 		pipe_file = open(FIFO_FILE, 'r')
 		readings = []
 		for ln in pipe_file:
-			magic_ln_match = self._magic_ln_regexp.match(ln[:-1])
+			magic_ln_match = self._magic_ln_regexp.match(ln.rstrip())
 			if magic_ln_match:
 				break;
 			else:

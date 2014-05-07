@@ -11,7 +11,7 @@ class HeartbeatVirtualSensor(VirtualSensor):
 		return "Heartbeat Generator"
 
 	def connect(self):
-		pass
+		return True
 
 	def read(self):
 		time.sleep(self._interval)
