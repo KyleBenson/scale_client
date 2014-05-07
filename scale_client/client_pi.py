@@ -2,6 +2,7 @@
 
 import threading
 import time
+import urllib2
 from threading import Thread
 from Queue import Queue
 from device_descriptor import DeviceDescriptor
