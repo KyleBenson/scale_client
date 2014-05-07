@@ -51,21 +51,23 @@ vs_heartbeat = HBVirtualSensor(
 	DeviceDescriptor("hb0"),
 	interval = 5
 )
-ls_vs.append(vs_heartbeat)
+if vs_heartbeat.connect():
+	ls_vs.append(vs_heartbeat)
+
 vs_temperature = TemperatureVirtualSensor(
 	queue,
 	DeviceDescriptor("cel0"),
 	daemon_path = CEL_DAEMON_PATH,
 	threshold = 24.0
 )
-vs_temperature.connect()
-ls_vs.append(vs_temperature)
+if vs_temperature.connect():
+	ls_vs.append(vs_temperature)
 
 vs_csn = CsnVirtualSensor(
 	queue,
 	DeviceDescriptor("accel"))
-vs_csn.connect()
-ls_vs.append(vs_csn)
+if vs_csn.connect():
+	ls_vs.append(vs_csn)
 
 for vs_j in ls_vs:
 	vs_j.daemon = True
