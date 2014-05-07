@@ -25,6 +25,7 @@ MQTT_PASSWORD = "xottyHH5j9v2"
 CEL_DAEMON_PATH = "temprature-streams"
 
 # Check Network Accessibility
+"""
 hasNetwork = False
 while(hasNetwork != True):
 	try:
@@ -33,6 +34,7 @@ while(hasNetwork != True):
 	except urllib2.URLError:
 		time.sleep(5)
 		continue 
+"""
 
 # Create message queue
 queue = Queue(QUEUE_SIZE)
