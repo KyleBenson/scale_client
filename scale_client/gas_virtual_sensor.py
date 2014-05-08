@@ -23,13 +23,27 @@ class GasVirtualSensor(AnalogVirtualSensor):
 
 	def policy_check(self, data):
 		ls_event = []
+		"""
 		if data > self._threshold:
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
-					msg = "Gas Detected",
+					msg = "Gas detected",
 					priority = 50
 				)
 			)
+		"""
+	
+		# Lines below are for testing purpose XXX
+		if True:
+			ls_event.append(
+				SensedEvent(
+					sensor = self.device.device,
+					msg = "Gas level: " + str(data),
+					priority = 70
+				)
+			)
+		# Lines above are for testing purpose
+
 		return ls_event
 

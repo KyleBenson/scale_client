@@ -59,7 +59,7 @@ class CsnVirtualSensor(VirtualSensor):
 		ls_event.append(
 			SensedEvent(
 				sensor = self.device.device,
-				msg = "Pick Detected: " + readings_line,
+				msg = "Pick detected: " + readings_line,
 				priority = 70
 			)
 		)
