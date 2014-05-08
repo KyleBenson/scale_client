@@ -22,7 +22,8 @@ class TemperatureVirtualSensor(USBVirtualSensor):
 
 	def connect(self):
 		self._result = subprocess.Popen(
-			['temperature-streams'],
+		#	['temperature-streams'],
+			[self._daemon_path],
 			shell=True,
 			stdout=subprocess.PIPE
 		)

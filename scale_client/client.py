@@ -20,7 +20,7 @@ MQTT_HOSTNAME = "m10.cloudmqtt.com"
 MQTT_HOSTPORT = 11094
 MQTT_USERNAME = "vbjsfwul"
 MQTT_PASSWORD = "xottyHH5j9v2"
-CEL_DAEMON_PATH = "temprature-streams"
+CEL_DAEMON_PATH = "temperature-streams"
 
 # Create message queue
 queue = Queue(QUEUE_SIZE)
