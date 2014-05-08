@@ -3,6 +3,7 @@
 import threading
 import time
 import urllib2
+import socket
 from threading import Thread
 from Queue import Queue
 from device_descriptor import DeviceDescriptor
@@ -45,11 +46,11 @@ reporter.daemon = True
 reporter.start()
 
 # Create publishers
-file_hostname = open("/etc/hostname", "r")
-str_hostname = file_hostname.readline().rstrip()
-file_hostname.close()
+#file_hostname = open("/etc/hostname", "r")
+#str_hostname = file_hostname.readline().rstrip()
+#file_hostname.close()
 pb_mqtt = MQTTPublisher(
-	topic_prefix = "scale/test/" + str_hostname
+	topic_prefix = "scale/test/" + socket.gethostname()
 )
 if pb_mqtt.connect(MQTT_HOSTNAME, MQTT_HOSTPORT, MQTT_USERNAME, MQTT_PASSWORD):
 	reporter.append_publisher(pb_mqtt)
