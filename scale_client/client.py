@@ -31,8 +31,11 @@ reporter.daemon = True
 reporter.start()
 
 # Create MQTT publishers
+file_hostname = open("/etc/hostname", "r")
+str_hostname = file_hostname.readline().rstrip()
+file_hostname.close()
 pb_mqtt = MQTTPublisher(
-	topic_prefix = "scale/test"
+	topic_prefix = "scale/test/" + str_hostname
 )
 if pb_mqtt.connect(MQTT_HOSTNAME, MQTT_HOSTPORT, MQTT_USERNAME, MQTT_PASSWORD):
 	reporter.append_publisher(pb_mqtt)

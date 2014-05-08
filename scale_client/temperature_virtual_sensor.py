@@ -4,7 +4,6 @@ import re
 from usb_virtual_sensor import USBVirtualSensor
 from sensed_event import SensedEvent
 
-
 class TemperatureVirtualSensor(USBVirtualSensor):
 	def __init__(
 		self, queue, device,
@@ -39,12 +38,25 @@ class TemperatureVirtualSensor(USBVirtualSensor):
 
 	def policy_check(self, data):
 		ls_event = []
+		"""
 		if data > self._threshold:
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
-					msg = "High Temperature: " + str(data),
+					msg = "Temperature high: " + str(data),
 					priority = 50
 				)
 			)
+		"""
+
+		# Lines below are for testing purpose XXX
+		if True:
+			ls_event.append(
+				SensedEvent(
+					sensor = self.device.device,
+					msg = "Temperature: " + str(data),
+					priority = 70
+				)
+			)
+		# Lines above are for testing purpose
 		return ls_event
