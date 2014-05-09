@@ -26,6 +26,11 @@ class EventReporter(Thread):
 				#check if it is sigfox publisher
 				if(isinstance(pb_j, SigfoxPublisher)):
 					pb_j.send(event)
+
+					#FIXME: This sleep(1) call blocks the EventReporter.
+					# To make sure that EventReporter reports as events arrive,
+					# SigFoxPublisher's mechanism needs to be modified.
+
 					#time.sleep(1)
 					pb_j.receive()
 	
