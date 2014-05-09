@@ -26,6 +26,6 @@ class EventReporter(Thread):
 				#check if it is sigfox publisher
 				if(isinstance(pb_j, SigfoxPublisher)):
 					pb_j.send(event)
-					time.sleep(1)
+					#time.sleep(1)
 					pb_j.receive()
 	

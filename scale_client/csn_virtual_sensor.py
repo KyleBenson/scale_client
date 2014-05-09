@@ -8,8 +8,8 @@ from Queue import Queue
 from virtual_sensor import VirtualSensor
 from sensed_event import SensedEvent
 
-FIFO_FILE = "/var/run/scale_vs_csn.fifo"
-SCALE_VS_MAGIC_LN = "$$$_SCALE_VS_MAGIC_LN_$$$"
+#FIFO_FILE = "/var/run/scale_vs_csn.fifo"
+SCALE_VS_MAGIC_LN = r"\$\$\$_SCALE_VS_MAGIC_LN_\$\$\$"
 
 
 class CsnVirtualSensor(VirtualSensor):
@@ -17,38 +17,47 @@ class CsnVirtualSensor(VirtualSensor):
 		VirtualSensor.__init__(self, queue, device)
 		self._reading_regexp = re.compile(r'.*readings: ([\-\+]?[0-9]*(\.[0-9]+)?)') 
 		self._magic_ln_regexp = re.compile(SCALE_VS_MAGIC_LN)
+		self._result = None
 
 	def type(self):
 		return "CSN Accelerometer"
 
 	def connect(self):
+		"""
 		try:
 			os.mkfifo(FIFO_FILE)
 		except OSError, e:
 			print "Failed to create FIFO between SCALE and CSN Server: %s" % e
 		#	pass
 			return False
+		"""	
 	#	server_thread = Thread(target = main)
 	#	server_thread.daemon = True
 	#	server_thread.start()
-		subprocess.Popen(
+		self._result = subprocess.Popen(
 			["/root/SmartAmericaSensors/scale_client/virtual_csn_server/main.py"],
+			shell = True,
+			stdout = subprocess.PIPE
 		)
 		return True
 
 	def read(self):
-		pipe_file = open(FIFO_FILE, 'r')
+		#pipe_file = open(FIFO_FILE, 'r')
+		
 		readings = []
-		for ln in pipe_file:
+		for ln in iter(self._result.stdout.readline, ''):
+			print ("Line: " + ln.rstrip())
 			magic_ln_match = self._magic_ln_regexp.match(ln.rstrip())
 			if magic_ln_match:
+			#	print ("Magic ln match")
 				break;
 			else:
 				reading_match = self._reading_regexp.match(ln)
 				if reading_match:
+			#		print ("Reading match")
 					readings.append(reading_match.group(1))
 
-		pipe_file.close()
+		#pipe_file.close()
 		return readings
 
 	def policy_check(self, data):

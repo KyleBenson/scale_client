@@ -1,7 +1,7 @@
 from __future__ import print_function
 import subprocess, re
 
-cmd = '/root/SmartAmericaSensors/temperature/temperature-streams'
+cmd = 'temperature-streams'
 result = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 #NOTE: we assume the temperature is in Celsius and don't scan for the degree symbol

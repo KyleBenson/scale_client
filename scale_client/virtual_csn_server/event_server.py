@@ -16,6 +16,7 @@ logging.basicConfig(filename='/var/log/csn_virtual_server', level=logging.DEBUG)
 import api_handler
 import util
 import os
+import sys
 
 from messages import common_pb2, event_pb2
 
@@ -25,7 +26,7 @@ from messages import common_pb2, event_pb2
 DISPLAY_TIME_AS_DELTA_THRESHOLD = datetime.timedelta(days=365).total_seconds()
 
 # SCALE client hard-coded parameters
-FIFO_FILE = "/var/run/scale_vs_csn.fifo"
+#FIFO_FILE = "/var/run/scale_vs_csn.fifo"
 SCALE_VS_MAGIC_LN = "$$$_SCALE_VS_MAGIC_LN_$$$"
 
 
@@ -115,9 +116,11 @@ class EventHandler(api_handler.ProtobufHandler):
 	"""
 
 	logging.info('Event data %s', self.request_pb)
-	print (self.request_pb);
+	print (self.request_pb)
+	print (SCALE_VS_MAGIC_LN)
         # _raw_event_queue.put(self.request_pb)
-
+	sys.stdout.flush()
+"""
 	try:
 		os.mkfifo(FIFO_FILE)
 	except OSError:
@@ -125,3 +128,4 @@ class EventHandler(api_handler.ProtobufHandler):
 	pipe_to_vs = open(FIFO_FILE, "w")
 	pipe_to_vs.write(str(self.request_pb)+SCALE_VS_MAGIC_LN)
 	pipe_to_vs.close()
+"""
