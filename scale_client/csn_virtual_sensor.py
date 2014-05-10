@@ -12,7 +12,7 @@ from sensed_event import SensedEvent
 SCALE_VS_MAGIC_LN = r"\$\$\$_SCALE_VS_MAGIC_LN_\$\$\$"
 
 
-class CsnVirtualSensor(VirtualSensor):
+class CSNVirtualSensor(VirtualSensor):
 	def __init__(self, queue, device):
 		VirtualSensor.__init__(self, queue, device)
 		self._reading_regexp = re.compile(r'.*readings: ([\-\+]?[0-9]*(\.[0-9]+)?)') 

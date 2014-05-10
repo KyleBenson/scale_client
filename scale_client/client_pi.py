@@ -66,7 +66,7 @@ vs_heartbeat = HBVirtualSensor(
 if vs_heartbeat.connect():
 	ls_vs.append(vs_heartbeat)
 
-#Create PIR Motion Virtual Sensor
+# Create PIR Motion Virtual Sensor
 vs_pir = PIRVirtualSensor(
 	queue,
 	DeviceDescriptor("pir0"),
@@ -75,7 +75,7 @@ vs_pir = PIRVirtualSensor(
 if vs_pir.connect():
 	ls_vs.append(vs_pir)
 
-#Create Light Virtual Sensor
+# Create Light Virtual Sensor
 vs_light = LightVirtualSensor(
 	queue,
 	DeviceDescriptor("light0"),
@@ -85,7 +85,7 @@ vs_light = LightVirtualSensor(
 if vs_light.connect():
 	ls_vs.append(vs_light)
 
-#Create Gas Virtual Sensor
+# Create Gas Virtual Sensor
 vs_gas = GasVirtualSensor(
 	queue,
 	DeviceDescriptor("gas0"),
