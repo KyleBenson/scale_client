@@ -3,7 +3,7 @@ import os
 import re
 import subprocess
 from threading import Thread
-from virtual_csn_server.main import *
+#from virtual_csn_server.main import *
 from Queue import Queue
 from virtual_sensor import VirtualSensor
 from sensed_event import SensedEvent

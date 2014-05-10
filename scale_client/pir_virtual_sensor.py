@@ -4,7 +4,7 @@ import subprocess
 import re
 from gpio_virtual_sensor import GPIOVirtualSensor
 from sensed_event import SensedEvent
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 
 class PIRVirtualSensor(GPIOVirtualSensor):
