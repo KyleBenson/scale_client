@@ -15,29 +15,22 @@ from mqtt_publisher import MQTTPublisher
 #from gpio_virtual_sensor import GPIOVirtualSensor
 #from analog_virtual_sensor import AnalogVirtualSensor
 from heartbeat_virtual_sensor import HeartbeatVirtualSensor as HBVirtualSensor
-from pir_virtual_sensor import PIRVirtualSensor 
-from light_virtual_sensor import LightVirtualSensor
-from gas_virtual_sensor import GasVirtualSensor
+#from pir_virtual_sensor import PIRVirtualSensor 
+#from light_virtual_sensor import LightVirtualSensor
+#from gas_virtual_sensor import GasVirtualSensor
+from dummy_pir_virtual_sensor import DummyPIRVirtualSensor 
+from dummy_light_virtual_sensor import DummyLightVirtualSensor
+from dummy_gas_virtual_sensor import DummyGasVirtualSensor
+from dummy_temperature_virtual_sensor import DummyTemperatureVirtualSensor
+from dummy_csn_virtual_sensor import DummyCSNVirtualSensor
 
 QUEUE_SIZE = 4096
 MQTT_HOSTNAME = "m10.cloudmqtt.com"
 MQTT_HOSTPORT = 11094
 MQTT_USERNAME = "vbjsfwul"
 MQTT_PASSWORD = "xottyHH5j9v2"
-MQTT_TOPIC = "iot-1/d/%012x/evt/%s/json" % (get_mac(), "raspi")
+MQTT_TOPIC = "iot-1/d/%012x/evt/%s/json" % (get_mac(), "computer")
 #CEL_DAEMON_PATH = "temprature-streams"
-
-# Check Network Accessibility
-"""
-hasNetwork = False
-while(hasNetwork != True):
-	try:
-		response = urllib2.urlopen('http://www.google.com', timeout = 2)
-		hasNetwork = True 
-	except urllib2.URLError:
-		time.sleep(5)
-		continue 
-"""
 
 # Create message queue
 queue = Queue(QUEUE_SIZE)
@@ -66,33 +59,49 @@ if vs_heartbeat.connect():
 	ls_vs.append(vs_heartbeat)
 
 # Create PIR Motion Virtual Sensor
-vs_pir = PIRVirtualSensor(
+vs_pir = DummyPIRVirtualSensor(
 	queue,
 	DeviceDescriptor("pir0"),
-	gpio_pin = 17
+#	gpio_pin = 17
 )
 if vs_pir.connect():
 	ls_vs.append(vs_pir)
 
 # Create Light Virtual Sensor
-vs_light = LightVirtualSensor(
+vs_light = DummyLightVirtualSensor(
 	queue,
 	DeviceDescriptor("light0"),
-	analog_port = 3,
+#	analog_port = 3,
 	threshold = 400
 )
 if vs_light.connect():
 	ls_vs.append(vs_light)
 
 # Create Gas Virtual Sensor
-vs_gas = GasVirtualSensor(
+vs_gas = DummyGasVirtualSensor(
 	queue,
 	DeviceDescriptor("gas0"),
-	analog_port = 0,
+#	analog_port = 0,
 	threshold = 500
 )
 if vs_gas.connect():
 	ls_vs.append(vs_gas)
+
+# Dummy Sheeva Sensors
+vs_temperature = DummyTemperatureVirtualSensor(
+	queue,
+	DeviceDescriptor("cel0"),
+#	daemon_path = CEL_DAEMON_PATH,
+	threshold = 24.0
+)
+if vs_temperature.connect():
+	ls_vs.append(vs_temperature)
+
+vs_csn = DummyCSNVirtualSensor(
+	queue,
+	DeviceDescriptor("accel"))
+if vs_csn.connect():
+	ls_vs.append(vs_csn)
 
 # Start all the sensors
 for vs_j in ls_vs:

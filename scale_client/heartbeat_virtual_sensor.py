@@ -23,7 +23,9 @@ class HeartbeatVirtualSensor(VirtualSensor):
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
-					msg = "I am running",
+					msg = {
+						"event": "alive",
+					},
 					priority = 700
 				)
 			)

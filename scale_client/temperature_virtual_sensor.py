@@ -1,16 +1,16 @@
 from __future__ import print_function
 import subprocess
 import re
-from usb_virtual_sensor import USBVirtualSensor
+from virtual_sensor import VirtualSensor
 from sensed_event import SensedEvent
 
-class TemperatureVirtualSensor(USBVirtualSensor):
+class TemperatureVirtualSensor(VirtualSensor):
 	def __init__(
 		self, queue, device,
 		daemon_path,
 		threshold
 	):
-		USBVirtualSensor.__init__(self, queue, device)
+		VirtualSensor.__init__(self, queue, device)
 		self._daemon_path = daemon_path
 		self._threshold = threshold
 		self._result = None
@@ -39,25 +39,29 @@ class TemperatureVirtualSensor(USBVirtualSensor):
 
 	def policy_check(self, data):
 		ls_event = []
-		"""
 		if data > self._threshold:
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
-					msg = "Temperature high: " + str(data),
+					msg = {
+						"event": "high_temperature",
+						"threshold": self._threshold,
+						"value": data
+					},
 					priority = 50
 				)
 			)
-		"""
-
-		# Lines below are for testing purpose XXX
+		
+		# Lines below are for testing purpose
 		if True:
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
-					msg = "Temperature: " + str(data),
-					priority = 70
+					msg = {
+						"event": "raw",
+						"value": data
+					},
+					priority = 200
 				)
 			)
-		# Lines above are for testing purpose
 		return ls_event

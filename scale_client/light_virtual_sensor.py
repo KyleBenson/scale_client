@@ -17,9 +17,9 @@ class LightVirtualSensor(AnalogVirtualSensor):
 
 	def read(self):
 		time.sleep(1)
-                raw_reading = self._spi.xfer2([1,8+self._port <<4,0])
-                adcout = ((raw_reading[1] &3) <<8)+raw_reading[2]
-                return adcout
+		raw_reading = self._spi.xfer2([1,8+self._port <<4,0])
+		adcout = ((raw_reading[1] &3) <<8)+raw_reading[2]
+		return adcout
 
 	def policy_check(self, data):
 		ls_event = []
@@ -27,8 +27,25 @@ class LightVirtualSensor(AnalogVirtualSensor):
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
-					msg = "Dark Enviroment",
+					msg = {
+						"event": "dark_environment",
+						"threshold": self._threshold,
+						"value": data
+					},
 					priority = 50
+				)
+			)
+
+		# Lines below are for testing purpose
+		if True:
+			ls_event.append(
+				SensedEvent(
+					sensor = self.device.device,
+					msg = {
+						"event": "raw",
+						"value": data
+					},
+					priority = 200
 				)
 			)
 		return ls_event

@@ -8,7 +8,6 @@ from Queue import Queue
 from virtual_sensor import VirtualSensor
 from sensed_event import SensedEvent
 
-#FIFO_FILE = "/var/run/scale_vs_csn.fifo"
 SCALE_VS_MAGIC_LN = r"\$\$\$_SCALE_VS_MAGIC_LN_\$\$\$"
 
 
@@ -23,17 +22,6 @@ class CSNVirtualSensor(VirtualSensor):
 		return "CSN Accelerometer"
 
 	def connect(self):
-		"""
-		try:
-			os.mkfifo(FIFO_FILE)
-		except OSError, e:
-			print "Failed to create FIFO between SCALE and CSN Server: %s" % e
-		#	pass
-			return False
-		"""	
-	#	server_thread = Thread(target = main)
-	#	server_thread.daemon = True
-	#	server_thread.start()
 		self._result = subprocess.Popen(
 			["/root/SmartAmericaSensors/scale_client/virtual_csn_server/main.py"],
 			shell = True,
@@ -55,7 +43,7 @@ class CSNVirtualSensor(VirtualSensor):
 				reading_match = self._reading_regexp.match(ln)
 				if reading_match:
 			#		print ("Reading match")
-					readings.append(reading_match.group(1))
+					readings.append(float(reading_match.group(1)))
 
 		#pipe_file.close()
 		return readings
@@ -64,11 +52,13 @@ class CSNVirtualSensor(VirtualSensor):
 		ls_event = []
 		if len(data) < 3:
 			return ls_event
-		readings_line = data[0]+', '+data[1]+', '+data[2]
 		ls_event.append(
 			SensedEvent(
 				sensor = self.device.device,
-				msg = "Pick detected: " + readings_line,
+				msg = {
+					"event": "pick_detected",
+					"value": data
+				},
 				priority = 70
 			)
 		)

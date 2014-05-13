@@ -5,14 +5,15 @@ import time
 import socket
 from threading import Thread
 from Queue import Queue
+from uuid import getnode as get_mac
 from device_descriptor import DeviceDescriptor
 from event_reporter import EventReporter
-from publisher import Publisher
+#from publisher import Publisher
 from mqtt_publisher import MQTTPublisher
 from sigfox_publisher import SigfoxPublisher 
-from virtual_sensor import VirtualSensor
+#from virtual_sensor import VirtualSensor
 from heartbeat_virtual_sensor import HeartbeatVirtualSensor as HBVirtualSensor
-from usb_virtual_sensor import USBVirtualSensor
+#from usb_virtual_sensor import USBVirtualSensor
 from temperature_virtual_sensor import TemperatureVirtualSensor
 from csn_virtual_sensor import CSNVirtualSensor
 
@@ -21,6 +22,7 @@ MQTT_HOSTNAME = "m10.cloudmqtt.com"
 MQTT_HOSTPORT = 11094
 MQTT_USERNAME = "vbjsfwul"
 MQTT_PASSWORD = "xottyHH5j9v2"
+MQTT_TOPIC = "iot-1/d/%012x/evt/%s/json" % (get_mac(), "computer")
 CEL_DAEMON_PATH = "temperature-streams"
 
 # Create message queue
@@ -32,19 +34,14 @@ reporter.daemon = True
 reporter.start()
 
 # Create MQTT publishers
-#file_hostname = open("/etc/hostname", "r")
-#str_hostname = file_hostname.readline().rstrip()
-#file_hostname.close()
 pb_mqtt = MQTTPublisher(
-	topic_prefix = "scale/test/" + socket.gethostname()
+	topic = MQTT_TOPIC
 )
 if pb_mqtt.connect(MQTT_HOSTNAME, MQTT_HOSTPORT, MQTT_USERNAME, MQTT_PASSWORD):
 	reporter.append_publisher(pb_mqtt)
 
 # Create Sigfox publisher
-pb_sigfox = SigfoxPublisher(
-	topic_prefix = "scale/test"
-)
+pb_sigfox = SigfoxPublisher()
 if (pb_sigfox.connect()):
 	reporter.append_publisher(pb_sigfox)
 

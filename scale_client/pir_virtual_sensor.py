@@ -32,7 +32,9 @@ class PIRVirtualSensor(GPIOVirtualSensor):
 				ls_event.append(
 					SensedEvent(
 						sensor = self.device.device,
-						msg = "Movement detected",
+						msg = {
+							"event": "movement_detected",
+						},
 						priority = 50
 					)
 				)

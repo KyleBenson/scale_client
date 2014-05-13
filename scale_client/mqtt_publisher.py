@@ -4,13 +4,12 @@ import mosquitto
 from mosquitto import Mosquitto
 
 class MQTTPublisher(Publisher):
-	def __init__(self, topic_prefix, topic_suffix = ""):
+	def __init__(self, topic):
 		self._client = Mosquitto()
 		self._client.on_connect = self._on_connect
 		self._client.on_disconnect = self._on_disconnect
 		self._client.on_publish = self._on_publish
-		self._topic_prefix = topic_prefix
-		self._topic_suffix = topic_suffix
+		self._topic = topic
 		self._loopflag = False
 
 	def _on_connect(self, mosq, obj, rc):
@@ -58,13 +57,14 @@ class MQTTPublisher(Publisher):
 				return False
 
 		# Make message from a sensed event
-		topic = ""
-		if self._topic_prefix != "":
-			topic += self._topic_prefix + "/"
-		topic += event.sensor
-		if self._topic_suffix != "":
-			topic += "/" + self._topic+suffix
-		msg = event.msg + " @" + str(event.timestamp)
+		import json
+		import copy
+
+		topic = self._topic
+		msg_obj = {"d": copy.copy(event.msg)}
+		msg_obj["d"]["sensor"] = event.sensor
+		msg_obj["d"]["timestamp"] = event.timestamp
+		msg = json.dumps(msg_obj)
 
 		# Publish message
 		res, mid = self._client.publish(topic, msg)
