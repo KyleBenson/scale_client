@@ -25,12 +25,11 @@ from dummy_temperature_virtual_sensor import DummyTemperatureVirtualSensor
 from dummy_csn_virtual_sensor import DummyCSNVirtualSensor
 
 QUEUE_SIZE = 4096
-MQTT_HOSTNAME = "m10.cloudmqtt.com"
-MQTT_HOSTPORT = 11094
+MQTT_HOSTNAME = "dime.smartamerica.io"
+MQTT_HOSTPORT = 1883
 MQTT_USERNAME = "vbjsfwul"
 MQTT_PASSWORD = "xottyHH5j9v2"
 MQTT_TOPIC = "iot-1/d/%012x/evt/%s/json" % (get_mac(), "computer")
-#CEL_DAEMON_PATH = "temprature-streams"
 
 # Create message queue
 queue = Queue(QUEUE_SIZE)

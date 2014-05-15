@@ -50,6 +50,12 @@ class SigfoxPublisher(Publisher):
 		except Exception as err: 
 			self._ex_handler(err)
 			return False
+        
+        # check that message was sent ok (no way to check that it was received!)
+        #sleep(1)
+        #TODO: fix this sleep interval so it doesn't block the whole event reporter
+        if self.receive() != "OK":
+            return False
 
 		return True
 
