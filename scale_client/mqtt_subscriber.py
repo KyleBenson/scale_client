@@ -31,7 +31,7 @@ from __future__ import print_function
 import mosquitto
 
 def on_connect(mosq, obj, rc):
-    mosq.subscribe("$SYS/#", 0)
+    #mosq.subscribe("$SYS/#", 0)
     print("rc: "+str(rc))
 
 def on_message(mosq, obj, msg):
@@ -56,7 +56,7 @@ mqttc.on_connect = on_connect
 mqttc.on_publish = on_publish
 mqttc.on_subscribe = on_subscribe
 # Uncomment to enable debug messages
-mqttc.on_log = on_log
+#mqttc.on_log = on_log
 mqttc.connect("dime.smartamerica.io", 1883, 60)
 print("connected!")
 mqttc.subscribe("iot-1/d/+/evt/+/json", 0)
