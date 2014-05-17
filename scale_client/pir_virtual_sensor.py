@@ -16,7 +16,8 @@ class PIRVirtualSensor(GPIOVirtualSensor):
 	ACTIVE = 1
 
 	def type(self):
-		return "PIR Motion Sensor"
+	#	return "PIR Motion Sensor"
+		return "SCALE_PIR_RPi"
 
 	def read(self):
 		input_value = self._GPIO.input(self._pin)
@@ -33,9 +34,11 @@ class PIRVirtualSensor(GPIOVirtualSensor):
 					SensedEvent(
 						sensor = self.device.device,
 						msg = {
-							"event": "movement_detected",
+							"event": "SCALE_motion_detected_RPi",
+							"value": data,
+							"condition": {}
 						},
-						priority = 50
+						priority = 7
 					)
 				)
 		if self._state == PIRVirtualSensor.ACTIVE:
