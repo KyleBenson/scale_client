@@ -10,7 +10,7 @@ class DummyGasVirtualSensor(GasVirtualSensor):
 		self._darkflag = True
 		self._dummyval = DummyGasVirtualSensor.DRK_MEAN
 	
-	DRK_MEAN = 110
+	DRK_MEAN = 200
 	BRT_MEAN = 800
 
 	def type(self):
