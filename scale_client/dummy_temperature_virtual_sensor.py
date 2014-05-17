@@ -18,4 +18,4 @@ class DummyTemperatureVirtualSensor(TemperatureVirtualSensor):
 
 	def read(self):
 		time.sleep(1)
-		return self.CEL_MEAN + self._rand.random() * 6 - 3
+		return round(self.CEL_MEAN + self._rand.random() * 6 - 3, 2)
