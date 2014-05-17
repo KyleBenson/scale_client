@@ -58,10 +58,11 @@ mqttc.on_subscribe = on_subscribe
 # Uncomment to enable debug messages
 #mqttc.on_log = on_log
 mqttc.connect("dime.smartamerica.io", 1883, 60)
-print("connected!")
-mqttc.subscribe("iot-1/d/+/evt/+/json", 0)
+print("Connected!")
+
 #mqttc.subscribe(("tuple", 1))
 #mqttc.subscribe([("list0", 0), ("list1", 1)])
+mqttc.subscribe("iot-1/d/+/evt/+/json", 0)
 
 mqttc.loop_forever()
 
