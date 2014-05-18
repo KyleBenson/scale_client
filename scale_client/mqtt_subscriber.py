@@ -66,9 +66,6 @@ if len(sys.argv) > 1:
 else:
     topic = "iot-1/d/+/evt/+/json"
 mqttc.subscribe(topic, 0)
-#mqttc.subscribe(("tuple", 1))
-#mqttc.subscribe([("list0", 0), ("list1", 1)])
-mqttc.subscribe("iot-1/d/+/evt/+/json", 0)
 
 mqttc.loop_forever()
 
