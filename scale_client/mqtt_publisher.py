@@ -1,10 +1,12 @@
 import socket
+from Queue import Queue
 from publisher import Publisher
 import mosquitto
 from mosquitto import Mosquitto
 
 class MQTTPublisher(Publisher):
-	def __init__(self, topic):
+	def __init__(self, name, queue_size, callback, topic):
+		Publisher.__init__(self, name, queue_size, callback)
 		self._client = Mosquitto()
 		self._client.on_connect = self._on_connect
 		self._client.on_disconnect = self._on_disconnect
@@ -50,21 +52,14 @@ class MQTTPublisher(Publisher):
 		return True
 
 	def send(self, event):
-		# Try to connect if not in loop
-		if not self._loopflag:
-			if not self._try_connect():
-				print "MQTT publisher failure: Cannot connect"
-				return False
+		self._queue.put(event)
 
-		# Make message from a sensed event
-		import json
-		import copy
+	def publish(self, encoded_event):
 
 		topic = self._topic
-		msg = event.to_json()
 
 		# Publish message
-		res, mid = self._client.publish(topic, msg)
+		res, mid = self._client.publish(topic, encoded_event)
 		if res == mosquitto.MOSQ_ERR_SUCCESS:
 			print "MQTT message published to " + topic
 		elif res == mosquitto.MOSQ_ERR_NO_CONN:
@@ -74,3 +69,19 @@ class MQTTPublisher(Publisher):
 			print "MQTT publisher failure: Unknown error"
 			return False
 		return True
+
+	def encode_event(self, event):
+                encoded_event = event.to_json()
+                return encoded_event	
+	
+	def check_available(self, event):
+		if not self._loopflag:
+                        if not self._try_connect():
+                                print "MQTT publisher failure: Cannot connect"
+                                return False
+
+		if self._queue.full():
+			return False
+		return True	
+
+			

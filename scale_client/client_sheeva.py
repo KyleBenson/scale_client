@@ -18,11 +18,11 @@ from temperature_virtual_sensor import TemperatureVirtualSensor
 from csn_virtual_sensor import CSNVirtualSensor
 
 QUEUE_SIZE = 4096
-MQTT_HOSTNAME = "m10.cloudmqtt.com"
-MQTT_HOSTPORT = 11094
-MQTT_USERNAME = "vbjsfwul"
-MQTT_PASSWORD = "xottyHH5j9v2"
-MQTT_TOPIC = "iot-1/d/%012x/evt/%s/json" % (get_mac(), "computer")
+MQTT_HOSTNAME = "dime.smartamerica.io"
+MQTT_HOSTPORT = 1883
+MQTT_USERNAME = None #"vbjsfwul"
+MQTT_PASSWORD = None #"xottyHH5j9v2"
+MQTT_TOPIC = "iot-1/d/%012x/evt/%s/json" % (get_mac(), "SheevaPlug")
 CEL_DAEMON_PATH = "temperature-streams"
 
 # Create message queue
@@ -33,17 +33,29 @@ reporter = EventReporter(queue)
 reporter.daemon = True
 reporter.start()
 
+ls_pb = []
 # Create MQTT publishers
+
 pb_mqtt = MQTTPublisher(
+	name = "Sigfox",
+	queue_size = 100,
+	callback = reporter.send_false_callback,
 	topic = MQTT_TOPIC
 )
 if pb_mqtt.connect(MQTT_HOSTNAME, MQTT_HOSTPORT, MQTT_USERNAME, MQTT_PASSWORD):
 	reporter.append_publisher(pb_mqtt)
+	ls_pb.append(pb_mqtt)
+
 
 # Create Sigfox publisher
-pb_sigfox = SigfoxPublisher()
+pb_sigfox = SigfoxPublisher(name = "Sigfox", queue_size = 6, callback =  reporter.send_false_callback)
 if (pb_sigfox.connect()):
 	reporter.append_publisher(pb_sigfox)
+	ls_pb.append(pb_sigfox)
+
+for pb_j in ls_pb:
+        pb_j.daemon = True
+        pb_j.start()
 
 # Create and start virtual sensors
 ls_vs = []
@@ -64,11 +76,11 @@ vs_temperature = TemperatureVirtualSensor(
 if vs_temperature.connect():
 	ls_vs.append(vs_temperature)
 
-vs_csn = CSNVirtualSensor(
-	queue,
-	DeviceDescriptor("accel"))
-if vs_csn.connect():
-	ls_vs.append(vs_csn)
+#vs_csn = CSNVirtualSensor(
+	#queue,
+	#DeviceDescriptor("accel"))
+#if vs_csn.connect():
+	#ls_vs.append(vs_csn)
 
 for vs_j in ls_vs:
 	vs_j.daemon = True

@@ -49,10 +49,15 @@ reporter.start()
 
 # Create publishers
 pb_mqtt = MQTTPublisher(
+	name = "MQTT",
+	queue_size = 100,
+	callback = reporter.send_false_callback,
 	topic = MQTT_TOPIC
 )
 if pb_mqtt.connect(MQTT_HOSTNAME, MQTT_HOSTPORT, MQTT_USERNAME, MQTT_PASSWORD):
 	reporter.append_publisher(pb_mqtt)
+	pb_mqtt.daemon = True
+	pb_mqtt.start()
 
 # Create and start virtual sensors
 # Create Heartbeat "Sensor"
