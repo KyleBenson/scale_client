@@ -1,8 +1,11 @@
 #!/usr/bin/python
+
 from __future__ import print_function
 import mosquitto, sys
+
 BROKER_ADDRESS = "dime.smartamerica.io"
 #BROKER_ADDRESS = "m2m.eclipse.org"
+
 # Copyright (c) 2010,2011 Roger Light <roger@atchoo.org>
 # All rights reserved.
 # 

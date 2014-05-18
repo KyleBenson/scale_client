@@ -61,17 +61,7 @@ class MQTTPublisher(Publisher):
 		import copy
 
 		topic = self._topic
-		msg_obj = {"d": copy.copy(event.msg)}
-	#	msg_obj["d"]["sensor"] = event.sensor
-		msg_obj["d"]["timestamp"] = event.timestamp
-		msg_obj["d"]["prio_value"] = event.priority
-		if msg_obj["d"]["prio_value"] < 4:
-			msg_obj["d"]["prio_class"] = "high"
-		elif msg_obj["d"]["prio_value"] > 7:
-			msg_obj["d"]["prio_class"] = "low"
-		else:
-			msg_obj["d"]["prio_class"] = "medium"
-		msg = json.dumps(msg_obj)
+		msg = event.to_json()
 
 		# Publish message
 		res, mid = self._client.publish(topic, msg)
