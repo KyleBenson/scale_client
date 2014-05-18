@@ -19,7 +19,8 @@ class CSNVirtualSensor(VirtualSensor):
 		self._result = None
 
 	def type(self):
-		return "CSN Accelerometer"
+	#	return "CSN Accelerometer"
+		return "SCALE_Seismic_Sheeva"
 
 	def connect(self):
 		self._result = subprocess.Popen(
@@ -56,10 +57,11 @@ class CSNVirtualSensor(VirtualSensor):
 			SensedEvent(
 				sensor = self.device.device,
 				msg = {
-					"event": "pick_detected",
-					"value": data
+					"event": "SCALE_pick_detected_Sheeva",
+					"value": data,
+					"condition": {}
 				},
-				priority = 70
+				priority = 5
 			)
 		)
 		return ls_event

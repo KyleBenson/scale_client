@@ -8,7 +8,8 @@ class HeartbeatVirtualSensor(VirtualSensor):
 		self._interval = interval
 
 	def type(self):
-		return "Heartbeat Generator"
+	#	return "Heartbeat Generator"
+		return "SCALE_Heartbeat"
 
 	def connect(self):
 		return True
@@ -24,9 +25,11 @@ class HeartbeatVirtualSensor(VirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": "alive",
+						"event": "SCALE_alive",
+						"value": None,
+						"condition": {}
 					},
-					priority = 700
+					priority = 10
 				)
 			)
 		return ls_event

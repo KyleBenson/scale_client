@@ -13,7 +13,8 @@ class GasVirtualSensor(AnalogVirtualSensor):
 		self._threshold = threshold
 
 	def type(self):
-		return "Gas Sensor"
+	#	return "Gas Sensor"
+		return "SCALE_Gas_RPi"
 
 	def read(self):
 		time.sleep(1)
@@ -28,11 +29,16 @@ class GasVirtualSensor(AnalogVirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": "gas_detected",
-						"threshold": self._threshold,
-						"value": data
+						"event": "SCALE_gas_detected_RPi",
+						"value": data,
+						"condition": {
+							"threshold": {
+								"operator": ">",
+								"value": self._threshold
+							}
+						}
 					},
-					priority = 50
+					priority = 5
 				)
 			)
 	
@@ -42,10 +48,11 @@ class GasVirtualSensor(AnalogVirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": "raw",
-						"value": data
+						"event": "SCALE_raw_Gas_RPi",
+						"value": data,
+						"condition": {}
 					},
-					priority = 200
+					priority = 10
 				)
 			)
 		return ls_event
