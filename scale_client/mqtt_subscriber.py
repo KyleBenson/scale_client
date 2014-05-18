@@ -1,5 +1,8 @@
 #!/usr/bin/python
-
+from __future__ import print_function
+import mosquitto, sys
+BROKER_ADDRESS = "dime.smartamerica.io"
+#BROKER_ADDRESS = "m2m.eclipse.org"
 # Copyright (c) 2010,2011 Roger Light <roger@atchoo.org>
 # All rights reserved.
 # 
@@ -27,8 +30,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-import mosquitto
 
 def on_connect(mosq, obj, rc):
     #mosq.subscribe("$SYS/#", 0)
@@ -57,9 +58,14 @@ mqttc.on_publish = on_publish
 mqttc.on_subscribe = on_subscribe
 # Uncomment to enable debug messages
 #mqttc.on_log = on_log
-mqttc.connect("dime.smartamerica.io", 1883, 60)
-print("Connected!")
 
+mqttc.connect(BROKER_ADDRESS, 1883, 60)
+print("connected!")
+if len(sys.argv) > 1:
+    topic = sys.argv[1]
+else:
+    topic = "iot-1/d/+/evt/+/json"
+mqttc.subscribe(topic, 0)
 #mqttc.subscribe(("tuple", 1))
 #mqttc.subscribe([("list0", 0), ("list1", 1)])
 mqttc.subscribe("iot-1/d/+/evt/+/json", 0)
