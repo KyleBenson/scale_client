@@ -23,6 +23,8 @@ sed "s/$OLD_HOSTNAME/$REPLY/g" -i /etc/hosts
 apt-get update
 apt-get install -y python-m2crypto python-pip python-dev git python-sphinx\
  python-requests python-yaml python-zmq dctrl-tools msgpack-python
+# msgpack-python has an issue on ARM architectures, which we're using, so we need to use a pure Python implementation
+pip install msgpack-pure
 
 # install salt using dpkg files that you built with build_salt_debs.sh
 dpkg -i salt-common_*.deb salt-minion*.deb
