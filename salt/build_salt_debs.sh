@@ -10,5 +10,5 @@ GIT_SSL_NO_VERIFY=true git clone https://github.com/saltstack/salt.git
 cd salt
 # force salt to use pure python implementation of msgpack since we are experiencing ARM architecture bugs
 sed -i '/^    import msgpack$/a\    raise ImportError' salt/payload.py
-sed -i '/^    import msgpack$/a\    raise ImportError' salt/states/pkg.py
+sed -i '/^        import msgpack$/a\        raise ImportError' salt/states/pkg.py
 debian/rules binary
