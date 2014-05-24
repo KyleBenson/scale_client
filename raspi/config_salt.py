@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+# NOTICE
+# 1) Make sure Raspberry Pi is loaded with the latest image, which has a salt installation.
+# 2) You should be able to write to the configuration directory.
+# 3) Fill in the IP address and port of salt master before running this script.
+
 SALT_MINION_D = "/etc/salt/minion.d"
 SALT_CONFIG_FILE = SALT_MINION_D + "/" + "scale.conf"
 SALT_ID_PREFIX = "SCALERPi"
