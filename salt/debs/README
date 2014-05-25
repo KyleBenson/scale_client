@@ -1,0 +1,6 @@
+The salt-common and salt-minion deb files here are for the Sheevaplugs (armelv5 architecture).
+You'll need to do:
+
+  sudo pip install msgpack-pure
+  
+in order to get them working correctly!
