@@ -15,10 +15,14 @@ To build .deb package:
 cd ..
 mv hidapi hidapi-0.8.0-rc1
 cd hidapi*
-dh_make --createorig
+dh_make --createorig # select library when prompted
 
-Now, edit the debian/control file to fix the "hidapiBROKEN" string and to add the 3 above lib dependencies
+Now, edit the debian/control file to fix the "hidapiBROKEN" string and to add the 3 above lib dependencies: libudev-dev, libusb-1.0-0-dev, libfox-1.6-dev
 remove "usr/share/pkgconfig/*" line from "debian/hidapi-dev.install" file
+
+# Next, do
+mv debian/hidapi1.dirs debian/hidapi.dirs 
+mv debian/hidapi1.install debian/hidapi.install 
 
 # finally, do:
 dpkg-buildpackage
@@ -28,29 +32,28 @@ BUILDING TEMPered
 
 git clone https://github.com/edorfaus/TEMPered.git
 mv TEMPered/ tempered-1.0
-cp SmartAmericaSensors/temperature/temperature-streams.c TEMPered-1.0/examples/
-cp SmartAmericaSensors/temperature/examples_CMakeLists.txt TEMPered-1.0/examples/CMakeLists.txt
-cd TEMPered-1.0
+cp SmartAmericaSensors/temperature/temperature-streams.c tempered-1.0/examples/
+cp SmartAmericaSensors/temperature/examples_CMakeLists.txt tempered-1.0/examples/CMakeLists.txt
+cd tempered-1.0
 cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr .
 make
 
 MAKING DEB FILE
 
-dh_make --createorig
+dh_make --createorig # select library when prompted
+mv debian/tempered1.install debian/tempered.install
+mv debian/tempered1.dirs debian/tempered.dirs
 
-Now, edit the debian/control file to fix the "temperedBROKEN" string and to add the hidapi1 lib dependency
-remove "usr/lib/lib*.a" line from "debian/tempered-dev.install" file
-may have to remove "install_manifest.txt" file
-remove "usr/lib/pkgconfig/*" line from "debian/tempered-dev.install" file
-add "usr/bin/*" to "debian/tempered1.install" 
+Now, edit the debian/control file to fix the "temperedBROKEN" string and to add the hidapi-dev lib dependency
+remove "usr/lib/lib*.a", "usr/lib/pkgconfig/*", "usr/share/pkgconfig/*" lines from "debian/tempered-dev.install" file, change "usr/lib/lib*.so" --> "usr/lib/*/lib*.so"
+add "usr/bin/*" to "debian/tempered.install"; change "usr/lib/lib*.so.*" --> "usr/lib/*/lib*.so.*"
+create file "debian/postinst.ex" to run the command `chmod 4755 /usr/bin/temperature-streams`, which
+  sets the root uid/gid on the temperature-streams program once it's installed (don't forget #!/bin/sh in the 1st line!)
 
 # finally, do:
+# may have to remove "install_manifest.txt" file if you have to retry the build during this process
 dpkg-buildpackage
 
-After installing TEMPered:
-  you may need to work some magic to set the root uid/gid on the temperature-streams program once it's installed:
-
-sudo chmod 4755 /usr/bin/temperature-streams
 
 OUR ADDITIONS
 
