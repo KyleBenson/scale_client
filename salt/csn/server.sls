@@ -1,11 +1,20 @@
+python-pip:
+  pkg.installed
+
 WebOb:
-  pip.installed
+  pip.installed:
+    - require:
+      - pkg: python-pip
 
 Paste:
-  pip.installed
+  pip.installed:
+    - require:
+      - pkg: python-pip
 
 webapp2:
-  pip.installed
+  pip.installed:
+    - require:
+      - pkg: python-pip
 
 #TODO: determine if the client needs this too?
 protobuf:

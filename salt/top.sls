@@ -1,5 +1,9 @@
 base:
+  '*':
+    - users
+    - scale
   'sheevaplug*':
     - tempered
-    - users
     - csn
+  'raspi*':
+    - raspi
