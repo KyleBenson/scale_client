@@ -47,7 +47,7 @@ mv debian/tempered1.dirs debian/tempered.dirs
 Now, edit the debian/control file to fix the "temperedBROKEN" string and to add the hidapi-dev lib dependency
 remove "usr/lib/lib*.a", "usr/lib/pkgconfig/*", "usr/share/pkgconfig/*" lines from "debian/tempered-dev.install" file, change "usr/lib/lib*.so" --> "usr/lib/*/lib*.so"
 add "usr/bin/*" to "debian/tempered.install"; change "usr/lib/lib*.so.*" --> "usr/lib/*/lib*.so.*"
-create file "debian/postinst.ex" to run the command `chmod 4755 /usr/bin/temperature-streams`, which
+create file "debian/postinst" to run the command `chmod 4755 /usr/bin/temperature-streams`, which
   sets the root uid/gid on the temperature-streams program once it's installed (don't forget #!/bin/sh in the 1st line!)
 
 # finally, do:
