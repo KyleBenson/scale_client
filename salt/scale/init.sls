@@ -6,8 +6,9 @@ pyserial:
 
 scale_repo:
   git.latest:
-    - name: https://github.com/KyleBenson/SmartAmericaSensors.git
+    - name: http://github.com/KyleBenson/SmartAmericaSensors.git
     - target: /usr/local/scale
+    - user: root
     - require:
       - pip: mosquitto
       - pip: pyserial
