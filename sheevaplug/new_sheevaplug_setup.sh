@@ -21,6 +21,7 @@ sed "s/$OLD_HOSTNAME/$REPLY/g" -i /etc/hosts
 # install salt dependencies
 #TODO: psutil, jinja2
 apt-get update
+apt-get upgrade
 apt-get install -y python-m2crypto python-pip python-dev git python-sphinx\
  python-requests python-yaml python-zmq dctrl-tools msgpack-python
 # msgpack-python has an issue on ARM architectures, which we're using, so we need to use a pure Python implementation
