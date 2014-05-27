@@ -27,11 +27,13 @@ apt-get install -y python-m2crypto python-pip python-dev git python-sphinx\
 pip install msgpack-pure
 
 # install salt using dpkg files that you built with build_salt_debs.sh
-dpkg -i salt-common_*.deb salt-minion*.deb
+dpkg -i salt-common_*.deb
+dpkg -i salt-minion*.deb
 apt-get -f install
 
 # point minion to the master, run it, and set to run on startup
 echo "master: $MASTER_ADDRESS" > /etc/salt/minion
+echo "$REPLY" > /etc/salt/minion_id
 salt-minion -d
 
 echo "Go to your master and accept the new key from this minion"
