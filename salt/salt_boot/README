@@ -4,3 +4,5 @@ You'll need to do:
   sudo pip install msgpack-pure
   
 in order to get them working correctly!
+
+NOTE: we may have to upgrade the version of ZeroMQ as the old one available in the package manager on the sheevaplugs has known keepalive issues.
