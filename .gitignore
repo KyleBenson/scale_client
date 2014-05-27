@@ -1,4 +1,6 @@
 *.py[cod]
+# salt stuff?
+*.DS_Store
 
 # C extensions
 *.so

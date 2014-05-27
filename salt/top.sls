@@ -5,5 +5,6 @@ base:
   'sheevaplug*':
     - tempered
     - csn
+    - sheevaplug
   'raspi*':
     - raspi
