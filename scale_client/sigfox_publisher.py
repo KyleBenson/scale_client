@@ -47,9 +47,8 @@ class SigfoxPublisher(Publisher):
 
     def publish(self, coded_event):
         #TODO: should define false code to indicate different fault reason
-        if coded_event == False:
-            return False
-
+        #if coded_event is False:
+        #    return False
         try:
             #self._ser.write(topic+"||"+msg+'\r\n')
             #use the above paras to send actual sensor data
@@ -59,7 +58,7 @@ class SigfoxPublisher(Publisher):
             return False
 
             # check that message was sent ok (no way to check that it was received!)
-            time.sleep(5)
+        time.sleep(7)
         #TODO: fix this sleep interval so it doesn't block the whole event reporter
         return self.receive()
 
@@ -70,10 +69,13 @@ class SigfoxPublisher(Publisher):
             ret += self._ser.read(1)
         print ("read from sigfox adapter: " + ret)
         ret_strings = ret.split('\r\n')
-        #TODO: access ret_strings[1] may cause out of range exception
-        if ret_strings[1] == "OK":
-            return True
-        else:
+        try:
+            if ret_strings[1] == "OK":
+                return True
+            else:
+                return False
+        except IndexError:
+            print "Index Error when dealing with Sigfox return "
             return False
 
     def encode_event(self, event):
@@ -118,7 +120,7 @@ class SigfoxPublisher(Publisher):
         # 2. Encode Value Descriptor
         # Temporary method
         hex_payload_vd = ""
-        for i in range(16):
+        for i in range(4):
             hex_payload_vd += "0"
 
         # 3. Encode Value
@@ -129,7 +131,10 @@ class SigfoxPublisher(Publisher):
                 hex_payload_value += "0"
         else:
             value_original = event.msg["value"]
-            hex_payload_value = hex(ctypes.c_int.from_buffer(ctypes.c_float(value_original)).value)
+            hex_payload_value = hex(ctypes.c_int.from_buffer(ctypes.c_float(value_original)).value)[2:]
+
+            for i in range(8):
+                hex_payload_value += "0"
 
         # 4. Encode Priority
         priority_original = event.priority
@@ -139,17 +144,15 @@ class SigfoxPublisher(Publisher):
         hex_payload_priority = hex(priority_original)[2] #[0:1] = '0x'
 
         # 5. Encode Control bits
-        hex_payload_cb = ""
-        for i in range(16):
-            hex_payload_cb += "0"
+        hex_payload_cb = "0"
 
         # 6. Generate Whole Hex Payload
         hex_payload = hex_payload_type + hex_payload_vd+ hex_payload_value + hex_payload_priority + hex_payload_cb
 
         # Publish message "||" can be redefined. but '\r\n' is mandatory
         coded_event = "at$ss=" + hex_payload + "\r\n"
-
-        return coded_event
+        print "Sigfox Ready to Send: " + str(coded_event)
+        return str(coded_event)
 
     def check_available(self, event):
         if self._queue.qsize() < (self._queue_size):
