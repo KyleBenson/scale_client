@@ -55,8 +55,12 @@ class MQTTPublisher(Publisher):
 		self._queue.put(event)
 
 	def publish(self, encoded_event):
+		# Fill in the blank "%s" left in self._topic
+		import json
 
-		topic = self._topic
+		event = json.loads(encoded_event)
+		topic_event_type = event["d"]["event"]
+		topic = self._topic % topic_event_type
 
 		# Publish message
 		res, mid = self._client.publish(topic, encoded_event)
@@ -71,14 +75,14 @@ class MQTTPublisher(Publisher):
 		return True
 
 	def encode_event(self, event):
-                encoded_event = event.to_json()
-                return encoded_event	
+		encoded_event = event.to_json()
+		return encoded_event	
 	
 	def check_available(self, event):
 		if not self._loopflag:
-                        if not self._try_connect():
-                                print "MQTT publisher failure: Cannot connect"
-                                return False
+			if not self._try_connect():
+				print "MQTT publisher failure: Cannot connect"
+				return False
 
 		if self._queue.full():
 			return False

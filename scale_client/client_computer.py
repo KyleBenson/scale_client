@@ -30,7 +30,9 @@ MQTT_HOSTNAME = "m2m.eclipse.org"
 MQTT_HOSTPORT = 1883
 MQTT_USERNAME = None #"vbjsfwul"
 MQTT_PASSWORD = None #"xottyHH5j9v2"
-MQTT_TOPIC = "iot-1/d/%012x/evt/%s/json" % (get_mac(), "computer")
+
+# MQTT publisher will fill in the "%s" below
+MQTT_TOPIC = "iot-1/d/%012x/evt/%s/json" % (get_mac(), "%s")
 
 # Create message queue
 queue = Queue(QUEUE_SIZE)
