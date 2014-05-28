@@ -81,6 +81,7 @@ class SigfoxPublisher(Publisher):
     def encode_event(self, event):
         import json
         import ctypes
+        import os
         print event.msg
 
         #The Structure of Sigfox message:
@@ -105,8 +106,8 @@ class SigfoxPublisher(Publisher):
         event_type_original = event.msg["event"]
 
         # Read from Event Type Enum Definition File(in JSON format)
-
-        type_file = open(self._event_type_json_file, "rt")
+        dirname, filename = os.path.split(os.path.abspath(__file__))
+        type_file = open(dirname+"/"+self._event_type_json_file, "rt")
         type_stream = type_file.read()
         type_info = json.loads(type_stream)
 
