@@ -31,7 +31,7 @@ with open('/etc/hostname', 'w') as f:
 with open('/etc/hosts') as f:
     old_hosts = f.read().strip()
 with open('/etc/hosts', 'w') as f:
-    f.write(old_hosts.replace('old_hostname', SALT_HOSTNAME))
+    f.write(old_hosts.replace(old_hostname, SALT_HOSTNAME))
 
 # must restart this service to register hostname change
 subprocess.call('/etc/init.d/hostname.sh start', shell=True)
