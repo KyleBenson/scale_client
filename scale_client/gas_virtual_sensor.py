@@ -13,8 +13,7 @@ class GasVirtualSensor(AnalogVirtualSensor):
 		self._threshold = threshold
 
 	def type(self):
-	#	return "Gas Sensor"
-		return "SCALE_Gas_RPi"
+		return "explosive_gas"
 
 	def read(self):
 		time.sleep(1)
@@ -29,7 +28,7 @@ class GasVirtualSensor(AnalogVirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": "SCALE_gas_detected_RPi",
+						"event": self.type(),
 						"value": data,
 						"condition": {
 							"threshold": {
@@ -41,14 +40,14 @@ class GasVirtualSensor(AnalogVirtualSensor):
 					priority = 5
 				)
 			)
-	
+
 		# Lines below are for testing purpose
 		if True:
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": "SCALE_raw_Gas_RPi",
+						"event": self.type(),
 						"value": data,
 						"condition": {}
 					},
