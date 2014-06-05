@@ -12,7 +12,7 @@ class GasVirtualSensor(AnalogVirtualSensor):
 		AnalogVirtualSensor.__init__(self, queue, device, analog_port)
 		self._threshold = threshold
 
-	def type(self):
+	def get_type(self):
 		return "explosive_gas"
 
 	def read(self):
@@ -28,7 +28,7 @@ class GasVirtualSensor(AnalogVirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": self.type(),
+						"event": self.get_type(),
 						"value": data,
 						"condition": {
 							"threshold": {
@@ -47,7 +47,7 @@ class GasVirtualSensor(AnalogVirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": self.type(),
+						"event": self.get_type(),
 						"value": data,
 						"condition": {}
 					},

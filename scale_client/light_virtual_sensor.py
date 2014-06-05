@@ -12,9 +12,10 @@ class LightVirtualSensor(AnalogVirtualSensor):
 		AnalogVirtualSensor.__init__(self, queue, device, analog_port)
 		self._threshold = threshold
 
-	def type(self):
+	def get_type(self):
 	#	return "Light Sensor"
-		return "SCALE_Light_RPi"
+	#	return "SCALE_Light_RPi"
+		return "light"
 
 	def read(self):
 		time.sleep(1)
@@ -29,7 +30,7 @@ class LightVirtualSensor(AnalogVirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": "SCALE_dark_environment_RPi",
+						"event": self.get_type(), #"SCALE_dark_environment_RPi",
 						"value": data,
 						"condition": {
 							"threshold": {
@@ -48,7 +49,7 @@ class LightVirtualSensor(AnalogVirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": "SCALE_raw_Light_RPi",
+						"event": self.get_type(), #"SCALE_raw_Light_RPi",
 						"value": data,
 						"condition": {}
 					},

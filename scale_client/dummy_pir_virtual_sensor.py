@@ -12,9 +12,6 @@ class DummyPIRVirtualSensor(PIRVirtualSensor):
 	IDLE = 0
 	ACTIVE = 1
 	
-	def type(self):
-		return "Dummy PIR Sensor"
-
 	def connect(self):
 		return True
 

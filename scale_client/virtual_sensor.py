@@ -7,7 +7,7 @@ class VirtualSensor(Thread):
 		self._queue = queue
 		self.device = device
 
-	def type(self):
+	def get_type(self):
 		raise NotImplementedError()
 
 	def connect(self):

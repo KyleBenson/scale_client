@@ -10,9 +10,6 @@ class DummyTemperatureVirtualSensor(TemperatureVirtualSensor):
 		self._darkflag = True
 		self.CEL_MEAN = threshold - 2
 
-	def type(self):
-		return "Dummy Temperature Sensor"
-	
 	def connect(self):
 		return True
 

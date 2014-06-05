@@ -13,9 +13,6 @@ class DummyGasVirtualSensor(GasVirtualSensor):
 	DRK_MEAN = 200
 	BRT_MEAN = 800
 
-	def type(self):
-		return "Dummy Gas Sensor"
-
 	def connect(self):
 		return True
 

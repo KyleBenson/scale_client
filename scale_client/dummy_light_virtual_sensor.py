@@ -12,9 +12,6 @@ class DummyLightVirtualSensor(LightVirtualSensor):
 	DRK_MEAN = 20
 	BRT_MEAN = 1000
 
-	def type(self):
-		return "Dummy Light Sensor"
-
 	def connect(self):
 		return True
 

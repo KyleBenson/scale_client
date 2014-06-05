@@ -11,9 +11,6 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
 
 	WAIT_MEAN = 10
 
-	def type(self):
-		return "Dummy CSN Accelerometer"
-
 	def connect(self):
 		return True
 

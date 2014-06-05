@@ -16,9 +16,10 @@ class TemperatureVirtualSensor(VirtualSensor):
 		self._result = None
 		self._regexp = re.compile(r'Device ([^:]*): Sensor ([0-9]*): Temperature: ([0-9\.]*)')
 
-	def type(self):
+	def get_type(self):
 	#	return "Temperature Sensor"
-		return "SCALE_Temp_Sheeva"
+	#	return "SCALE_Temp_Sheeva"
+		return "temperature"
 
 	def connect(self):
 		self._result = subprocess.Popen(
@@ -45,7 +46,7 @@ class TemperatureVirtualSensor(VirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": "SCALE_high_heat_Sheeva",
+						"event": self.get_type(), #"SCALE_high_heat_Sheeva",
 						"value": data,
 						"condition": {
 							"threshold": {
@@ -64,7 +65,7 @@ class TemperatureVirtualSensor(VirtualSensor):
 				SensedEvent(
 					sensor = self.device.device,
 					msg = {
-						"event": "SCALE_raw_Temp_Sheeva",
+						"event": self.get_type(), #"SCALE_raw_Temp_Sheeva",
 						"value": data,
 						"condition": {}
 					},
