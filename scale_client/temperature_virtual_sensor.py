@@ -60,7 +60,7 @@ class TemperatureVirtualSensor(VirtualSensor):
 			)
 		
 		# Lines below are for testing purpose
-		if True:
+		"""	if True:
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
@@ -71,5 +71,5 @@ class TemperatureVirtualSensor(VirtualSensor):
 					},
 					priority = 10
 				)
-			)
+			)"""
 		return ls_event

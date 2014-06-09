@@ -44,7 +44,7 @@ class LightVirtualSensor(AnalogVirtualSensor):
 			)
 
 		# Lines below are for testing purpose
-		if True:
+		"""	if True:
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
@@ -55,5 +55,5 @@ class LightVirtualSensor(AnalogVirtualSensor):
 					},
 					priority = 10
 				)
-			)
+			)"""
 		return ls_event

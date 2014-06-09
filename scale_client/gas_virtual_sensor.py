@@ -42,7 +42,7 @@ class GasVirtualSensor(AnalogVirtualSensor):
 			)
 
 		# Lines below are for testing purpose
-		if False:
+		"""	if True:
 			ls_event.append(
 				SensedEvent(
 					sensor = self.device.device,
@@ -53,6 +53,6 @@ class GasVirtualSensor(AnalogVirtualSensor):
 					},
 					priority = 10
 				)
-			)
+			)"""
 		return ls_event
 
