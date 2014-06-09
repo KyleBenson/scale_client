@@ -95,7 +95,7 @@ vs_gas = GasVirtualSensor(
 	queue,
 	DeviceDescriptor("gas0"),
 	analog_port = 0,
-	threshold = 500
+	threshold = 750
 )
 if vs_gas.connect():
 	ls_vs.append(vs_gas)
