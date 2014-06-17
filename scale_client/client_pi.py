@@ -75,7 +75,8 @@ if vs_heartbeat.connect():
 vs_pir = PIRVirtualSensor(
 	queue,
 	DeviceDescriptor("pir0"),
-	gpio_pin = 17
+	gpio_pin = 17,
+	inact_threshold = 1200
 )
 if vs_pir.connect():
 	ls_vs.append(vs_pir)

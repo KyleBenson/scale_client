@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 import subprocess
 import re
@@ -6,11 +5,16 @@ from analog_virtual_sensor import AnalogVirtualSensor
 from sensed_event import SensedEvent
 import time
 
-
 class LightVirtualSensor(AnalogVirtualSensor):
-	def __init__(self, queue, device, analog_port, threshold):
+	def __init__(self, queue, device, analog_port, threshold, flash_delta = 600):
 		AnalogVirtualSensor.__init__(self, queue, device, analog_port)
 		self._threshold = threshold
+		self._state = LightVirtualSensor.DARK
+		self._flash_delta = flash_delta
+		self._last_data	= None
+
+	DARK = 0
+	BRIGHT = 1
 
 	def get_type(self):
 	#	return "Light Sensor"
@@ -25,11 +29,36 @@ class LightVirtualSensor(AnalogVirtualSensor):
 
 	def policy_check(self, data):
 		ls_event = []
-		if data < self._threshold:
-			ls_event.append(
-				SensedEvent(
-					sensor = self.device.device,
-					msg = {
+		if self._state == LightVirtualSensor.DARK:
+			if data < self._threshold:
+				pass
+			if data > self._threshold:
+				self._state = LightVirtualSensor.BRIGHT
+				ls_event.append(
+					SensedEvent(
+						sensor = self.device.device,
+						msg = {
+						"event": self.get_type(), #"SCALE_bright_environment_RPi",
+						"value": data,
+						"condition": {
+							"threshold": {
+								"operator": ">",
+								"value": self._threshold
+							}
+						}
+					},
+					priority = 7
+					)
+				)		 
+		if self._state == LightVirtualSensor.BRIGHT:
+			if data > self._threshold:
+				pass
+			if data < self._threshold:
+				self._state = LightVirtualSensor.DARK
+				ls_event.append(
+					SensedEvent(
+						sensor = self.device.device,
+						msg = {
 						"event": self.get_type(), #"SCALE_dark_environment_RPi",
 						"value": data,
 						"condition": {
@@ -40,20 +69,27 @@ class LightVirtualSensor(AnalogVirtualSensor):
 						}
 					},
 					priority = 7
+					)
 				)
-			)
-
-		# Lines below are for testing purpose
-		"""	if True:
-			ls_event.append(
-				SensedEvent(
-					sensor = self.device.device,
-					msg = {
-						"event": self.get_type(), #"SCALE_raw_Light_RPi",
-						"value": data,
-						"condition": {}
+				
+		# Flash light detection
+		if self._last_data is not None:
+			if (data-self._last_data) > self._flash_delta:
+				ls_event.append(
+					SensedEvent(
+						sensor = self.device.device,
+						msg = {
+						"event": self.get_type(), #"SCALE_flash_environment_RPi",
+						"value": (data-self._last_data),
+						"condition": {
+							"delta": {
+								"operator": ">",
+								"value": self._flash_delta
+							}
+						}
 					},
-					priority = 10
-				)
-			)"""
+					priority = 7
+					)
+				) 	
+		self._last_data = data
 		return ls_event
