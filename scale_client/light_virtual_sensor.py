@@ -38,16 +38,16 @@ class LightVirtualSensor(AnalogVirtualSensor):
 					SensedEvent(
 						sensor = self.device.device,
 						msg = {
-						"event": self.get_type(), #"SCALE_bright_environment_RPi",
-						"value": data,
-						"condition": {
-							"threshold": {
-								"operator": ">",
-								"value": self._threshold
+							"event": self.get_type(), #"SCALE_bright_environment_RPi",
+							"value": data,
+							"condition": {
+								"threshold": {
+									"operator": ">",
+									"value": self._threshold
+								}
 							}
-						}
-					},
-					priority = 7
+						},
+						priority = 7
 					)
 				)		 
 		if self._state == LightVirtualSensor.BRIGHT:
@@ -59,16 +59,16 @@ class LightVirtualSensor(AnalogVirtualSensor):
 					SensedEvent(
 						sensor = self.device.device,
 						msg = {
-						"event": self.get_type(), #"SCALE_dark_environment_RPi",
-						"value": data,
-						"condition": {
-							"threshold": {
-								"operator": "<",
-								"value": self._threshold
+							"event": self.get_type(), #"SCALE_dark_environment_RPi",
+							"value": data,
+							"condition": {
+								"threshold": {
+									"operator": "<",
+									"value": self._threshold
+								}
 							}
-						}
-					},
-					priority = 7
+						},
+						priority = 7
 					)
 				)
 				
@@ -79,16 +79,16 @@ class LightVirtualSensor(AnalogVirtualSensor):
 					SensedEvent(
 						sensor = self.device.device,
 						msg = {
-						"event": self.get_type(), #"SCALE_flash_environment_RPi",
-						"value": (data-self._last_data),
-						"condition": {
-							"delta": {
-								"operator": ">",
-								"value": self._flash_delta
+							"event": self.get_type(), #"SCALE_flash_environment_RPi",
+							"value": (data-self._last_data),
+							"condition": {
+								"delta": {
+									"operator": ">",
+									"value": self._flash_delta
+								}
 							}
-						}
-					},
-					priority = 7
+						},
+						priority = 7
 					)
 				) 	
 		self._last_data = data
