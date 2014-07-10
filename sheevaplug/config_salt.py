@@ -8,7 +8,7 @@
 SALT_MINION_D = "/etc/salt/minion.d"
 SALT_CONFIG_FILE = SALT_MINION_D + "/" + "scale.conf"
 SALT_ID_PREFIX = "sheevaplug"
-SALT_MASTER = "128.195.11.110" #"208.76.112.106"
+SALT_MASTER = "128.195.52.93" #"128.195.11.110" #"208.76.112.106"
 SALT_MASTER_PORT = 4506
 
 from uuid import getnode
