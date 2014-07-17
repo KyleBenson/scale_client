@@ -62,7 +62,7 @@ ls_vs = []
 vs_heartbeat = HBVirtualSensor(
 	queue,
 	DeviceDescriptor("hb0"),
-	interval = 5
+	interval = 60 
 )
 if vs_heartbeat.connect():
 	ls_vs.append(vs_heartbeat)
