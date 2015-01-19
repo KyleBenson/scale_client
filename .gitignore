@@ -44,3 +44,6 @@ scale_client/.idea/scale_client.iml
 scale_client/.idea/scopes/scope_settings.xml
 scale_client/.idea/vcs.xml
 scale_client/.idea/workspace.xml
+
+# PyCharm IDE
+.idea
