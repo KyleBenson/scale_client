@@ -81,3 +81,9 @@ TODO: external website
 
 
 TODO: license, which will be LGPL, BSD, or similar so feel free to fork and use as you wish!
+
+ScaleCycle
+==========
+
+This fork is dedicated for the ScaleCycle project, and its default branch at present is `cycle` instead of `master`.
+
