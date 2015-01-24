@@ -2,11 +2,12 @@
 
 
 #Install Dependency
-pip install mosquitto
-pip install pyserial
+#pip install mosquitto
+#pip install pyserial
+pip install -r requirements.txt
 
 #Make SCALE start when System boots
-cp scale_sheeva /etc/init.d/scale
+cp ../daemons/scale_sheeva /etc/init.d/scale
 
 update-rc.d scale defaults
 
