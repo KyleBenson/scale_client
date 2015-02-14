@@ -3,7 +3,7 @@ from __future__ import print_function
 from time import time as get_time
 
 from scale_client.sensors.gpio_virtual_sensor import GPIOVirtualSensor
-from sensed_event import SensedEvent
+from scale_client.core.sensed_event import SensedEvent
 
 #import RPi.GPIO as GPIO
 

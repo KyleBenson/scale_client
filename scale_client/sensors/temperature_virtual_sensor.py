@@ -3,7 +3,7 @@ import subprocess
 import re
 
 from scale_client.sensors.virtual_sensor import VirtualSensor
-from sensed_event import SensedEvent
+from scale_client.core.sensed_event import SensedEvent
 
 
 class TemperatureVirtualSensor(VirtualSensor):

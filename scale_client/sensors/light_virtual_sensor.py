@@ -2,7 +2,7 @@ from __future__ import print_function
 import time
 
 from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
-from sensed_event import SensedEvent
+from scale_client.core.sensed_event import SensedEvent
 
 
 class LightVirtualSensor(AnalogVirtualSensor):

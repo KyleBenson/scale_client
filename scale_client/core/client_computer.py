@@ -7,20 +7,13 @@ from uuid import getnode as get_mac
 from scale_client.core.device_descriptor import DeviceDescriptor
 from event_reporter import EventReporter
 
-
-
-
-
-
-
-
 #from publisher import Publisher
 from scale_client.publishers.mqtt_publisher import MQTTPublisher
 #from virtual_sensor import VirtualSensor
 #from gpio_virtual_sensor import GPIOVirtualSensor
 #from analog_virtual_sensor import AnalogVirtualSensor
 from scale_client.sensors.heartbeat_virtual_sensor import HeartbeatVirtualSensor as HBVirtualSensor
-#from pir_virtual_sensor import PIRVirtualSensor 
+#from pir_virtual_sensor import PIRVirtualSensor
 #from light_virtual_sensor import LightVirtualSensor
 #from gas_virtual_sensor import GasVirtualSensor
 from scale_client.sensors.dummy_pir_virtual_sensor import DummyPIRVirtualSensor
