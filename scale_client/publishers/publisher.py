@@ -1,33 +1,39 @@
 from threading import Thread
 from Queue import Queue
 
+
 class Publisher(Thread):
-	def __init__(self, name, queue_size, reporter_callback):
-		Thread.__init__(self)
-		self._queue_size = queue_size
-		self._queue = Queue(queue_size) 
-		self._callback = reporter_callback
-		self._name = name
+    """Publishers handle forwarding SensedEvents to some end-point possibly via a particular network interface."""
 
-	def get_name(self):
-		return self._name
+    def __init__(self, name=None, queue_size=100, reporter_callback=None):
+        Thread.__init__(self)
+        self._queue_size = queue_size
+        self._queue = Queue(queue_size)
+        #TODO: is having pubs refers to reporter okay??? sounds circular...
+        self._callback = reporter_callback
+        self._name = name
 
-	def connect(self):
-		raise NotImplementedError()
+    def get_name(self):
+        return self._name
 
-	def send(self, event):
-		self._queue.put(event)
+    def connect(self):
+        """Derived publishers should not add any args to the connect function.
+          Pass all args into constructor instead."""
+        raise NotImplementedError()
 
-	def check_available(self,event):
-		raise NotImplementedError()
+    def send(self, event):
+        self._queue.put(event)
 
-	def encode_event(self, event):
-		raise NotImplementedError()
+    def check_available(self, event):
+        raise NotImplementedError()
 
-	def run(self):
-		while True:
-			event = self._queue.get()
-			ret = self.publish(self.encode_event(event))
-			if ret == False:
-				self._callback(self, event, ret)
+    def encode_event(self, event):
+        raise NotImplementedError()
+
+    def run(self):
+        while True:
+            event = self._queue.get()
+            ret = self.publish(self.encode_event(event))
+            if not ret:
+                self._callback(self, event, ret)
 

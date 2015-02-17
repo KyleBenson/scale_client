@@ -1,0 +1,29 @@
+# Note that this still needs a SigfoxPublisher added to it; not officially tested!
+Main:
+    event_queue_size: 4096
+
+Publishers:
+    - MqttPublisher:
+        class: "mqtt_publisher.MQTTPublisher"
+        hostname: "dime.smartamerica.io"
+        #hostname: "m2m.eclipse.org"
+        hostport: 1883
+        username: null
+        #username: "vbjsfwul"
+        password: null
+        #password: "xottyHH5j9v2"
+        keepalive: 60
+        #need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
+
+Sensors:
+    - HBSensor:
+        class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
+        dev_name: "hb0"
+        interval: 60
+    - TempSensor:
+        class: "temperature_virtual_sensor.TemperatureVirtualSensor"
+        dev_name: "cel0"
+		threshold: 24.0
+    - CSNSensor:
+        class: "csn_virtual_sensor.CSNVirtualSensor"
+	    dev_name: "accel"
