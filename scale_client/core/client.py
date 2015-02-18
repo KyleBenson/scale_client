@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
-import time, yaml, sys, logging, argparse, os.path
+import time, yaml, logging, argparse, os.path
 log = None
 
 from Queue import Queue
 
 from scale_client.core.device_descriptor import DeviceDescriptor
-import scale_client.publishers as publishers, scale_client.sensors as sensors
+#import scale_client.publishers as publishers, scale_client.sensors as sensors
 
 from event_reporter import EventReporter
 
@@ -150,7 +150,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Scale Client main process")
 
     parser.add_argument('--config', type=str, nargs=1,
-                        default=os.path.join(os.path.dirname(__file__), 'default_config.yml'),
+                        # config files are located in a different directory
+                        default=os.path.join(os.path.dirname(__file__), '..', 'config', 'default_config.yml'),
                         help='''file from which to read configuration''')
     parser.add_argument('--log-level', type=str, default='WARNING', dest='log_level',
                         help='''one of debug, info, error, warning''')
