@@ -5,8 +5,8 @@ from scale_client.sensors.csn_virtual_sensor import CSNVirtualSensor
 
 
 class DummyCSNVirtualSensor(CSNVirtualSensor):
-	def __init__(self, queue, device):
-		CSNVirtualSensor.__init__(self, queue, device)
+	def __init__(self, broker, device):
+		CSNVirtualSensor.__init__(self, broker, device)
 		self._rand = Random()
 		self._rand.seed()
 		self._whatflag = True

@@ -8,11 +8,11 @@ from scale_client.core.sensed_event import SensedEvent
 
 class TemperatureVirtualSensor(VirtualSensor):
 	def __init__(
-		self, queue, device,
+		self, broker, device,
 		daemon_path,
 		threshold
 	):
-		VirtualSensor.__init__(self, queue, device)
+		VirtualSensor.__init__(self, broker, device)
 		self._daemon_path = daemon_path
 		self._threshold = threshold
 		self._result = None

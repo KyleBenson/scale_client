@@ -5,8 +5,8 @@ from scale_client.sensors.gas_virtual_sensor import GasVirtualSensor
 
 
 class DummyGasVirtualSensor(GasVirtualSensor):
-	def __init__(self, queue, device, threshold):
-		GasVirtualSensor.__init__(self, queue, device, None, threshold)
+	def __init__(self, broker, device, threshold):
+		GasVirtualSensor.__init__(self, broker, device, None, threshold)
 		self._rand = Random()
 		self._rand.seed()
 		self._darkflag = True

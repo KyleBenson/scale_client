@@ -5,8 +5,8 @@ from scale_client.core.sensed_event import SensedEvent
 
 
 class HeartbeatVirtualSensor(VirtualSensor):
-	def __init__(self, queue, device, interval):
-		VirtualSensor.__init__(self, queue, device)
+	def __init__(self, broker, device, interval):
+		VirtualSensor.__init__(self, broker, device)
 		self._interval = interval
 
 	def get_type(self):

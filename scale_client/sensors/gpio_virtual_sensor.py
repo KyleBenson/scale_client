@@ -2,8 +2,8 @@ from scale_client.sensors.virtual_sensor import VirtualSensor
 #import RPi.GPIO as GPIO
 
 class GPIOVirtualSensor(VirtualSensor):
-	def __init__(self, queue, device, gpio_pin):
-		VirtualSensor.__init__(self, queue, device)
+	def __init__(self, broker, device, gpio_pin):
+		VirtualSensor.__init__(self, broker, device)
 		self._pin = gpio_pin
 		self._GPIO = None
 

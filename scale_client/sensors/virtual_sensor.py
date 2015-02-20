@@ -1,15 +1,14 @@
-from threading import Thread
+from scale_client.core import Application
 import logging
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
-class VirtualSensor(Thread):
+class VirtualSensor(Application):
     """VirtualSensors represent an abstract sensor feed, which may be raw data coming directly from a device, data
     coming from a remote device, or even events detected by other VirtualSensors"""
 
-    def __init__(self, queue, device):
-        Thread.__init__(self)
-        self._queue = queue
+    def __init__(self, broker, device):
+        super(VirtualSensor, self).__init__(self, broker)
         self.device = device
 
     def get_type(self):
@@ -27,7 +26,7 @@ class VirtualSensor(Thread):
     def report_event(self, ls_event):
         for event in ls_event:
             log.debug("Event added to queue by VS: %s" % event)
-            self._queue.put(event)
+            self._broker.put(event)
 
     def run(self):
         while True:

@@ -9,8 +9,8 @@ from scale_client.core.sensed_event import SensedEvent
 
 
 class PIRVirtualSensor(GPIOVirtualSensor):
-	def __init__(self, queue, device, gpio_pin, inact_threshold = 600):
-		GPIOVirtualSensor.__init__(self, queue, device, gpio_pin)
+	def __init__(self, broker, device, gpio_pin, inact_threshold = 600):
+		GPIOVirtualSensor.__init__(self, broker, device, gpio_pin)
 		self._state = PIRVirtualSensor.IDLE 
 		self._inact_timer = get_time()
 		self._inact_threshold = inact_threshold

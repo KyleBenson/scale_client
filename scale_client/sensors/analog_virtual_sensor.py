@@ -2,8 +2,8 @@ from scale_client.sensors.virtual_sensor import VirtualSensor
 #import spidev
 
 class AnalogVirtualSensor(VirtualSensor):
-	def __init__(self, queue, device, analog_port):
-		VirtualSensor.__init__(self, queue, device)
+	def __init__(self, broker, device, analog_port):
+		VirtualSensor.__init__(self, broker, device)
 		if analog_port >3 or analog_port < 0:
 			return -1
 		self._port = analog_port

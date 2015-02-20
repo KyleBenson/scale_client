@@ -5,8 +5,8 @@ from scale_client.sensors.pir_virtual_sensor import PIRVirtualSensor
 
 
 class DummyPIRVirtualSensor(PIRVirtualSensor):
-	def __init__(self, queue, device):
-		PIRVirtualSensor.__init__(self, queue, device, None)
+	def __init__(self, broker, device):
+		PIRVirtualSensor.__init__(self, broker, device, None)
 		self._rand = Random()
 		self._rand.seed()
 		self._darkflag = True

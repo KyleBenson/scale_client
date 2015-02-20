@@ -7,8 +7,8 @@ from scale_client.core.sensed_event import SensedEvent
 
 
 class GasVirtualSensor(AnalogVirtualSensor):
-	def __init__(self, queue, device, analog_port, threshold):
-		AnalogVirtualSensor.__init__(self, queue, device, analog_port)
+	def __init__(self, broker, device, analog_port, threshold):
+		AnalogVirtualSensor.__init__(self, broker, device, analog_port)
 		self._threshold = threshold
 
 	def get_type(self):

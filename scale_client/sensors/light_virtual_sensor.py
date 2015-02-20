@@ -6,8 +6,8 @@ from scale_client.core.sensed_event import SensedEvent
 
 
 class LightVirtualSensor(AnalogVirtualSensor):
-	def __init__(self, queue, device, analog_port, threshold, flash_delta = 600):
-		AnalogVirtualSensor.__init__(self, queue, device, analog_port)
+	def __init__(self, broker, device, analog_port, threshold, flash_delta = 600):
+		AnalogVirtualSensor.__init__(self, broker, device, analog_port)
 		self._threshold = threshold
 		self._state = LightVirtualSensor.DARK
 		self._flash_delta = flash_delta
