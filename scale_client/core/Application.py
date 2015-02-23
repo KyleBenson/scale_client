@@ -3,7 +3,7 @@ import logging
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
-
+# TODO: make this the abstract base version and do an implementation
 class Application(Thread):
     """
     Applications may subscribe to events and may respond to them

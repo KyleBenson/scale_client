@@ -1,11 +1,18 @@
-from scale_client.core import Application
+from scale_client.core import application
 import logging
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
-class VirtualSensor(Application):
-    """VirtualSensors represent an abstract sensor feed, which may be raw data coming directly from a device, data
-    coming from a remote device, or even events detected by other VirtualSensors"""
+
+class VirtualSensor(application):
+    """
+    VirtualSensors represent an abstract sensor feed, which may be raw data coming directly from a device, data
+    coming from a remote device, or even events detected by other VirtualSensors.
+
+    Open implementation questions:
+      1) How to handle sampling rates, modifying priorities, and turning sensors on/off remotely?
+      2)
+    """
 
     def __init__(self, broker, device):
         super(VirtualSensor, self).__init__(self, broker)
