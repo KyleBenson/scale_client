@@ -4,6 +4,11 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 # TODO: make this the abstract base version and do an implementation
+# TODO: have smart choosing of implementations where multiple classes are implemented in this module and
+# the one true "Application" implementation is exported as whichever the best of those is that can be imported
+# (or that is specified in config??).  It seems that handling this exporting in core/__init__.py will lead to issues
+# when another class, e.g. event_reporter, wants to import Application as relative imports apparently cannot be used
+# in a non-package
 class Application(Thread):
     """
     Applications may subscribe to events and may respond to them
