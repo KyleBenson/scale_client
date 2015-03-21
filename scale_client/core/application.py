@@ -144,7 +144,8 @@ class Application(circuits.BaseComponent):
     # NOTE: we have to implement these with separate functions in order to use the handler decorator
     #######################
 
-    @handler("SensedEvent")
+    # make sure to do channel * to override the fact that we explicitly set all Components' channels
+    @handler("SensedEvent", channel='*')
     def _on_event(self, event, *args):
         """
         This callback is where you should handle the Application's logic for responding to events to which it has

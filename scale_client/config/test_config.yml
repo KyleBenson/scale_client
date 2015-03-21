@@ -27,3 +27,6 @@ Sensors:
         class: "dummy_light_virtual_sensor.DummyLightVirtualSensor"
         dev_name: "light0"
         threshold: 400
+    - HighHeatSensor:
+        class: "high_heat_virtual_sensor.HighHeatVirtualSensor"
+        dev_name: "hheat0"
