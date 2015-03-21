@@ -1,15 +1,22 @@
-from threading import Thread
+import circuits
+# note that we'll always keep around a 'handler' decorator even if we stop using circuits!
+from circuits.core.handlers import handler
+from scale_client.core.sensed_event import SensedEvent
+
 import logging
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
-# TODO: make this the abstract base version and do an implementation
+
 # TODO: have smart choosing of implementations where multiple classes are implemented in this module and
 # the one true "Application" implementation is exported as whichever the best of those is that can be imported
 # (or that is specified in config??).  It seems that handling this exporting in core/__init__.py will lead to issues
 # when another class, e.g. event_reporter, wants to import Application as relative imports apparently cannot be used
 # in a non-package
-class Application(Thread):
+
+# TODO: make this the abstract base version and do an implementation
+#class AbstractApplication(object):
+class Application(circuits.BaseComponent):
     """
     Applications may subscribe to events and may respond to them
     (or some internal logic) by publishing events.
@@ -44,28 +51,39 @@ class Application(Thread):
     both between those on local and remote machines.
     """
 
-    def __init__(self, broker):
+    def __init__(self, broker=None):
         super(Application, self).__init__(self)
-        self._broker = broker
+        if broker is None:
+            raise NotImplementedError
+        self._register_broker(broker)
 
     # TODO: get_name()?
+
+    def _register_broker(self, broker):
+        """Connects this Application to the specified pub-sub event broker.  This method is automatically called for
+        you and should really only be used for testing purposes.
+
+        The circuits implementation registers the Component to the Broker"""
+        self._broker = broker
+        self.register(broker)
 
     def on_event(self, event, topic):
         """
         This callback is where you should handle the Application's logic for responding to events to which it has
-        subsribed.
+        subscribed.
         :param event: the Event just published
         :param topic: the Topic the Event was published to
         """
+        pass
 
-    def on_setup(self):
+    def on_start(self):
         """
         This callback is fired as soon as the Application is started.  Use it to handle any setup such as network
         connections, constructing classes, or subscribing to event Topics.
         """
         pass
 
-    def on_teardown(self):
+    def on_stop(self):
         """
         This callback is fired when an Application is shut down (including when the whole system is doing so).  Use it
         to free any resources, close network connections, save state, etc.
@@ -89,16 +107,20 @@ class Application(Thread):
         """
         pass
 
-    def publish(self, event, topic):
+    #TODO: unsubscribe?
+
+    def publish(self, event, topic=None):
         """
         Publishes the given Event to the given Topic
         :param event: Event to publish
         :param topic: Topic to publish to
         :return: a True-ish object if successful
         """
-        raise NotImplementedError()
+        if topic is None:
+            topic = event.__class__
+        ret = self._publish(event, topic)
         self.on_publish(event, topic)
-        return True
+        return ret
 
     def subscribe(self, topic):
         """
@@ -107,17 +129,75 @@ class Application(Thread):
         :param topic: the Topic to subscribe to
         :return: a True-ish object if successful
         """
-        raise NotImplementedError()
+        ret = self._subscribe(topic)
+        self.on_subscribe(topic)
+        return ret
 
-    def run(self):
+#TODO: this abstraction nonsense
+#class Application(circuits.Component, AbstractApplication):
+#    """This class implements the Application using the circuits library"""
+
+    # def __init__(self):
+    #     circuits.Component.__init__()
+
+    #######################
+    # NOTE: we have to implement these with separate functions in order to use the handler decorator
+    #######################
+
+    @handler("SensedEvent")
+    def _on_event(self, event, *args):
         """
-        This should always be called to start the Application.  You should expect, but not rely on, implementations of
-        Application to make this function asynchronous, that is it will likely return immediately and do the actual
-        starting up in the background.
+        This callback is where you should handle the Application's logic for responding to events to which it has
+        subscribed.
+        :param event: the Event just published
+        :param topic: the Topic the Event was published to
+        """
+        self.on_event(event, "SensedEvent")
+
+    @handler("started")
+    def _on_start(self, component):
+        """
+        This callback is fired as soon as the Application is started.  Use it to handle any setup such as network
+        connections, constructing classes, or subscribing to event Topics.
+        """
+        self.on_start()
+
+    @handler("stopped")
+    def _on_stop(self, component):
+        """
+        This callback is fired when an Application is shut down (including when the whole system is doing so).  Use it
+        to free any resources, close network connections, save state, etc.
+        """
+        self.on_stop()
+
+    def _publish(self, event, topic):
+        """
+        Publishes the given Event to the given Topic
+        :param event: Event to publish
+        :param topic: Topic to publish to
         :return: a True-ish object if successful
         """
-        raise NotImplementedError()
+        return self.fireEvent(event, topic)
 
-        while True:
-            data = self.read()
-            self.report_event(self.policy_check(data))
+    def _subscribe(self, topic):
+        """
+        Subscribes to the given Topic so that any Events being published to that Topic will be routed to this
+        Application via the on_event() callback.
+        :param topic: the Topic to subscribe to
+        :return: a True-ish object if successful
+        """
+        # TODO: this is going to be near-impossible with circuits alone since they've adopted the convention of
+        # subscribing by class type.  This doesn't allow hierarchies like "subscribe to all network-related events",
+        # let alone the advanced content-based subscriptions that we're going to want eventually... maybe channels???
+        raise NotImplementedError()
+        self.addHandler(f)
+
+    # TODO: determine what to do with this part of the API
+    # def run(self):
+    #     """
+    #     This should always be called to start the Application.  You should expect, but not rely on, implementations of
+    #     Application to make this function asynchronous, that is it will likely return immediately and do the actual
+    #     starting up in the background.
+    #     :return: a True-ish object if successful
+    #     """
+    #     return super(self.__class__, self).run()

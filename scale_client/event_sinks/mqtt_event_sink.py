@@ -6,19 +6,19 @@ from mosquitto import Mosquitto
 import logging
 log = logging.getLogger(__name__)
 
-from scale_client.publishers.publisher import Publisher
+from scale_client.event_sinks.event_sink import EventSink
 from uuid import getnode as get_mac
 
 
-class MQTTPublisher(Publisher):
-    def __init__(self, name='MQTT', queue_size=100, callback=None,
-                 topic="iot-1/d/%012x/evt/%s/json" % (get_mac(), "%s"),
+class MQTTEventSink(EventSink):
+    def __init__(self, broker,
+                topic="iot-1/d/%012x/evt/%s/json" % (get_mac(), "%s"),
                 hostname=None,
                 hostport=1883,
                 username=None,
                 password=None,
                 keepalive=60):
-        Publisher.__init__(self, name, queue_size, callback)
+        EventSink.__init__(self, broker)
         self._client = Mosquitto()
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
@@ -54,16 +54,14 @@ class MQTTPublisher(Publisher):
         self._loopflag = True
         return True
 
-    def connect(self):
+    def on_start(self):
         return self._try_connect()
 
-    def send(self, event):
-        self._queue.put(event)
-
-    def publish(self, encoded_event):
+    def send(self, encoded_event):
         # Fill in the blank "%s" left in self._topic
         import json
 
+        # extract the actual topic string
         event = json.loads(encoded_event)
         topic_event_type = event["d"]["event"]
         topic = self._topic % topic_event_type
@@ -80,16 +78,10 @@ class MQTTPublisher(Publisher):
             return False
         return True
 
-    def encode_event(self, event):
-        encoded_event = event.to_json()
-        return encoded_event
-
     def check_available(self, event):
         if not self._loopflag:
             if not self._try_connect():
                 log.error("MQTT publisher failure: Cannot connect")
                 return False
-
-        if self._queue.full():
-            return False
+        # TODO: backpressure?
         return True

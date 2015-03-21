@@ -1,10 +1,10 @@
-# Note that this still needs a SigfoxPublisher added to it; not officially tested!
+# Note that this still needs a SigfoxEventSink added to it; not officially tested!
 Main:
     event_queue_size: 4096
 
-Publishers:
-    - MqttPublisher:
-        class: "mqtt_publisher.MQTTPublisher"
+EventSinks:
+    - MqttEventSink:
+        class: "mqtt_event_sink.MQTTEventSink"
         hostname: "dime.smartamerica.io"
         #hostname: "m2m.eclipse.org"
         hostport: 1883

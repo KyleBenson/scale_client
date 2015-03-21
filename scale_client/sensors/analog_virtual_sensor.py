@@ -1,23 +1,36 @@
 from scale_client.sensors.virtual_sensor import VirtualSensor
-#import spidev
+
+import logging
+logging.basicConfig()
+log = logging.getLogger(__name__)
+
 
 class AnalogVirtualSensor(VirtualSensor):
-	def __init__(self, broker, device, analog_port):
-		VirtualSensor.__init__(self, broker, device)
-		if analog_port >3 or analog_port < 0:
-			return -1
-		self._port = analog_port
-		self._spi = None
+    """
+    This class is specifically designed to support Analog sensors attached to a ADC board on a Raspberry Pi.
+    """
 
-	def connect(self):
-		if self._spi is None:
-			import spidev
+    def __init__(self, broker, device=None, analog_port=None):
+        VirtualSensor.__init__(self, broker, device)
+        self._port = analog_port
+        self._spi = None
 
-			self._spi = spidev.SpiDev()
-		try:
-			self._spi.open(0,0)
-		except IOError:
-			print "Failed to open analog device: " + self.device.device
+    def read_raw(self):
+        raw_reading = self._spi.xfer2([1, 8 + self._port << 4, 0])
+        adcout = ((raw_reading[1] & 3) << 8) + raw_reading[2]
+        return adcout
 
-			return False
-		return True
+    def on_start(self):
+        if self._port > 3 or self._port < 0 or self._port is None:
+            raise ValueError("invalid analog port number")
+
+        if self._spi is None:
+            import spidev
+
+            self._spi = spidev.SpiDev()
+        try:
+            self._spi.open(0, 0)
+        except IOError:
+            log.error("Failed to open analog device: " + self.device.device)
+
+        super(AnalogVirtualSensor, self).on_start()

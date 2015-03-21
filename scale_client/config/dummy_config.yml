@@ -1,11 +1,8 @@
 # This configuration file spins up a client with dummy sensors and publishes via MQTT
 # ideal for testing on a laptop :)
-Main:
-    event_queue_size: 4096
-
-Publishers:
-    - MqttPublisher:
-        class: "mqtt_publisher.MQTTPublisher"
+EventSinks:
+    - MqttEventSink:
+        class: "mqtt_event_sink.MQTTEventSink"
         hostname: "dime.smartamerica.io"
         #hostname: "m2m.eclipse.org"
         hostport: 1883
@@ -24,16 +21,13 @@ Sensors:
     - DummyPirSensor:
         class: "dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
         dev_name: "pir0"
-        #gpio_pin: 17
     - DummyLightSensor:
         class: "dummy_light_virtual_sensor.DummyLightVirtualSensor"
         dev_name: "light0"
-        #analog_port: 3
         threshold: 400
     - DummyGasSensor:
         class: "dummy_gas_virtual_sensor.DummyGasVirtualSensor"
         dev_name: "gas0"
-        #analog_port: 0
         threshold: 500
     - DummyTempSensor:
         class: "dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"

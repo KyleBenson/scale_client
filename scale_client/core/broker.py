@@ -4,11 +4,12 @@ import logging
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
+#NOTE: THIS ISN'T NEEDED CURRENTLY SINCE CIRCUITS HANDLES ALL THE BROKERING!
 
 #TODO: abstract base class??  same with App?
 class Broker(Thread):
     """
-    This purely abstract base class represents the API for the local publish-subscribe broker than handles routing and
+    This purely abstract (TODO!!!!) base class represents the API for the local publish-subscribe broker than handles routing and
     delivery of generic Events in the whole system.  It works as a singleton object that, when instantiated, will fire
     any registered callbacks upon publication of a new Event.
 
@@ -52,5 +53,5 @@ class Broker(Thread):
         raise NotImplementedError()
 
         while True:
-            data = self.read()
+            data = self.read_raw()
             self.report_event(self.policy_check(data))

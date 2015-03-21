@@ -1,95 +1,78 @@
 from __future__ import print_function
-import time
 
 from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
 from scale_client.core.sensed_event import SensedEvent
 
 
 class LightVirtualSensor(AnalogVirtualSensor):
-	def __init__(self, broker, device, analog_port, threshold, flash_delta = 600):
-		AnalogVirtualSensor.__init__(self, broker, device, analog_port)
-		self._threshold = threshold
-		self._state = LightVirtualSensor.DARK
-		self._flash_delta = flash_delta
-		self._last_data	= None
+    def __init__(self, broker, device=None, analog_port=None, threshold=24.0, flash_delta=600):
+        AnalogVirtualSensor.__init__(self, broker, device=device, analog_port=analog_port)
+        self._threshold = threshold
+        self._state = LightVirtualSensor.DARK
+        self._flash_delta = flash_delta
+        self._last_data = None
 
-	DARK = 0
-	BRIGHT = 1
+    DARK = 0
+    BRIGHT = 1
 
-	def get_type(self):
-	#	return "Light Sensor"
-	#	return "SCALE_Light_RPi"
-		return "light"
+    def get_type(self):
+        return "light"
 
-	def read(self):
-		time.sleep(1)
-		raw_reading = self._spi.xfer2([1,8+self._port <<4,0])
-		adcout = ((raw_reading[1] &3) <<8)+raw_reading[2]
-		return adcout
+    def read(self):
+        event = super(LightVirtualSensor, self).read()
+        event.data['condition'] = self.__get_condition()
+        return event
 
-	def policy_check(self, data):
-		ls_event = []
-		if self._state == LightVirtualSensor.DARK:
-			if data < self._threshold:
-				pass
-			if data > self._threshold:
-				self._state = LightVirtualSensor.BRIGHT
-				ls_event.append(
-					SensedEvent(
-						sensor = self.device.device,
-						msg = {
-							"event": self.get_type(), #"SCALE_bright_environment_RPi",
-							"value": data,
-							"condition": {
-								"threshold": {
-									"operator": ">",
-									"value": self._threshold
-								}
-							}
-						},
-						priority = 7
-					)
-				)		 
-		if self._state == LightVirtualSensor.BRIGHT:
-			if data > self._threshold:
-				pass
-			if data < self._threshold:
-				self._state = LightVirtualSensor.DARK
-				ls_event.append(
-					SensedEvent(
-						sensor = self.device.device,
-						msg = {
-							"event": self.get_type(), #"SCALE_dark_environment_RPi",
-							"value": data,
-							"condition": {
-								"threshold": {
-									"operator": "<",
-									"value": self._threshold
-								}
-							}
-						},
-						priority = 7
-					)
-				)
-				
-		# Flash light detection
-		if self._last_data is not None:
-			if (data-self._last_data) > self._flash_delta:
-				ls_event.append(
-					SensedEvent(
-						sensor = self.device.device,
-						msg = {
-							"event": self.get_type(), #"SCALE_flash_environment_RPi",
-							"value": (data-self._last_data),
-							"condition": {
-								"delta": {
-									"operator": ">",
-									"value": self._flash_delta
-								}
-							}
-						},
-						priority = 7
-					)
-				) 	
-		self._last_data = data
-		return ls_event
+    def __get_condition(self):
+        if self._state == LightVirtualSensor.DARK:
+            return {"threshold": {
+                "operator": ">",
+                "value": self._threshold
+                }
+            }
+        elif self._state == LightVirtualSensor.BRIGHT:
+            return {"threshold": {
+                "operator": "<",
+                "value": self._threshold
+                }
+            }
+
+    def policy_check(self, data):
+        """
+        Only report the data if the light level has transitioned from light to dark or vice-versa.  This function also
+        checks if the sensor has detected a bright flash above some delta value since the last reading and publishes a
+        "light_flash" event if so.
+        :param data: SensedEvent to check
+        :return bool:
+        """
+        data = float(data.get_raw_data())
+        success = False
+
+        if self._state == LightVirtualSensor.DARK and data > self._threshold:
+            self._state = LightVirtualSensor.BRIGHT
+            success = True
+        elif self._state == LightVirtualSensor.BRIGHT and data < self._threshold:
+            self._state = LightVirtualSensor.DARK
+            success = True
+
+        # Flash light detection.  Note that it doesn't require crossing the threshold.
+        if self._last_data is not None:
+            if (data-self._last_data) > self._flash_delta:
+                self.publish(
+                    SensedEvent(
+                        sensor=self.device.device,
+                        data={
+                            "event": "light_flash",
+                            "value": (data-self._last_data),
+                            "condition": {
+                                "delta": {
+                                    "operator": ">",
+                                    "value": self._flash_delta
+                                }
+                            }
+                        },
+                        priority=7
+                    )
+                )
+        self._last_data = data
+        return success

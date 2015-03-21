@@ -6,9 +6,11 @@ log = None
 from Queue import Queue
 
 from scale_client.core.device_descriptor import DeviceDescriptor
-#import scale_client.publishers as publishers, scale_client.sensors as sensors
+#import scale_client.event_sinks as event_sinks, scale_client.sensors as sensors
 
 from event_reporter import EventReporter
+# TODO: obfuscate this within a Broker class
+from circuits.core.manager import Manager as Broker
 
 
 class ScaleClient:
@@ -16,115 +18,112 @@ class ScaleClient:
     overall Scale Client software.
     """
     def __init__(self, config_filename):
+        self.__broker = None
+        self.__reporter = None
+        self.__sensors = []
+        self.__applications = None
         try:
+            log.info("Reading config file: %s" % config_filename)
             with open(config_filename) as cfile:
                 cfg = yaml.load(cfile)
                 # lower-case all top-level headings to tolerate different capitalizations
                 cfg = {k.lower(): v for k, v in cfg.items()}
 
                 # verify required entries present
-                required_entries = ('main',)
-                for ent in required_entries:
-                    if ent not in cfg:
-                        raise Exception("Required entry %s not present in config file." % ent)
+                # required_entries = ('main',)
+                # for ent in required_entries:
+                #     if ent not in cfg:
+                #         raise Exception("Required entry %s not present in config file." % ent)
 
                 # call appropriate handlers for each section in the appropriate order
 
                 if 'main' in cfg:
+                    self.setup_broker(cfg['main'])
                     self.setup_reporter(cfg['main'])
                 else:
+                    self.setup_broker({})
                     self.setup_reporter({})
-                if 'publishers' in cfg:
-                    self.setup_publishers(cfg['publishers'])
+                if 'eventsinks' in cfg:
+                    self.setup_event_sinks(cfg['eventsinks'])
                 if 'sensors' in cfg:
                     self.setup_sensors(cfg['sensors'])
+                if 'applications' in cfg:
+                    self.setup_applications(cfg['applications'])
 
         except IOError as e:
             log.error("Error reading config file: %s" % e)
+            exit(1)
 
     def setup_reporter(self, cfg):
 
-        # Create sensed event queue
-        qsize = cfg['event_queue_size'] if 'event_queue_size' in cfg else 4096
-        self.queue = Queue(qsize)
+        if self.__broker is None:
+            self.setup_broker(cfg)
 
-        # Create and start event reporter
-        self.reporter = EventReporter(self.queue)
-        self.reporter.daemon = True
-        self.reporter.start()
+        self.__reporter = EventReporter(self.__broker)
 
-    def setup_publishers(self, publishers):
-        for p in (pub.values()[0] for pub in publishers):
+    def setup_broker(self, cfg):
+        """
+        Currently only creates a dummy Broker object for registering Applications to.
+
+        :param cfg:
+        :return:
+        """
+        self.__broker = Broker()
+
+    def setup_event_sinks(self, sink_configurations):
+        for sink_config in (sink.values()[0] for sink in sink_configurations):
             # need to get class definition to call constructor
-            if 'class' not in p:
-                log.warn("Skipping publisher with no class definition: %s" % p)
+            if 'class' not in sink_config:
+                log.warn("Skipping EventSink with no class definition: %s" % sink_config)
                 continue
-
-            # this line lets us tolerate just e.g. mqtt_publisher.MQTTPublisher as a relative pathname
-            cls_name = p['class'] if 'scale_client.publishers' in p['class'] else 'scale_client.publishers.' + p['class']
-            cls = self._get_class_by_name(cls_name)
-
-            # make a copy of config so we can tweak it to expose only correct kwargs
-            newp = p.copy()
-            # TODO: not have to do this here??
-            newp['callback'] = self.reporter.send_false_callback
-            newp.pop('class')
-
             try:
-                pub = cls(**newp)
-                if pub.connect():
-                    self.reporter.append_publisher(pub)
-                    pub.daemon = True
-                    pub.start()
-                else:
-                    log.warn("Error connecting publisher after configuration: %s" % p)
-                    pass
+                # this line lets us tolerate just e.g. mqtt_event_sink.MQTTEventSink as a relative pathname
+                cls_name = sink_config['class'] if 'scale_client.event_sinks' in sink_config['class']\
+                    else 'scale_client.event_sinks.' + sink_config['class']
+                cls = self._get_class_by_name(cls_name)
 
-                log.info("Publisher created from config: %s" % p)
+                # make a copy of config so we can tweak it to expose only correct kwargs
+                new_sink_config = sink_config.copy()
+                new_sink_config.pop('class')
+
+                sink = cls(self.__broker, **new_sink_config)
+
+                self.__reporter.add_sink(sink)
+                log.info("EventSink created from config: %s" % sink_config)
             except Exception as e:
-                log.error("Unexpected error while creating publisher: %s" % e)
+                log.error("Unexpected error while creating EventSink: %s" % e)
 
-    def setup_sensors(self, cfg):
-        # Create and start each virtual sensor listed in config
-        ls_vs = []
-        for s in (c.values()[0] for c in cfg):
+    def setup_sensors(self, sensor_configurations):
+        n_sensors = 0
+        for sensor_config in (c.values()[0] for c in sensor_configurations):
             # need to get class definition to call constructor
-            if 'class' not in s:
-                log.warn("Skipping virtual sensor with no class definition: %s" % s)
+            if 'class' not in sensor_config:
+                log.warn("Skipping virtual sensor with no class definition: %s" % sensor_config)
                 continue
 
             try:
-                cls_name = s['class'] if 'scale_client.sensors' in s['class'] else 'scale_client.sensors.' + s['class']
+                cls_name = sensor_config['class'] if 'scale_client.sensors' in sensor_config['class']\
+                    else 'scale_client.sensors.' + sensor_config['class']
                 cls = self._get_class_by_name(cls_name)
 
                 # copy config s so we can tweak it as necessary to expose only correct kwargs
-                news = s.copy()
-                news.pop('class')
-                news.pop('dev_name')
+                new_sensor_config = sensor_config.copy()
+                new_sensor_config.pop('class')
+                new_sensor_config.pop('dev_name')
 
-                vs = cls(self.queue, DeviceDescriptor(news.get("dev_name", "vs%i" % len(ls_vs))), **news)
-                if vs.connect():
-                    ls_vs.append(vs)
-                else:
-                    log.warn("Error connecting virtual sensor after configuration: %s" % s)
-                    pass
-
-                log.info("Virtual sensor created from config: %s" % s)
+                cls(self.__broker, device=DeviceDescriptor(new_sensor_config.get("dev_name", "vs%i" % n_sensors)),
+                    **new_sensor_config)
+                n_sensors += 1
+                log.info("Virtual sensor created from config: %s" % sensor_config)
 
             except Exception as e:
-                log.error("Unexpected error (%s) while creating virtual sensor: %s" % (e, s))
+                log.error("Unexpected error (%s) while creating virtual sensor: %s" % (e, sensor_config))
                 continue
-
-        # Start all the sensors
-        for vs_j in ls_vs:
-            vs_j.daemon = True
-            vs_j.start()
 
     def run(self):
         """Currently just loop forever to allow the other threads to do their work."""
         # TODO: handle this with less overhead?
-        while True:
-            time.sleep(1)
+        self.__broker.run()
 
     def _get_class_by_name(self,kls):
         """Imports and returns a class reference for the full module name specified in regular Python import format"""
@@ -149,7 +148,7 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description="Scale Client main process")
 
-    parser.add_argument('--config', type=str, nargs=1,
+    parser.add_argument('--config', type=str,
                         # config files are located in a different directory
                         default=os.path.join(os.path.dirname(__file__), '..', 'config', 'default_config.yml'),
                         help='''file from which to read configuration''')

@@ -9,24 +9,24 @@ class EventReporter(Application):
     Rather, it decides which SensedEvents to report when and then chooses from the
     available Publishers the ideal one to report the data via.
     """
-    def __init__(self, queue):
-        super(EventReporter, self).__init__(self)
-        self._queue = queue
-        self._ls_pb = []
-        self._ls_queue = []
+    def __init__(self, broker):
+        super(EventReporter, self).__init__(broker)
+        self.__sinks = []
 
-    def append_publisher(self, pb):
-        self._ls_pb.append(pb)
+    def add_sink(self, sink):
+        """
+        Registers the given EventSink with the EventReporter.  Note that the order in which you add them matters as we
+        currently have no other way of distinguishing the priority in which the EventReporter should consider each
+        EventSink (currently it tries the first added one, then second...).
+        :param sink:
+        """
+        self.__sinks.append(sink)
 
-    def send_false_callback(self, pb, event, false_reason):
-        # TODO: Need to have a send fail dealing policy, Now we just discard
-        print pb.get_name()+" send failed"
-        return True
+    # TODO: remove_sink???
 
-    def run(self):
-        while True:
-            event = self._queue.get()
-
-            for pb_j in self._ls_pb:
-                if pb_j.check_available(event):
-                    pb_j.send(event)
+    def on_event(self, event, topic):
+        """Every time any SensedEvent is published, we should determine whether to report it or not and then do so."""
+        for sink in self.__sinks:
+            if sink.check_available(event):
+                sink.send_event(event)
+                # TODO: only send via one of the sinks?

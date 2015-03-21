@@ -1,0 +1,29 @@
+# This configuration file spins up a client with dummy sensors and publishes via MQTT
+# ideal for testing on a laptop :)
+EventSinks:
+    - LogEventSink:
+        class: "log_event_sink.LogEventSink"
+
+Sensors:
+    - HBSensor:
+        class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
+        dev_name: "hb0"
+        #interval: 1
+    - DummySeismicSensor:
+        class: "dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
+        dev_name: "accel"
+    - DummyPirSensor:
+        class: "dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
+        dev_name: "pir0"
+    - DummyGasSensor:
+        class: "dummy_gas_virtual_sensor.DummyGasVirtualSensor"
+        dev_name: "gas0"
+        threshold: 500
+    - DummyTempSensor:
+        class: "dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
+        dev_name: "cel0"
+        threshold: 24.0
+    - DummyLightSensor:
+        class: "dummy_light_virtual_sensor.DummyLightVirtualSensor"
+        dev_name: "light0"
+        threshold: 400

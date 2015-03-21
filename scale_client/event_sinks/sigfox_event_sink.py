@@ -1,50 +1,55 @@
 ##1. install python serial package, details can be found at http://pyserial.sourceforge.net/pyserial.html#installation
 ##2. change the permission of your device, using "chmod o+rw". In my machine, it is "sudo chmod o+rw /dev/ttyUSB0"
 
-import time
+import logging
+log = logging.getLogger(__name__)
 
-from scale_client.publishers.publisher import Publisher
+from scale_client.event_sinks.event_sink import EventSink
+from scale_client.core.application import handler
 import serial
 
+from circuits.core.timers import Timer
+from circuits.core.events import Event
 
-class SigfoxPublisher(Publisher):
-    def __init__(self, name, queue_size, callback):
-        Publisher.__init__(self, name, queue_size, callback)
-        self._ser = None
-        self._event_type_json_file = "event_type.json"
 
-    def _ex_handler(self, obj):
-        template = "An exception of type {0} occured. Arguments:\n{1!r}"
-        message = template.format(type(obj).__name__, obj.args)
-        print message
+class SigfoxCheckEventSent(Event):
+    """Signals the SigfoxEventSink to check whether the event was successfully sent."""
 
-    def connect(self,
+
+class SigfoxEventSink(EventSink):
+    def __init__(self,
                 _port='/dev/ttyUSB0',
                 _baudrate=9600,
                 _parity=serial.PARITY_NONE,
                 _stopbits=serial.STOPBITS_ONE,
                 _bytesize=serial.EIGHTBITS):
-        try:
-            self._ser = serial.Serial(
+        EventSink.__init__(self)
+        self._event_type_json_file = "event_type.json"
+        self.__is_available = False
+
+        self._ser = serial.Serial(
                 port=_port,
                 baudrate=_baudrate,
                 parity=_parity,
                 stopbits=_stopbits,
                 bytesize=_bytesize
             )
-        except Exception as err:
-            self._ex_handler(err)
-            return False
 
-        if (not self._ser.isOpen()):
+    def check_available(self, event):
+        return self.__is_available
+
+    def _ex_handler(self, obj):
+        template = "An exception of type {0} occured. Arguments:\n{1!r}"
+        message = template.format(type(obj).__name__, obj.args)
+        log.error(message)
+
+    def on_start(self):
+        if not self._ser.isOpen():
             self._ser.open()
-        print("Sigfox adapter connected")
-        return True
+        log.info("Sigfox adapter connected")
+        self.__is_available = True
 
-    def send(self, event):
-        self._queue.put(event)
-
-    def publish(self, coded_event):
+    def send(self, coded_event):
         #TODO: should define false code to indicate different fault reason
         #if coded_event is False:
         #    return False
@@ -56,17 +61,37 @@ class SigfoxPublisher(Publisher):
             self._ex_handler(err)
             return False
 
-            # check that message was sent ok (no way to check that it was received!)
-        time.sleep(7)
-        #TODO: fix this sleep interval so it doesn't block the whole event reporter
-        return self.receive()
+        self.__is_available = False
+        # check that message was sent ok after a timeout (no way to check that it was received!)
+        self.set_event_check_timer()
+
+    def set_event_check_timer(self, time_to_wait=7):
+        """
+        Sets a timer so that the SigfoxEventSink will check whether the event was successfully sent after the given
+        time interval has expired.
+        :param time: a number of seconds to wait or a datetime object representing when the check should be done
+        """
+        try:
+            self.__timer.reset(time_to_wait)
+        except AttributeError:
+            self.__timer = Timer(time_to_wait, SigfoxCheckEventSent())
+            self.__timer.register(self)
+
+    @handler("SigfoxCheckEventSent")
+    def check_event_sent(self):
+        #TODO: do this asynchronously so we don't always wait 7 seconds???
+        if self.receive():
+            self.__is_available = True
+        else:
+            log.error("Unable to receive() reply from Sigfox adapter. Resetting timer...")
+            self.set_event_check_timer()
 
     def receive(self):
         #read message from the sigfox adapter
         ret = ''  #return message read
         while self._ser.inWaiting() > 0:
             ret += self._ser.read(1)
-        print ("read from sigfox adapter: " + ret)
+        log.debug("read from sigfox adapter: " + ret)
         ret_strings = ret.split('\r\n')
         try:
             if ret_strings[1] == "OK":
@@ -74,14 +99,14 @@ class SigfoxPublisher(Publisher):
             else:
                 return False
         except IndexError:
-            print "Index Error when dealing with Sigfox return "
+            log.error("Index Error when dealing with Sigfox return ")
             return False
 
     def encode_event(self, event):
         import json
         import ctypes
         import os
-        print event.msg
+        log.debug("encoding event: %s" % event.msg)
 
         #The Structure of Sigfox message:
         #  at$ss="payload_part"
@@ -113,7 +138,7 @@ class SigfoxPublisher(Publisher):
         try:
             event_type_encoded = type_info[event_type_original]
         except KeyError:
-            print "Unknown Event: " + event_type_original
+            log.error("Unknown Event: " + event_type_original)
             return False
         hex_payload_type = event_type_encoded
 
@@ -139,7 +164,7 @@ class SigfoxPublisher(Publisher):
         # 4. Encode Priority
         priority_original = event.priority
         if priority_original < 0 or priority_original > 15:
-            print "Priority Value Out of Range"
+            log.warn("Priority Value Out of Range")
 
         hex_payload_priority = hex(priority_original)[2] #[0:1] = '0x'
 
@@ -151,40 +176,5 @@ class SigfoxPublisher(Publisher):
 
         # Publish message "||" can be redefined. but '\r\n' is mandatory
         coded_event = "at$ss=" + hex_payload + "\r\n"
-        print "Sigfox Ready to Send: " + str(coded_event)
+        log.debug("Sigfox Ready to Send: " + str(coded_event))
         return str(coded_event)
-
-    def check_available(self, event):
-        if self._queue.qsize() < (self._queue_size):
-            return True
-        else:
-            return False
-
-
-'''
-	def run(self):
-		while True:
-			event = self._queue.get()	
-			ret = self.publish(self.encode_event(event))	
-			print "published: "
-			if ret == False:
-				self._queue.put(event)
-'''
-'''
-#Debug use, run sigfoxpubisher independently
-def main():
-	sig=SigfoxPublisher()
-
-	if(sig.connect()):
-		event=SensedEvent("SampleSensor", "SampleMSG", 1)
-		sig.send(event)#convert event to sigfox format here!
-		ret_event = self._queue.get()
-				ret = self.publish(self.encode_event(ret_event))
-				if ret == False:
-					self._queue.put(ret_event)
-	else:
-		exit
-
-if __name__ == "__main__":
-	main()
-'''
