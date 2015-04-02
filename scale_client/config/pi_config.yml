@@ -23,21 +23,22 @@ Sensors:
     - PirSensor:
         class: "pir_virtual_sensor.PIRVirtualSensor"
         dev_name: "pir0"
-        #gpio_pin: 17
+        gpio_pin: 17
     - LightSensor:
         class: "light_virtual_sensor.LightVirtualSensor"
         dev_name: "light0"
-        #analog_port: 3
+        analog_port: 3
         threshold: 400
     - GasSensor:
         class: "gas_virtual_sensor.GasVirtualSensor"
         dev_name: "gas0"
-        #analog_port: 0
+        analog_port: 0
         threshold: 500
-    - TempSensor:
-        class: "temperature_virtual_sensor.TemperatureVirtualSensor"
-        dev_name: "cel0"
-        threshold: 24.0
-    - SeismicSensor:
-        class: "csn_virtual_sensor.CSNVirtualSensor"
-        dev_name: "accel"
+    # - TempSensor:
+    #     class: "temperature_virtual_sensor.TemperatureVirtualSensor"
+    #     dev_name: "cel0"
+    #     threshold: 24.0
+    # - SeismicSensor:
+    #     class: "csn_virtual_sensor.CSNVirtualSensor"
+    #     dev_name: "accel"
+
