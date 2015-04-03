@@ -23,7 +23,7 @@ setup(name = NAME,
       packages = PACKAGES,
       package_data = PACKAGE_DATA,
       data_files = DATA_FILES,
-      install_requires = ['circuits', 'pyserial', 'mosquitto',
+      requires = ['circuits', 'pyserial', 'mosquitto',
               # TODO: how to only require this on a pi?
               # 'spidev',
               ]
