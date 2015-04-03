@@ -20,9 +20,13 @@ DIR=/usr/local/scale/scale_client/core
 DAEMON="$PYTHON"
 DAEMON_OPTS="-m scale_client"
 
-PIP_LS=$(pip freeze)
-echo "$PIP_LS" | grep -q "scale\-client"
+#PIP_LS=$(pip freeze)
+#echo "$PIP_LS" | grep -q "scale\-client"
+
+MODULE_TEST=$($PYTHON -c 'import scale_client; print scale_client.__name__')
+echo "$MODULE_TEST" | grep -q "scale_client"
 if [ $? -eq 0 ]; then # If module scale_client is found in pip list
+
 MODULE_PATH=$($PYTHON -c 'import scale_client; import os; print os.path.dirname(scale_client.__file__)')
 CONFIG_PATH="$MODULE_PATH/config"
 
