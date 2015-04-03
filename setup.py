@@ -1,20 +1,32 @@
 #!/usr/bin/env python
 
+import socket
 from distutils.core import setup
 
-setup(name='scale_client',
-      version='0.2',
-      description='Safe Community Awareness and Alerting Network (SCALE) client',
-      author='Kyle Benson',
-      author_email='kebenson@uci.edu',
-      url='https://github.com/KyleBenson/SmartAmericaSensors',
-      packages=['scale_client', 'scale_client.core',
-                'scale_client.sensors', 'scale_client.event_sinks'],
-      requires=['circuits', 'pyserial',
-                'mosquitto',
-                # TODO: how to only require this on a pi?
-                # 'spidev',
-                ]
+NAME = "scale_client"
+VERSION = "0.2"
+DESC = "Safe Community Awareness and Alerting Network (SCALE) client"
+AUTHOR = "Kyle Benson"
+AUTHOR_EMAIL = "kebenson@uci.edu"
+URL = "https://github.com/KyleBenson/SmartAmericaSensors"
+PACKAGES = ["scale_client", "scale_client.core",
+            "scale_client.sensors", "scale_client.event_sinks"]
+PACKAGE_DATA = {"scale_client": ["config/default_config.yml"]}
+DATA_FILES = [("/etc/init.d", ["scripts/scale_daemon"])]
+
+setup(name = NAME,
+      version = VERSION,
+      description = DESC,
+      author = AUTHOR,
+      author_email = AUTHOR_EMAIL,
+      url = URL,
+      packages = PACKAGES,
+      package_data = PACKAGE_DATA,
+      data_files = DATA_FILES,
+      requires = ['circuits', 'pyserial',
+                  'mosquitto',
+                  # TODO: how to only require this on a pi?
+                  # 'spidev',
+                 ]
       )
 
-#TODO: replace mosquitto with paho?

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ### BEGIN INIT INFO
-# Provides:          myservice
+# Provides:          scale_daemon 
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
@@ -11,17 +11,34 @@
 ### END INIT INFO
 #     update-rc.d scale defaults
 
+PYTHON="`which python`"
+
 # Change the next 3 lines to suit where you install your script and what you want to call it
 DIR=/usr/local/scale/scale_client/core
 # scale-client has been successfully installed
-if [[ `pip freeze` =~ "scale-client" ]];
-then DAEMON="`which python` -- -m scale_client";
-# this assumes the sheevaplugs are named sheevaplug##
-elif [grep sheeva /etc/hostname];
-then DAEMON=$DIR/client_sheeva.py;
-else DAEMON=$DIR/client_pi.py;
+
+DAEMON="$PYTHON"
+DAEMON_OPTS="-m scale_client"
+
+PIP_LS=$(pip freeze)
+echo "$PIP_LS" | grep -q "scale\-client"
+if [ $? -eq 0 ]; then # If module scale_client is found in pip list
+MODULE_PATH=$($PYTHON -c 'import scale_client; import os; print os.path.dirname(scale_client.__file__)')
+CONFIG_PATH="$MODULE_PATH/config"
+
+#echo "MODULE_PATH=$MODULE_PATH"
+#echo "CONFIG_PATH=$CONFIG_PATH"
+
+if grep -q sheeva /etc/hostname; then #XXX
+DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/sheeva_config.yml"
+elif grep -q pi /etc/hostname; then
+DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/pi_config.yml"
 fi
-DAEMON_NAME=scale
+
+else exit 2; # If module scale_client is not found in pip list
+fi
+
+DAEMON_NAME=scale_daemon
 
 # This next line determines what user the script runs as.
 # Root generally not recommended but necessary if you are using the Raspberry Pi GPIO from Python.
@@ -33,34 +50,30 @@ PIDFILE=/var/run/$DAEMON_NAME.pid
 . /lib/lsb/init-functions
 
 do_start () {
-    log_daemon_msg "Starting system $DAEMON_NAME daemon"
-    start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMON
+    log_daemon_msg "Starting SCALE client" "$DAEMON_NAME"
+    start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMON -- $DAEMON_OPTS
+    log_end_msg $?
+	do_status
+  }
+do_stop () {
+    log_daemon_msg "Stopping SCALE client" "$DAEMON_NAME"
+    start-stop-daemon --stop --pidfile $PIDFILE --retry 10
     log_end_msg $?
   }
-  do_stop () {
-     log_daemon_msg "Stopping system $DAEMON_NAME daemon"
-     start-stop-daemon --stop --pidfile $PIDFILE --retry 10
-     log_end_msg $?
-     }
+do_status () {
+    status_of_proc -p $PIDFILE $DAEMON "SCALE client" && exit 0 || exit $?
+  }
 
 case "$1" in
-
-    start|stop)
+    start|stop|status)
             do_${1}
     ;;
-
     restart|reload|force-reload)
             do_stop
             do_start
     ;;
-
-    status)
-            status_of_proc "$DAEMON_NAME" "$DAEMON" && exit 0 || exit $?
-    ;;
-                        
 	*)
-    		echo "Usage: /etc/init.d/$DAEMON_NAME {start|stop|restart|status}"
+            echo "Usage: /etc/init.d/$DAEMON_NAME {start|stop|restart|status}"
             exit 1
-     ;;
-
+    ;;
 esac
