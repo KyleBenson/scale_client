@@ -34,8 +34,8 @@ Sensors:
         dev_name: "gas0"
         analog_port: 0 
         threshold: 500
-    - RawAnalogSensor:
-        class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
-        dev_name: "raw2"
-        analog_port: 2
+    #- RawAnalogSensor:
+    #    class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
+    #    dev_name: "raw2"
+    #    analog_port: 2
 
