@@ -3,7 +3,7 @@ Main:
     event_queue_size: 4096
 
 EventSinks:
-    - MqttPublisher:
+    - MQTTPublisher:
         class: "mqtt_event_sink.MQTTEventSink"
         hostname: "dime.smartamerica.io"
         #hostname: "m2m.eclipse.org"
@@ -20,7 +20,7 @@ Sensors:
         class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
         dev_name: "hb0"
         interval: 60
-    - PirSensor:
+    - PIRSensor:
         class: "pir_virtual_sensor.PIRVirtualSensor"
         dev_name: "pir0"
         gpio_pin: 17
@@ -34,13 +34,6 @@ Sensors:
         dev_name: "gas0"
         analog_port: 0 
         threshold: 500
-    # - TempSensor:
-    #     class: "temperature_virtual_sensor.TemperatureVirtualSensor"
-    #     dev_name: "cel0"
-    #     threshold: 24.0
-    # - SeismicSensor:
-    #     class: "csn_virtual_sensor.CSNVirtualSensor"
-    #     dev_name: "accel"
     - RawAnalogSensor:
         class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
         dev_name: "raw2"
