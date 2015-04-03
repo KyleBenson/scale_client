@@ -15,18 +15,16 @@ class RelayEventSink(EventSink):
 
     def on_start(self):
 	# check to see if the current node has any neighbor
-
-	return false
+		return false
 
     def send(self, encoded_event):
-
-	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-	for neighbor in self.__neighbors:
-		sock.sendto(encoded_event, (neighbor, self.__relay_port))
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+		for neighbor in self.__neighbors:
+			sock.sendto(encoded_event, (neighbor, self.__relay_port))
     		log.info("Forwarding sensed events to neighbor " + neighbor)
 
     def check_available(self, event):
         if not self._loopflag:
-                return False
+        	return False
         # TODO: backpressure?
         return True

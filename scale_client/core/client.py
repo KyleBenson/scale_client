@@ -123,6 +123,8 @@ class ScaleClient:
     def run(self):
         """Currently just loop forever to allow the other threads to do their work."""
         # TODO: handle this with less overhead?
+	log.debug('hi there')
+	print 'hi there'
         self.__broker.run()
 
     def _get_class_by_name(self,kls):

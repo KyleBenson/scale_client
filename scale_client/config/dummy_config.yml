@@ -11,7 +11,10 @@ EventSinks:
         password: null
         #password: "xottyHH5j9v2"
         keepalive: 60
-        #need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
+		#need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
+	- RelayScannerEventSink:
+		class: "relay_scanner_event_sink.RelayScannerEventSink"
+		interval: 10
 
 Sensors:
     - HBSensor:
