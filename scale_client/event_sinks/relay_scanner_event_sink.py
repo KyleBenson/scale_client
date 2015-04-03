@@ -13,7 +13,7 @@ class SigfoxCheckEventSent(Event):
 
 
 class RelayScannerEventSink(EventSink):
-	def __init__(self, _scan_interval=10):
+	def __init__(self, interval=10):
         	EventSink.__init__(self)
 
 	def check_available(self, event):
