@@ -12,9 +12,6 @@ EventSinks:
         #password: "xottyHH5j9v2"
         keepalive: 60
         #need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
-    - RelayScannerEventSink:
-        class: "relay_scanner_event_sink.RelayScannerEventSink"
-        scan_interval: 10
 
 Sensors:
     - HBSensor:
@@ -39,3 +36,7 @@ Sensors:
     - DummySeismicSensor:
         class: "dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
         dev_name: "accel"
+    - RemoteSensor:
+        class: "remote_virtual_sensor.RemoteVirtualSensor"
+        relay_port: 3868
+        dev_name: "remoteSensor"
