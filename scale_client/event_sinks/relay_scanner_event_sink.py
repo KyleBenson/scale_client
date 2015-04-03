@@ -35,8 +35,8 @@ class RelayScannerEventSink(EventSink):
             self.__timer.register(self)
 
     @handler("SigfoxCheckEventSent")
-	def check_event_sent(self):
-		#TODO: do this asynchronously so we don't always wait 7 seconds???
+    def check_event_sent(self):
+    	#TODO: do this asynchronously so we don't always wait 7 seconds???
         if self.receive():
 			print ('receiving something ... ')
 		else:
