@@ -1,7 +1,6 @@
 from threading import Thread
 
 import logging
-logging.basicConfig()
 log = logging.getLogger(__name__)
 
 #NOTE: THIS ISN'T NEEDED CURRENTLY SINCE CIRCUITS HANDLES ALL THE BROKERING!

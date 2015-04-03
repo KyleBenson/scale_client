@@ -1,7 +1,7 @@
 from scale_client.core.application import Application
 from scale_client.core.sensed_event import SensedEvent
+
 import logging
-logging.basicConfig()
 log = logging.getLogger(__name__)
 
 from circuits.core.events import Event

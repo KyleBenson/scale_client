@@ -1,7 +1,6 @@
 from scale_client.sensors.virtual_sensor import VirtualSensor
 
 import logging
-logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
