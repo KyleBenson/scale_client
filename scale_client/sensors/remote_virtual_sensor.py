@@ -6,7 +6,6 @@ from scale_client.sensors.virtual_sensor import VirtualSensor
 from scale_client.network.scale_network_manager import ScaleNetworkManager
 
 import logging
-logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
