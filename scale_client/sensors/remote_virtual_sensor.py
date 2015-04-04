@@ -1,7 +1,9 @@
 import re
 import subprocess
 import socket
+import json
 from scale_client.sensors.virtual_sensor import VirtualSensor
+from scale_client.network.scale_network_manager import ScaleNetworkManager
 
 import logging
 logging.basicConfig()
@@ -12,7 +14,10 @@ class RemoteVirtualSensor(VirtualSensor):
     def __init__(self, broker, relay_port=3868, device=None):
         VirtualSensor.__init__(self, broker, device)
         self.relay_port = relay_port
-        print 'initial'
+        # Need to call network manager to get node
+        # wireless mesh mac interface and status of each 
+        # available interfaces: wifi, batman and ethernet
+	    self.__networkManager = ScaleNetworkManager()
 
     def get_type(self):
         return "remoteSensor"
@@ -20,13 +25,7 @@ class RemoteVirtualSensor(VirtualSensor):
     def on_start(self):
         # TODO: asynchronous callback when something is actually available on this pipe
 		super(RemoteVirtualSensor, self).on_start()
-		print 'remote virtual sensor on start'
 
-    def read_raw(self):
-		reading = 'sensor is reading'
-		print reading
-		return 'remoteSensor'
-    
     def read(self):
         #Override VirtualSensor read() method
         super(RemoteVirtualSensor, self).read()
@@ -37,3 +36,22 @@ class RemoteVirtualSensor(VirtualSensor):
         while True:
             data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
             print "received message:", data
+
+    def replay_and_store_event(self, event):
+        if not event:
+            log.error("Receive an empty relay event. Moving forward")
+            return false
+        else:
+            try:
+                event_object = json.loads(event)
+                if self.policy_check(event_object):
+                    self.publish(event_object.data)
+                    self.store(event_object.data)
+                
+            except ValueError, e:
+                log.error("Invalid relay message") 
+            return True
+                              
+    def policy_check(self, event):
+
+
