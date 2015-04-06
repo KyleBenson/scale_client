@@ -40,3 +40,8 @@ Sensors:
         class: "remote_virtual_sensor.RemoteVirtualSensor"
         relay_port: 3868
         dev_name: "remoteSensor"
+
+Network:
+    - NetworkManager:
+        class: "scale_network_manager.ScaleNetworkManager"
+        batman_interface: "wlan0"

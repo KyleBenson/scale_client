@@ -47,6 +47,8 @@ class ScaleClient:
                     self.setup_event_sinks(cfg['eventsinks'])
                 if 'sensors' in cfg:
                     self.setup_sensors(cfg['sensors'])
+                if 'network' in cfg:
+                    self.setup_sensors(cfg['network'])
                 if 'applications' in cfg:
                     self.setup_applications(cfg['applications'])
 

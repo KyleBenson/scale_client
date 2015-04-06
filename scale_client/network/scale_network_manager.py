@@ -99,6 +99,16 @@ class ScaleNetworkManager():
         else:
 			         return  
 
+    def get_interface_mac_address(self, interface):
+        '''
+        Get mac address of a specific interface
+        '''
+
+        if interface in self.interfaces.keys():
+            return self.interfaces[interface]['mac']
+        else:
+			         return  
+
     def get_interface_status(self, interface):
         '''
         Check status of a specific interface

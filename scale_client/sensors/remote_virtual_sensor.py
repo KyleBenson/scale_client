@@ -16,7 +16,7 @@ class RemoteVirtualSensor(VirtualSensor):
         # Need to call network manager to get node
         # wireless mesh mac interface and status of each 
         # available interfaces: wifi, batman and ethernet
-	    self.__networkManager = ScaleNetworkManager()
+        self.__networkManager = ScaleNetworkManager()
 
     def get_type(self):
         return "remoteSensor"
@@ -30,7 +30,7 @@ class RemoteVirtualSensor(VirtualSensor):
         super(RemoteVirtualSensor, self).read()
         print "at remote virtual sensor, reading data"
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-		# Listen to traffic from every host on port 3868
+        # Listen to traffic from every host on port 3868
         sock.bind(('0.0.0.0', self.relay_port))
         while True:
             data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
@@ -45,12 +45,33 @@ class RemoteVirtualSensor(VirtualSensor):
                 event_object = json.loads(event)
                 if self.policy_check(event_object):
                     self.publish(event_object.data)
-                    self.store(event_object.data)
+                    self.store(event_object)
                 
             except ValueError, e:
                 log.error("Invalid relay message") 
             return True
                               
     def policy_check(self, event):
+        if not event:
+            return False
 
+        batman_interface = self._networkManager.get_batman_interface()
+        host_id = self._networkManager.get_interface_ip_address(batman_interface)
+        host_id += "-mac:" + self.self._networkManager.get_mac_address(batman_interface)
 
+        if event.source == host_id:
+            return False
+        else:
+            return True
+    
+    def store(self, event):
+        '''
+        Host receives data from its neighbors here. 
+        We need to store the data in some kind of data 
+        structure so that the application can query and 
+        analyze it based on its need
+        '''
+        log.info("Got data from neighbor: " + event.source)
+        log.info("Data: " + event.data)
+
+        return
