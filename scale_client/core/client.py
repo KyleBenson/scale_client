@@ -47,8 +47,8 @@ class ScaleClient:
                     self.setup_event_sinks(cfg['eventsinks'])
                 if 'sensors' in cfg:
                     self.setup_sensors(cfg['sensors'])
-                if 'network' in cfg:
-                    self.setup_sensors(cfg['network'])
+                if 'networks' in cfg:
+                    self.setup_network(cfg['networks'])
                 if 'applications' in cfg:
                     self.setup_applications(cfg['applications'])
 
@@ -122,11 +122,35 @@ class ScaleClient:
                 log.error("Unexpected error (%s) while creating virtual sensor: %s" % (e, sensor_config))
                 continue
 
+    def setup_network(self, network_configurations):
+        for network_config in (c.values()[0] for c in network_configurations):
+            # need to get class definition to call constructor
+            if 'class' not in network_config:
+                log.warn("Skipping network config with no class definition: %s" % network_config)
+                continue
+
+            try:
+                cls_name = network_config['class'] if 'scale_client.network' in network_config['class']\
+                    else 'scale_client.network.' + network_config['class']
+                cls = self._get_class_by_name(cls_name)
+
+                # copy config s so we can tweak it as necessary to expose only correct kwargs
+                new_network_config = network_config.copy()
+                new_network_config.pop('class')
+
+                cls(self.__broker, **new_network_config)
+                log.info("Virtual sensor created from config: %s" % network_config)
+
+            except Exception as e:
+                log.error("Unexpected error (%s) while setting network class: %s" % (e, network_config))
+
     def run(self):
         """Currently just loop forever to allow the other threads to do their work."""
         # TODO: handle this with less overhead?
-	log.debug('hi there')
-	print 'hi there'
+        
+        log.debug('hi there')
+        print 'hi there'
+
         self.__broker.run()
 
     def _get_class_by_name(self,kls):

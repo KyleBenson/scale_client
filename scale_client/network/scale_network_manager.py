@@ -46,12 +46,13 @@ class ScaleNetworkManager():
     BATMAN_INTERFACE = 'wlan0'
     BATMAN_ORIGINATOR_FILE = '/sys/kernel/debug/batman_adv/bat0/originators'
 
-    def __init__(self):
+    def __init__(self, broker, batman_interface='wlan0'):
         self.interfaces['eth0'] = {'ip': '', 'mac': '', 'status': 'down'}
         self.interfaces['bat0'] = {'ip': '', 'mac': '', 'status': 'down'}
         self.interfaces['wlan1'] = {'ip': '', 'mac': '', 'status': 'down'}
         self.interfaces['wlan0'] = {'ip': '', 'mac': '', 'status': 'down'}
         self.interfaces['wlan0:avahi'] = {'ip': '', 'mac': '', 'status': 'down'}
+        self.batman_interface = batman_interface
         self.scan_all_interfaces()
         self.update_neighbors()
         
@@ -73,7 +74,7 @@ class ScaleNetworkManager():
             if len(error) == 0:
                 found = re.search("addr:(.+?) ", output)
                 if found:
-                    self.interfaces[interface]['ip'] = found.group(1)
+                    self.interfaces[interface]['ip'] = found.group(1).strip()
                     self.interfaces[interface]['status'] = 'up'
 
         #scan for mac addresses
@@ -86,7 +87,7 @@ class ScaleNetworkManager():
             if len(error) == 0:
                 found = re.search("HWaddr(.+?) ", output)
                 if found:
-                    self.interfaces[interface]['mac'] = found.group(1)
+                    self.interfaces[interface]['mac'] = found.group(1).strip()
         return
     
     def get_interface_ip_address(self, interface):

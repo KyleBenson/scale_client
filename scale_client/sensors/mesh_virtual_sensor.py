@@ -9,25 +9,27 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class RemoteVirtualSensor(VirtualSensor):
-    def __init__(self, broker, relay_port=3868, device=None):
+class MeshVirtualSensor(VirtualSensor, ScaleNetworkManager):
+    def __init__(self, broker, relay_port=3868, batman_interface='wlan0:avahi', device=None):
         VirtualSensor.__init__(self, broker, device)
+        ScaleNetworkManager.__init__(self, broker, batman_interface)
         self.relay_port = relay_port
-        # Need to call network manager to get node
-        # wireless mesh mac interface and status of each 
-        # available interfaces: wifi, batman and ethernet
-        self.__networkManager = ScaleNetworkManager()
+
+        self.batman_interface = batman_interface
+        self.batman_ip = self.get_interface_ip_address(self.batman_interface)
+        self.batman_mac = self.get_interface_mac_address(self.batman_interface)
+        self.host_id = self.batman_ip + "_" + self.batman_mac
 
     def get_type(self):
         return "remoteSensor"
 
     def on_start(self):
         # TODO: asynchronous callback when something is actually available on this pipe
-		super(RemoteVirtualSensor, self).on_start()
+        super(MeshVirtualSensor, self).on_start()
 
     def read(self):
         #Override VirtualSensor read() method
-        super(RemoteVirtualSensor, self).read()
+        super(MeshVirtualSensor, self).read()
         print "at remote virtual sensor, reading data"
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
         # Listen to traffic from every host on port 3868
@@ -35,6 +37,7 @@ class RemoteVirtualSensor(VirtualSensor):
         while True:
             data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
             print "received message:", data
+            self.replay_and_store_event(data)
 
     def replay_and_store_event(self, event):
         if not event:
@@ -54,12 +57,7 @@ class RemoteVirtualSensor(VirtualSensor):
     def policy_check(self, event):
         if not event:
             return False
-
-        batman_interface = self._networkManager.get_batman_interface()
-        host_id = self._networkManager.get_interface_ip_address(batman_interface)
-        host_id += "-mac:" + self.self._networkManager.get_mac_address(batman_interface)
-
-        if event.source == host_id:
+        if event.source == self.host_id:
             return False
         else:
             return True
