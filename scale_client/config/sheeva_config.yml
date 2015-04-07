@@ -3,7 +3,7 @@ Main:
     event_queue_size: 4096
 
 EventSinks:
-    - MqttEventSink:
+    - MQTTEventSink:
         class: "mqtt_event_sink.MQTTEventSink"
         hostname: "dime.smartamerica.io"
         #hostname: "m2m.eclipse.org"

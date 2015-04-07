@@ -1,7 +1,7 @@
 # This configuration file spins up a client with dummy sensors and publishes via MQTT
 # ideal for testing on a laptop :)
 EventSinks:
-    - MqttEventSink:
+    - MQTTEventSink:
         class: "mqtt_event_sink.MQTTEventSink"
         hostname: "dime.smartamerica.io"
         #hostname: "m2m.eclipse.org"
@@ -18,7 +18,7 @@ Sensors:
         class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
         dev_name: "hb0"
         interval: 60
-    - DummyPirSensor:
+    - DummyPIRSensor:
         class: "dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
         dev_name: "pir0"
     - DummyLightSensor:
