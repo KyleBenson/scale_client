@@ -1,0 +1,6 @@
+circuits
+mosquitto
+PyYAML
+#TODO: replace mosquitto with paho?
+#TODO: spidev? how to only download on pi???
+pyserial
