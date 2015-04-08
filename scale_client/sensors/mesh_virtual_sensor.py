@@ -10,15 +10,18 @@ log = logging.getLogger(__name__)
 
 
 class MeshVirtualSensor(VirtualSensor, ScaleNetworkManager):
-    def __init__(self, broker, relay_port=3868, batman_interface='wlan0:avahi', device=None):
+    def __init__(self, broker, relay_port=3868, device=None):
         VirtualSensor.__init__(self, broker, device)
-        ScaleNetworkManager.__init__(self, broker, batman_interface)
+        ScaleNetworkManager.__init__(self, broker)
         self.relay_port = relay_port
 
-        self.batman_interface = batman_interface
+        self.batman_interface = self.get_batman_interface()
         self.batman_ip = self.get_interface_ip_address(self.batman_interface)
         self.batman_mac = self.get_interface_mac_address(self.batman_interface)
         self.host_id = self.batman_ip + "_" + self.batman_mac
+       
+        print self.host_id
+        self.display_neighbors()
 
     def get_type(self):
         return "remoteSensor"

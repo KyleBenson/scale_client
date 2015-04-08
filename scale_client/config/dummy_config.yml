@@ -39,10 +39,10 @@ Sensors:
     - MeshSensor:
         class: "mesh_virtual_sensor.MeshVirtualSensor"
         relay_port: 3868
-        batman_interface: "wlan0:avahi"
         dev_name: "meshSensor"
 
 Networks:
     - NetworkManager:
         class: "scale_network_manager.ScaleNetworkManager"
-        batman_interface: "wlan0"
+        batman_interface: "wlan0:avahi"
+        batman_originators_file: "/sys/kernel/debug/batman_adv/bat0/originators"
