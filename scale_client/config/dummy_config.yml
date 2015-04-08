@@ -13,6 +13,10 @@ EventSinks:
         keepalive: 60
         #need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
 
+Applications:
+    - Thread:
+        class: "dummy_threaded_application.DummyThreadedApplication"
+
 Sensors:
     - HBSensor:
         class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"

@@ -1,7 +1,6 @@
-import circuits
 # note that we'll always keep around a 'handler' decorator even if we stop using circuits!
 from circuits.core.handlers import handler
-from scale_client.core.sensed_event import SensedEvent
+from circuits.core.components import BaseComponent
 
 import logging
 log = logging.getLogger(__name__)
@@ -15,7 +14,7 @@ log = logging.getLogger(__name__)
 
 # TODO: make this the abstract base version and do an implementation
 #class AbstractApplication(object):
-class Application(circuits.BaseComponent):
+class Application(BaseComponent):
     """
     Applications may subscribe to events and may respond to them
     (or some internal logic) by publishing events.
@@ -51,7 +50,12 @@ class Application(circuits.BaseComponent):
     """
 
     def __init__(self, broker=None):
-        super(Application, self).__init__(self)
+        # NOTE: this circuits-specific hack helps deliver events only to the right channels, that is ReadSensorData
+        # events will only fire to the object that initiated the timer that fires them.  Also note that it MUTS come
+        # before the super() call!
+        BaseComponent.__init__(self, channel=self._get_channel_name())
+        super(Application, self).__init__()
+
         if broker is None:
             raise NotImplementedError
         self._register_broker(broker)
@@ -201,3 +205,11 @@ class Application(circuits.BaseComponent):
     #     :return: a True-ish object if successful
     #     """
     #     return super(self.__class__, self).run()
+
+    def _get_channel_name(self):
+        """
+        Returns a channel name to be used by circuits for routing events properly.
+        Currently just the class name plus the unique memory address.
+        :return:
+        """
+        return '%s@%d' % (self.__class__.__name__, id(self))

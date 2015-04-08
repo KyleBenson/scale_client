@@ -7,7 +7,6 @@ log = logging.getLogger(__name__)
 from circuits.core.events import Event
 from circuits.core.timers import Timer
 from circuits.core.handlers import handler
-from circuits.core.components import BaseComponent
 
 class ReadSensorData(Event):
     """Used in circuits implementation to periodically tell a VirtualSensor to call its read() function."""
@@ -30,10 +29,6 @@ class VirtualSensor(Application):
     DEFAULT_PRIORITY = 5
 
     def __init__(self, broker, device=None, interval=1):
-        # NOTE: this circuits-specific hack helps deliver events only to the right channels, that is ReadSensorData
-        # events will only fire to the object that initiated the timer that fires them.  Also note that it MUTS come
-        # before the super() call!
-        BaseComponent.__init__(self, channel=self.__get_channel_name())
         super(VirtualSensor, self).__init__(broker)
 
         # TODO: anonymous device descriptor?
@@ -104,7 +99,7 @@ class VirtualSensor(Application):
         publishing any SensedEvents gleaned from read() if they pass policy_check().
         To use this feature, do the following at the end of your implementation: super(YourSensorClass, self).on_start()
         """
-        self._timer = Timer(self._wait_period, ReadSensorData(), self.__get_channel_name(), persist=True)
+        self._timer = Timer(self._wait_period, ReadSensorData(), self._get_channel_name(), persist=True)
         self._timer.register(self)
 
     @handler("ReadSensorData")
@@ -112,7 +107,7 @@ class VirtualSensor(Application):
         """
         This function actually reads sensor data and then publishes it if it passes the policy_check()
         """
-        log.debug("ReadSensorData event received; reading...")
+        log.debug("%s reading sensor data..." % self.get_type())
 
         event = self.read()
         if event is None:
@@ -121,11 +116,3 @@ class VirtualSensor(Application):
         if self.policy_check(event):
             # we specify the event's class because that is how topics are currently implemented using circuits
             self.publish(event)
-
-    def __get_channel_name(self):
-        """
-        Returns a channel name to be used by circuits for routing events properly.  Currently just the class name.
-        :return:
-        """
-        # TODO: make this instance unique so e.g. two Heartbeat sensors could run at once
-        return self.__class__.__name__

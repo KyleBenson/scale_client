@@ -11,7 +11,7 @@ Clone the Git repo and run: `pip install -r requirements.txt; python -m scale_cl
 Installation
 ------------
 
-For easy installation, simply run `sudo python setup.py install` from inside the main directory. This should handle installing all of the dependencies. Note that the codebase should run fine on any machine supporting Python 2.7+, but that it is tested on a Raspberry Pi running Raspbian and on Linux/Mac OSX machines (note that the latter won't support most physical sensor devices!). You don't **need** to run with `sudo`; doing so will install the daemon file.
+For easy installation, simply run `sudo python setup.py install` from inside the main directory. Assuming you have `setuptools` installed via `pip`, this should handle installing all of the dependencies. Note that the codebase should run fine on any machine supporting Python 2.7+, but that it is tested on a Raspberry Pi running Raspbian and on Linux/Mac OSX machines (note that the latter won't support most physical sensor devices!). You don't **need** to run with `sudo`; doing so will install the daemon file.
 
 If you don't wish to install the package and instead run it straight from the repository, you can do so as long as the directory containing `scale_client` is in your `PYTHONPATH` or in the current directory.
 
