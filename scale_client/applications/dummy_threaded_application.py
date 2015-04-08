@@ -13,7 +13,7 @@ def f(nsecs):
 
 class DummyThreadedApplication(ThreadedApplication):
     """
-    This class shows a simple example of how to use the THreadedApplication
+    This class shows a simple example of how to use the ThreadedApplication
     class to accomplish running some task in the background using another
     thread/process.
     """

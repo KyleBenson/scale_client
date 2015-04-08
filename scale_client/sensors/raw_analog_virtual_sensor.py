@@ -5,8 +5,8 @@ from scale_client.core.sensed_event import SensedEvent
 
 
 class RawAnalogVirtualSensor(AnalogVirtualSensor):
-    def __init__(self, broker, device=None, analog_port=None):
-        AnalogVirtualSensor.__init__(self, broker, device=device, analog_port=analog_port)
+    def __init__(self, broker, device=None, interval=1, analog_port=None):
+        AnalogVirtualSensor.__init__(self, broker, device=device, interval=interval, analog_port=analog_port)
 
     def get_type(self):
         return "raw_analog"
