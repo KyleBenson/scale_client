@@ -52,7 +52,7 @@ iface default inet dhcp
 allow-hotplug wlan0
 auto wlan0" > /etc/network/interfaces
 
-sed '/exit/d' /etc/rc.local >> /etc/rc.local
+sed '/exit/d' /etc/rc.local > /etc/rc.local
 
 echo "# setup mesh interface on reboot
 
@@ -66,11 +66,11 @@ avahi-autoipd wlan0 -D
 
 exit 0" >> /etc/rc.local
 
+/etc/rc.local
+
 echo ""
 echo ""
 echo "Running test"
-echo ""
-/etc/rc.local
 echo ""
 echo ""
 batctl o
@@ -84,3 +84,6 @@ echo "To test, try: batctl 0"
 echo ""
 echo "You will see a list of neighbors' mac address if the node is with coverage range of other nodes"
 echo ""
+echo "You can also do ifconfig to verify if batman has been setup correctly. wlan0:avahi with an ipv4"
+echo "in ifconfig result indicates the setup is succesfully"
+ 
