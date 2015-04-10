@@ -1,5 +1,8 @@
 from scale_client.sensors.virtual_sensor import VirtualSensor
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class HeartbeatVirtualSensor(VirtualSensor):
     """
@@ -10,4 +13,5 @@ class HeartbeatVirtualSensor(VirtualSensor):
         return "heartbeat"
 
     def read_raw(self):
+        log.debug("Heartbeat read")
         return "heartbeat"

@@ -12,7 +12,7 @@ Sensors:
     - DummySeismicSensor:
         class: "dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
         dev_name: "accel"
-    - DummyPirSensor:
+    - DummyPIRSensor:
         class: "dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
         dev_name: "pir0"
     - DummyGasSensor:

@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
-import time, yaml, logging, argparse, os.path
+import yaml, logging, argparse, os.path
 log = None
-
-from Queue import Queue
 
 from scale_client.core.device_descriptor import DeviceDescriptor
 #import scale_client.event_sinks as event_sinks, scale_client.sensors as sensors
@@ -94,6 +92,31 @@ class ScaleClient:
                 log.info("EventSink created from config: %s" % sink_config)
             except Exception as e:
                 log.error("Unexpected error while creating EventSink: %s" % e)
+
+    def setup_applications(self, application_configurations):
+        n_applications = 0
+        for application_config in (c.values()[0] for c in application_configurations):
+            # need to get class definition to call constructor
+            if 'class' not in application_config:
+                log.warn("Skipping virtual application with no class definition: %s" % application_config)
+                continue
+
+            try:
+                cls_name = application_config['class'] if 'scale_client.applications' in application_config['class']\
+                    else 'scale_client.applications.' + application_config['class']
+                cls = self._get_class_by_name(cls_name)
+
+                # copy config s so we can tweak it as necessary to expose only correct kwargs
+                new_application_config = application_config.copy()
+                new_application_config.pop('class')
+
+                cls(self.__broker, **new_application_config)
+                n_applications += 1
+                log.info("Application created from config: %s" % application_config)
+
+            except Exception as e:
+                log.error("Unexpected error (%s) while creating application: %s" % (e, application_config))
+                continue
 
     def setup_sensors(self, sensor_configurations):
         n_sensors = 0

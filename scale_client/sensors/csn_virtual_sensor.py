@@ -3,7 +3,6 @@ import subprocess
 from scale_client.sensors.virtual_sensor import VirtualSensor
 
 import logging
-logging.basicConfig()
 log = logging.getLogger(__name__)
 
 SCALE_VS_MAGIC_LN = r"\$\$\$_SCALE_VS_MAGIC_LN_\$\$\$"

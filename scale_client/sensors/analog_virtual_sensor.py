@@ -1,7 +1,6 @@
 from scale_client.sensors.virtual_sensor import VirtualSensor
 
 import logging
-logging.basicConfig()
 log = logging.getLogger(__name__)
 
 
@@ -10,8 +9,8 @@ class AnalogVirtualSensor(VirtualSensor):
     This class is specifically designed to support Analog sensors attached to a ADC board on a Raspberry Pi.
     """
 
-    def __init__(self, broker, device=None, analog_port=None):
-        VirtualSensor.__init__(self, broker, device)
+    def __init__(self, broker, device=None, interval=1, analog_port=None):
+        VirtualSensor.__init__(self, broker, device, interval)
         self._port = analog_port
         self._spi = None
 

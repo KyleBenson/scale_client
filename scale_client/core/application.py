@@ -1,12 +1,15 @@
-import circuits
 # note that we'll always keep around a 'handler' decorator even if we stop using circuits!
 from circuits.core.handlers import handler
-from scale_client.core.sensed_event import SensedEvent
+from circuits.core.components import BaseComponent
+from circuits.core.timers import Timer
+from circuits import Event
 
 import logging
-logging.basicConfig()
 log = logging.getLogger(__name__)
 
+
+class timer_expired_event(Event):
+    """Used in circuits implementation to periodically tell an Application to call some function."""
 
 # TODO: have smart choosing of implementations where multiple classes are implemented in this module and
 # the one true "Application" implementation is exported as whichever the best of those is that can be imported
@@ -16,43 +19,32 @@ log = logging.getLogger(__name__)
 
 # TODO: make this the abstract base version and do an implementation
 #class AbstractApplication(object):
-class Application(circuits.BaseComponent):
+class Application(BaseComponent):
     """
     Applications may subscribe to events and may respond to them
     (or some internal logic) by publishing events.
     These are the core of the system and any classes adding additional
     functionality should at least indirectly subclass Application.
 
-    QUESTIONS:
-    1) should all events be routed through an on_event(event, topic) function where the developer must add logic
-    for appropriately routing the event to other handlers
-    --OR--
-    should the appropriate handler function be specified in the subscribe(topic, handler) function??
+    OPEN QUESTIONS:
 
-    2) Should the actions taken in the run() loop be modifiable by the developer,
-    or should we possibly add in some callbacks that can be called within that loop?  It seems that no we shouldn't the
-       run() function is a black box that handles the asynchronous runtime and any logic for periodically reading values
-       or polling for something should be handled by asynchronous callbacks tied to timers.  Should there then be some
-       fire_every(time, callback) function for Applications to easily abstract the actual mechanism with which these
-       timers are created?
-
-         For example, how would the ZigBeeVirtualSensor read packets?  Does it need to keep polling
-       or should we assume there's always a way of setting up a callback to do so?  What if we just specify an innermost
-       function that is executed by the run() loop constantly and it normally just sleeps indefinitely but a developer
-       can override it to do something slightly different (sleep 10ms then read from blahblah)?
-
-    3) How to support historical queries of events?  This will certainly be something that VirtualSensors should support
+    1) How to support historical queries of events?  This will certainly be something that VirtualSensors should support
     and likely some applications will want to do so as well so this should probably be built into this most basic of
     core classes....  Perhaps this should be handled by exposing some API at the broker rather than building this logic
     into the Application, which would require one API here and yet another (albeit more internal) API at the broker for
     actually handling the true low-level logic.
 
-    In the future, they will support migrating between processes,
+    2) In the future, they will support migrating between processes,
     both between those on local and remote machines.
     """
 
     def __init__(self, broker=None):
-        super(Application, self).__init__(self)
+        # NOTE: this circuits-specific hack helps deliver events only to the right channels, that is ReadSensorData
+        # events will only fire to the object that initiated the timer that fires them.  Also note that it MUTS come
+        # before the super() call!
+        BaseComponent.__init__(self, channel=self._get_channel_name())
+        super(Application, self).__init__()
+
         if broker is None:
             raise NotImplementedError
         self._register_broker(broker)
@@ -133,6 +125,51 @@ class Application(circuits.BaseComponent):
         self.on_subscribe(topic)
         return ret
 
+    def timed_call(self, time, function, repeat=False, *args, **kwargs):
+        """
+        This function will call the given function, with the given args,
+        once the timer expires.  You can have the timer reset so the
+        function will runrepeatedly by using the repeat argument.
+        NOTE: the function must be an instancemethod of the calling class!
+        NOTE: there is currently no way to cancel the call so if you need
+        that feature, add it yourself!
+
+        :param time: time (in seconds or as a datetime object) until
+        the timer expires and calls the function
+        :param function: function to call
+        :param repeat: whether or not the timer should reset and periodically repeat the function
+        """
+
+        # First build a handler for the event that will be fired by the timer
+        # and register it with circuits only on our object's unique channel
+        # BEWARE: there are some serious dragons here... This is a bunch of
+        # hacky nonsense I had to do to convince the circuits system that the
+        # function we're passing them is a bona-fide handler object.  For
+        # whatever reason, we can't just pass the instancemethod directly to
+        # the handler function to make a handler as we get some AttributeError
+        # related to it trying to set attributes that don't exist, so instead
+        # we have to provide a regular method here that wraps the actual
+        # instancemethod.
+        def f(*fargs, **fkwargs):
+            return function(*fargs, **fkwargs)
+        f = handler(False, channel=self._get_channel_name(), override=True)(f)
+        f.handler = True
+        f.names = ["timer_expired_event"]
+        f.channel = self._get_channel_name()
+        f.priority = 10
+        f.event = False
+        self.addHandler(f)
+
+        # Then set the timer.  Note how the args are passed via the
+        # __timer_expired_event object.
+        self._timer = Timer(time, timer_expired_event(*args, **kwargs), self._get_channel_name(), persist=repeat)
+        self._timer.register(self)
+
+        # TODO: allow cancelling the timed_call by returning a reference to
+        # the handler we registered and write a cancel_timed_call(method)
+        # function that takes this reference in and calls removeHandler
+
+
 #TODO: this abstraction nonsense
 #class Application(circuits.Component, AbstractApplication):
 #    """This class implements the Application using the circuits library"""
@@ -202,3 +239,11 @@ class Application(circuits.BaseComponent):
     #     :return: a True-ish object if successful
     #     """
     #     return super(self.__class__, self).run()
+
+    def _get_channel_name(self):
+        """
+        Returns a channel name to be used by circuits for routing events properly.
+        Currently just the class name plus the unique memory address.
+        :return:
+        """
+        return '%s@%d' % (self.__class__.__name__, id(self))
