@@ -13,14 +13,8 @@ class RawAnalogVirtualSensor(AnalogVirtualSensor):
 
     def read(self):
         event = super(RawAnalogVirtualSensor, self).read()
-        event.data['condition'] = self.__get_condition()
+        event.data['condition'] = {} #XXX: Do we have to have empty condition?
         return event
 
-    def __get_condition(self):
-        return {}
-
     def policy_check(self, data):
-        data = float(data.get_raw_data())
-        success = True
-
-        return success
+        return True

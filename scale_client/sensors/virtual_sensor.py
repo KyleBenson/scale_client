@@ -32,7 +32,7 @@ class VirtualSensor(Application):
         """
         A unique human-readable identifier of the type of sensor this object represents.
         """
-        return "VirtualSensor"
+        return "virtual_sensor"
 
     def read_raw(self):
         """
@@ -40,7 +40,7 @@ class VirtualSensor(Application):
         necessary, to return a raw sensor reading.
         :return: raw data
         """
-        return "SensedEvent"
+        return None #"SensedEvent"
 
     def read(self):
         """
