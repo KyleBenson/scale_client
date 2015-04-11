@@ -24,7 +24,7 @@ class MeshVirtualSensor(VirtualSensor, ScaleNetworkManager):
         self.display_neighbors()
 
     def get_type(self):
-        return "remoteSensor"
+        return "MeshSensor"
 
     def on_start(self):
         # TODO: asynchronous callback when something is actually available on this pipe
@@ -34,6 +34,8 @@ class MeshVirtualSensor(VirtualSensor, ScaleNetworkManager):
         #Override VirtualSensor read() method
         super(MeshVirtualSensor, self).read()
         print "at remote virtual sensor, reading data"
+        
+        '''
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
         # Listen to traffic from every host on port 3868
         sock.bind(('0.0.0.0', self.relay_port))
@@ -41,6 +43,7 @@ class MeshVirtualSensor(VirtualSensor, ScaleNetworkManager):
             data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
             print "received message:", data
             self.replay_and_store_event(data)
+        '''
 
     def replay_and_store_event(self, event):
         if not event:

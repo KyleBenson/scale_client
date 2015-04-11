@@ -34,6 +34,7 @@ class TemperatureVirtualSensor(VirtualSensor):
             temperature = float(match.group(3))
         except AttributeError as e:
             log.error('Error parsing temperature: %s' % e)
+
         return temperature
 
     def read(self):
@@ -44,6 +45,9 @@ class TemperatureVirtualSensor(VirtualSensor):
                 "value": self._threshold
                 }
             }
+        print "You are at Read Temperature Sensor"
+        print event
+
         return event
 
     def policy_check(self, event):

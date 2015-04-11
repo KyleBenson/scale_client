@@ -12,6 +12,9 @@ EventSinks:
         #password: "xottyHH5j9v2"
         keepalive: 60
         #need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
+    - RelayEventSink:
+        class: "relay_event_sink.RelayEventSink"
+        relay_port: 3868
 
 Applications:
     - Thread:
