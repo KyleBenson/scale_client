@@ -45,8 +45,6 @@ class TemperatureVirtualSensor(VirtualSensor):
                 "value": self._threshold
                 }
             }
-        print "You are at Read Temperature Sensor"
-        print event
 
         return event
 

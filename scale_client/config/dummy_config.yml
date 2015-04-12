@@ -19,6 +19,8 @@ EventSinks:
 Applications:
     - Thread:
         class: "dummy_threaded_application.DummyThreadedApplication"
+    - MeshRelayedEventReceiver:
+        class: "mesh_relayed_event_receiver.MeshRelayedEventReceiver"
 
 Sensors:
     - HBSensor:

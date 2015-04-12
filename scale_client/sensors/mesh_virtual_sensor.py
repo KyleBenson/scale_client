@@ -1,6 +1,5 @@
 import re
 import subprocess
-import socket
 import json
 from scale_client.sensors.virtual_sensor import VirtualSensor
 from scale_client.network.scale_network_manager import ScaleNetworkManager
@@ -34,16 +33,6 @@ class MeshVirtualSensor(VirtualSensor, ScaleNetworkManager):
         #Override VirtualSensor read() method
         super(MeshVirtualSensor, self).read()
         print "at remote virtual sensor, reading data"
-        
-        '''
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-        # Listen to traffic from every host on port 3868
-        sock.bind(('0.0.0.0', self.relay_port))
-        while True:
-            data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
-            print "received message:", data
-            self.replay_and_store_event(data)
-        '''
 
     def replay_and_store_event(self, event):
         if not event:
@@ -63,7 +52,7 @@ class MeshVirtualSensor(VirtualSensor, ScaleNetworkManager):
     def policy_check(self, event):
         if not event:
             return False
-        if event.source == self.host_id:
+        if False: #event.source == self.host_id:
             return False
         else:
             return True
