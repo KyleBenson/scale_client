@@ -31,6 +31,7 @@ class AsyncoreReceiverUDP(asyncore.dispatcher):
         
         print "GOT DATA FROM NEIGHBOR"
         print str(addr)+" >> "+data
+        self.publish("RelayedEvent")
         
     # This is called all the time and causes errors if you leave it out.
     def handle_write(self):
@@ -42,10 +43,17 @@ class AsyncoreReceiverUDP(asyncore.dispatcher):
 
 
 def f(nsec):
+    global relayed_events_pool
+    
+    replayed_events_pool = 10
+
     AsyncoreReceiverUDP()
     asyncore.loop()
+    
 
 class MeshRelayedEventReceiver(ThreadedApplication):
+
+    relayed_events_pool = 0
 
     def on_start(self):
         self.run_in_background(f, 3)

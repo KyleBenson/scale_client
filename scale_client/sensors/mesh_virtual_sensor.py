@@ -1,6 +1,8 @@
 import re
 import subprocess
 import json
+from random import *
+
 from scale_client.sensors.virtual_sensor import VirtualSensor
 from scale_client.network.scale_network_manager import ScaleNetworkManager
 
@@ -29,10 +31,17 @@ class MeshVirtualSensor(VirtualSensor, ScaleNetworkManager):
         # TODO: asynchronous callback when something is actually available on this pipe
         super(MeshVirtualSensor, self).on_start()
 
+    '''
     def read(self):
         #Override VirtualSensor read() method
         super(MeshVirtualSensor, self).read()
-        print "at remote virtual sensor, reading data"
+    '''
+
+    def read_raw(self):
+        #testing 
+        rand = Random()
+        rand.seed()
+        return round(5 + rand.random() * 6 - 3, 2)
 
     def replay_and_store_event(self, event):
         if not event:

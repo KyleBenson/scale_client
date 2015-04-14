@@ -1,4 +1,5 @@
 import socket
+import time
 from scale_client.network.scale_network_manager import ScaleNetworkManager
 
 import logging
@@ -44,12 +45,14 @@ class AsyncoreClientUDP(asyncore.dispatcher):
             self.buffer = self.buffer[sent:]
 
 class RelayEventSink(EventSink, ScaleNetworkManager):
+    SCAN_INTERVAL = 20 # 1 min
+    SOCKET_CONNECTION_REFRESH_INTERVAL = 30 # 3 mins 
     def __init__(self, broker, relay_port):
         EventSink.__init__(self, broker)
         
         ScaleNetworkManager.__init__(self, broker)
 
-        self.__neighbors = self.get_neighbors()
+        self._neighbors = self.get_neighbors()
         self.batman_interface = self.get_batman_interface()
         self.batman_ip = self.get_interface_ip_address(self.batman_interface)
         self.batman_mac = self.get_interface_mac_address(self.batman_interface)
@@ -58,21 +61,52 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         #print self.mesh_host_id
         #self.display_neighbors()
 
-        self.__relay_port = relay_port
+        self._relay_port = relay_port
+        self.last_time_scanned = time.time()
+        self.last_time_refreshed= time.time()
 
-        self.__neighbor_connections = {}
+        self._neighbor_connections = {}
         self.create_connection_to_neighbors()
 
     def create_connection_to_neighbors(self):
-        for index in self.__neighbors:
+        for index in self._neighbors:
             neighbor_ip_address = self.neighbors[index].get_ip_address()
             if neighbor_ip_address:
-                self.__neighbor_connections[neighbor_ip_address] = AsyncoreClientUDP(neighbor_ip_address, self.__relay_port)
+                if self._neighbor_connections[neighbor_ip_address]:
+                    self._neighbor_connections[neighbor_ip_address].handle_close()
+                self._neighbor_connections[neighbor_ip_address] = AsyncoreClientUDP(neighbor_ip_address, self._relay_port)
 
     def on_start(self):
         # check to see if the current node has any neighbor
         return 
-    
+
+    def has_connection(self):
+        '''
+        Check to see if the current node has connection to the internet
+        through eth0 or Wlan1 (wifi). To reduce overhead, we just do it
+        randomly and assume that the connection stay the same until the 
+        next check
+        '''
+        
+        # Rescan the local network to have updated info
+        if (time.time() - self.last_time_scanned) > self.SCAN_INTERVAL:
+            print "NEED TO RESCAN THE NETWORK"
+            self.scan_all_interfaces()
+            self.update_neighbors()
+            self.scan_arp_address()
+            self.last_time_scanned = time.time()
+            #reset timer so that we can check again
+
+        eth0_ip = self.get_interface_ip_address('eth0')
+        if eth0_ip:
+            return True
+        else:
+            wlan1_ip = self.get_interface_ip_address('wlan1')
+            if wlan1_ip:
+                return True
+            else:
+                return False
+
     def send(self, encoded_event):
         '''
         Instead of publishing sensed events to MQTT server like MqttEventSink,
@@ -82,14 +116,32 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
 
         relay_event = {}
         relay_event['source'] = self.mesh_host_id
-        relay_event['event'] = encoded_event
+        relay_event['sensed_event'] = encoded_event
+
+        if self.has_connection():
+            relay_event['published'] = 1
+        else:
+            relay_event['published'] = 0
+
+        # Check to see if the current node has connection 
+        # to the internet through eth0 or Wlan1 interface
+
+
         encoded_relay_event = json.dumps(relay_event)
         
-        for index in self.__neighbors:
+        print "relay event " + encoded_relay_event
+
+
+        if (time.time() - self.last_time_refreshed) > self.SOCKET_CONNECTION_REFRESH_INTERVAL:
+            self.create_connection_to_neighbors()
+            self.last_time_refreshed = time.time()
+            print "REFRESH NEIGHBOR SOCKET CONNECTION"
+
+        for index in self._neighbors:
             neighbor_ip_address = self.neighbors[index].get_ip_address()
             if neighbor_ip_address:
-                if self.__neighbor_connections[neighbor_ip_address]:
-                    self.__neighbor_connections[neighbor_ip_address].buffer += encoded_relay_event
+                if self._neighbor_connections[neighbor_ip_address]:
+                    self._neighbor_connections[neighbor_ip_address].buffer += encoded_relay_event
                     log.info("Forwarded sensed event to neighbor at ip address: " + neighbor_ip_address)
 
     def check_available(self, event):
