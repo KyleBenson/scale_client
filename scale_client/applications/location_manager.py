@@ -16,12 +16,12 @@ class LocationManager(Application):
 		Application.__init__(self, broker)
 
 		# Keep location coordinates and its time-stamp, associated with source
-		# Format: device: {"lat": , "lon": , "alt": , "expire": , "priority": }
+		# Format: sensor: {"lat": , "lon": , "alt": , "expire": , "priority": }
 		self._location_pool = {}
 
 	SOURCE_SUPPORT = ["geo_ip"]
 
-	def _on_event(self, event, topic):
+	def on_event(self, event, topic):
 		"""
 		LocationManager should deal with all location events published by
 		location providers.
@@ -31,12 +31,13 @@ class LocationManager(Application):
 		data = event.get_raw_data()
 		if not et in LocationManager.SOURCE_SUPPORT:
 			return
+		log.debug("event from " + et)
 		item = {"lat": data["lat"],
 			"lon": data["lon"],
 			"alt": None,
 			"expire": data["exp"],
-			"priority": event["priority"]}
-		self._location_pool[event.device] = item
+			"priority": event.priority}
+		self._location_pool[event.sensor] = item
 
 		#Update location pool and choose a best location to report
 		best_device = self._update_location()
@@ -44,8 +45,10 @@ class LocationManager(Application):
 		#Publish the best location
 		if not best_device:
 			return
+		sd = {"event": "location_update",
+				"value": self._location_pool[best_device]}
 		up = SensedEvent(sensor = "location",
-				data = self._location_pool[best_device],
+				data = sd,
 				priority = 5)
 		self.publish(up)
 		pass
