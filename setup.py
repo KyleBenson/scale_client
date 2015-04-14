@@ -12,7 +12,8 @@ URL = "https://github.com/KyleBenson/SmartAmericaSensors"
 
 # Specific information about package contents
 PACKAGES = ["scale_client", "scale_client.core",
-            "scale_client.sensors", "scale_client.event_sinks"]
+            "scale_client.sensors", "scale_client.event_sinks",
+			"scale_client.applications"]
 PACKAGE_DATA = {"scale_client": ["config/*"]}
 DAEMON_LOCATION = "/etc/init.d"
 DATA_FILES = [(DAEMON_LOCATION, ["scripts/scale_daemon"])]
