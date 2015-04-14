@@ -26,7 +26,7 @@ try:
     with open(DAEMON_LOCATION, 'w') as F:
         pass
 except IOError:
-    print "Can't access daemon location.  Skipping daemon installation..."
+    print "Can't access daemon location. Skipping daemon installation..."
     DATA_FILES = None
 
 setup(name=NAME,
