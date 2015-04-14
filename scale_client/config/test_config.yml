@@ -1,5 +1,6 @@
 # This configuration file spins up a client with dummy sensors and publishes via MQTT
-# ideal for testing on a laptop :)
+# Ideal for testing on a laptop :)
+
 EventSinks:
     - LogEventSink:
         class: "log_event_sink.LogEventSink"

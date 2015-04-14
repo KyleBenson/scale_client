@@ -1,4 +1,5 @@
 # Note that this still needs a SigfoxEventSink added to it; not officially tested!
+
 Main:
     event_queue_size: 4096
 

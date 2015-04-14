@@ -1,4 +1,3 @@
-# Hasn't been officially tested!
 Main:
     event_queue_size: 4096
 
