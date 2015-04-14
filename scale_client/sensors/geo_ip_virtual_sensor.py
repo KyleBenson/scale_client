@@ -40,6 +40,7 @@ class GeoIPVirtualSensor(VirtualSensor):
 		return raw
 	
 	def read(self):
+		raw = self.read_raw()
 		event = self.make_event_with_raw_data(raw, priority=9)
 		return event
 
