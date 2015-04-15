@@ -1,4 +1,4 @@
-from application import 
+from application import Application 
 
 import time
 
@@ -36,25 +36,29 @@ class EventReporter(Application):
         we should determine whether to report it or not and then do so.
         """
         et = event.get_type()
+        ed = event.data["value"] #ed = event.get_raw_data()
 
         # Ignorance
         if et == "geo_ip":
             return
 
         # Location info maintenance XXX: Looks thread-unsafe
-        if et == "location":
-            self._location = event.get_raw_data()
-            if not lat in self._location or not lon in self._location:
-                self._location = None
+        if et == "location_update":
+            if not "lat" in ed or not "lon" in ed:
                 raise ValueError # This should not happen
+            self._location = ed
         elif self._location is not None:
             if self._location["expire"] < time.time():
                 sefl._location = None
                 #TODO: What else can we do? Request a location update?
 
         #TODO: Tag the event
-        event.geotag = {"lon": self._location["lon"],
-                        "lat": self._location["lat"]}
+        if self._location is None:
+            pass
+        elif type(self._location) == type({}):
+            event.data["geotag"] = {"lon": self._location["lon"],
+                                    "lat": self._location["lat"]}
+        else: raise ValueError
 
         # Send event to sinks
         for sink in self.__sinks:
