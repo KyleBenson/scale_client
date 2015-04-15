@@ -51,7 +51,6 @@ class LocationManager(Application):
 				data = sd,
 				priority = 5)
 		self.publish(up)
-		pass
 
 	def _update_location(self):
 		"""

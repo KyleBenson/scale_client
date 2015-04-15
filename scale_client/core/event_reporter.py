@@ -1,5 +1,6 @@
-from application import Application
+from application import 
 
+import time
 
 class EventReporter(Application):
     """
@@ -13,19 +14,49 @@ class EventReporter(Application):
         super(EventReporter, self).__init__(broker)
         self.__sinks = []
 
+        # Location info maintenance
+        self._location = None
+
     def add_sink(self, sink):
         """
-        Registers the given EventSink with the EventReporter.  Note that the order in which you add them matters as we
-        currently have no other way of distinguishing the priority in which the EventReporter should consider each
-        EventSink (currently it tries the first added one, then second...).
+        Registers the given EventSink with the EventReporter.
+        Note that the order in which you add them matters as we
+        currently have no other way of distinguishing the priority 
+        in which the EventReporter should consider each
+        EventSink (currently it tries the first added one, then second...)
         :param sink:
         """
         self.__sinks.append(sink)
 
-    # TODO: remove_sink???
+    #TODO: remove_sink?
 
     def on_event(self, event, topic):
-        """Every time any SensedEvent is published, we should determine whether to report it or not and then do so."""
+        """
+        Every time any SensedEvent is published, 
+        we should determine whether to report it or not and then do so.
+        """
+        et = event.get_type()
+
+        # Ignorance
+        if et == "geo_ip":
+            return
+
+        # Location info maintenance XXX: Looks thread-unsafe
+        if et == "location":
+            self._location = event.get_raw_data()
+            if not lat in self._location or not lon in self._location:
+                self._location = None
+                raise ValueError # This should not happen
+        elif self._location is not None:
+            if self._location["expire"] < time.time():
+                sefl._location = None
+                #TODO: What else can we do? Request a location update?
+
+        #TODO: Tag the event
+        event.geotag = {"lon": self._location["lon"],
+                        "lat": self._location["lat"]}
+
+        # Send event to sinks
         for sink in self.__sinks:
             if sink.check_available(event):
                 sink.send_event(event)
