@@ -72,8 +72,8 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         for index in self._neighbors:
             neighbor_ip_address = self.neighbors[index].get_ip_address()
             if neighbor_ip_address:
-                if self._neighbor_connections[neighbor_ip_address]:
-                    self._neighbor_connections[neighbor_ip_address].handle_close()
+                #if self._neighbor_connections[neighbor_ip_address]:
+                #    self._neighbor_connections[neighbor_ip_address].handle_close()
                 self._neighbor_connections[neighbor_ip_address] = AsyncoreClientUDP(neighbor_ip_address, self._relay_port)
 
     def on_start(self):
@@ -115,7 +115,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
 
         relay_event = {}
         relay_event['source'] = self.mesh_host_id
-        relay_event['sensed_event'] = encoded_event
+        relay_event['sensed_event'] = json.loads(encoded_event)
 
         if self.has_connection():
             relay_event['published'] = 1
@@ -127,6 +127,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
 
 
         encoded_relay_event = json.dumps(relay_event)
+        #print "Replaying event: " + encoded_relay_event 
         
         if (time.time() - self.last_time_refreshed) > self.SOCKET_CONNECTION_REFRESH_INTERVAL:
             self.create_connection_to_neighbors()
