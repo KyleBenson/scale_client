@@ -6,6 +6,7 @@ import json
 from time import sleep
 from scale_client.core.threaded_application import ThreadedApplication
 #from scale_client.network.scale_network_manager import ScaleNetworkManager
+from scale_client.core.relayed_sensed_event import RelayedSensedEvent
 
 import logging
 log = logging.getLogger(__name__)
@@ -13,13 +14,16 @@ log = logging.getLogger(__name__)
 
 import asyncore, socket
 
-class AsyncoreReceiverUDP(asyncore.dispatcher):
+class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent):
     def __init__(self):
         asyncore.dispatcher.__init__(self)
         
         # Bind to port 5005 on all interfaces
         self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.bind(('', 3868))
+
+        self.relayedSensedEvent = RelayedSensedEvent()
+        self.relayedSensedEvent.__init__()
         
     # Even though UDP is connectionless this is called when it binds to a port
     def handle_connect(self):
@@ -31,22 +35,20 @@ class AsyncoreReceiverUDP(asyncore.dispatcher):
         
         print "GOT DATA FROM NEIGHBOR"
         print str(addr)+" >> "+data
-        self.publish("RelayedEvent")
+        if data:
+            self.relayedSensedEvent.load_data(data)
+            print "Relayed event type: " + self.relayedSensedEvent.get_type()
+
+    
+
+        ##self.publish("RelayedEvent")
         
     # This is called all the time and causes errors if you leave it out.
     def handle_write(self):
         pass
 
 
-
-
-
-
 def f(nsec):
-    global relayed_events_pool
-    
-    replayed_events_pool = 10
-
     AsyncoreReceiverUDP()
     asyncore.loop()
     

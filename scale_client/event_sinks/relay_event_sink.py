@@ -45,8 +45,8 @@ class AsyncoreClientUDP(asyncore.dispatcher):
             self.buffer = self.buffer[sent:]
 
 class RelayEventSink(EventSink, ScaleNetworkManager):
-    SCAN_INTERVAL = 20 # 1 min
-    SOCKET_CONNECTION_REFRESH_INTERVAL = 30 # 3 mins 
+    SCAN_INTERVAL = 60 # 1 min
+    SOCKET_CONNECTION_REFRESH_INTERVAL = 360 # 3 mins 
     def __init__(self, broker, relay_port):
         EventSink.__init__(self, broker)
         
@@ -90,7 +90,6 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         
         # Rescan the local network to have updated info
         if (time.time() - self.last_time_scanned) > self.SCAN_INTERVAL:
-            print "NEED TO RESCAN THE NETWORK"
             self.scan_all_interfaces()
             self.update_neighbors()
             self.scan_arp_address()
@@ -129,13 +128,9 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
 
         encoded_relay_event = json.dumps(relay_event)
         
-        print "relay event " + encoded_relay_event
-
-
         if (time.time() - self.last_time_refreshed) > self.SOCKET_CONNECTION_REFRESH_INTERVAL:
             self.create_connection_to_neighbors()
             self.last_time_refreshed = time.time()
-            print "REFRESH NEIGHBOR SOCKET CONNECTION"
 
         for index in self._neighbors:
             neighbor_ip_address = self.neighbors[index].get_ip_address()
