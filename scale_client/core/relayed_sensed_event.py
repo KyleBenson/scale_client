@@ -2,7 +2,6 @@ import time
 from circuits import Event
 import pprint
 import json
-from pprint import pprint
 
 import logging
 log = logging.getLogger(__name__)
