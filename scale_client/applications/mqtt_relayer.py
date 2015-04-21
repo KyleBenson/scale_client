@@ -46,18 +46,6 @@ class MqttRelayer():
         pass
 
     def _try_connect(self):
-        print "Try to connect to MQTT"
-        print "Host name"
-        print self._hostname
-        print "host port"
-        print self._hostport
-        print "username "
-        print self._username
-        print "password"
-        print self._password
-        print "keep alive"
-        print self._keepalive
-
         if self._username is not None and self._password is not None:
             self._client.username_pw_set(self._username, self._password)
         try:
@@ -66,7 +54,6 @@ class MqttRelayer():
             return False
         self._client.loop_start()
         self._loopflag = True
-        print "CONNECTED IS GOOD"
         return True
 
     def on_start(self):

@@ -9,8 +9,9 @@ from uuid import getnode as get_mac
 from pprint import pprint
 import asyncore, socket
 
-
+import time
 from time import sleep
+
 from scale_client.core.threaded_application import ThreadedApplication
 #from scale_client.network.scale_network_manager import ScaleNetworkManager
 from scale_client.core.relayed_sensed_event import RelayedSensedEvent
@@ -57,36 +58,18 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application, 
     # This is called everytime there is something to read
     def handle_read(self):
         data, addr = self.recvfrom(2048)
-        print "GOT DATA FROM NEIGHBOR"
+        #print "GOT DATA FROM NEIGHBOR"
         #print str(addr)+" >> "+data
 
         if data:
             self.relayedSensedEvent.load_data(data)
-            self.publish_relayed_sensed_event(self.relayedSensedEvent)
+            # submit neighbor's event to Mqtt server 
+            # if their events have not been submitted
+            if self.relayedSensedEvent.published == 0:
+                self.publish_relayed_sensed_event(self.relayedSensedEvent)
 
             if(self.relayedSensedEvent.sensor == 'temperature'):
-                print "Relayed event type: " + self.relayedSensedEvent.get_type()
-
-                print 'ha! temperature '
-                print self.relayedSensedEvent.data['value'] 
-
-                self.relayedSensedEvents['temperature']['neighbors_sum'] += self.relayedSensedEvent.data['value']
-                self.relayedSensedEvents['temperature']['neighbors_counter'] += 1
-
-                if(self.relayedSensedEvents['temperature']['neighbors_counter'] > 5):
-
-                    self.relayedSensedEvents['temperature']['neighbors_average'] = self.relayedSensedEvents['temperature']['neighbors_sum']/self.relayedSensedEvents['temperature']['neighbors_counter']
-                    self.relayedSensedEvents['temperature']['neighbors_average'] = round(self.relayedSensedEvents['temperature']['neighbors_average'], 2)
-    
-                    # reset total temp and counter
-                    self.relayedSensedEvents['temperature']['neighbors_counter'] = 0
-                    self.relayedSensedEvents['temperature']['neighbors_sum'] = 0.0
-
-
-                print "TEMPERATURE DATA "
-                print self.relayedSensedEvents
-
-                print str(addr)+" >> "+data
+                self.calculate_neighbors_average_temp()
 
             """
             Can not publish relayed sensed event back to the appication,
@@ -98,7 +81,44 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application, 
             print sensedEvent
             self.publish(sensedEvent)
             """
+    def calculate_neighbors_average_temp(self):
+        self.relayedSensedEvents['temperature']['neighbors_sum'] += self.relayedSensedEvent.data['value']
+        self.relayedSensedEvents['temperature']['neighbors_counter'] += 1
+
+        # calculate avarage temparature of all neighbors after receiving 5 
+        if(self.relayedSensedEvents['temperature']['neighbors_counter'] > 5):
+            self.relayedSensedEvents['temperature']['neighbors_average'] = self.relayedSensedEvents['temperature']['neighbors_sum']/self.relayedSensedEvents['temperature']['neighbors_counter']
+            self.relayedSensedEvents['temperature']['neighbors_average'] = round(self.relayedSensedEvents['temperature']['neighbors_average'], 2)
+   
+            # Publish avarage temparature 
+            self.publish_neighbors_avarage_temp()
+
+            # reset total temp and counter
+            self.relayedSensedEvents['temperature']['neighbors_counter'] = 0
+            self.relayedSensedEvents['temperature']['neighbors_sum'] = 0.0
+        return True
+
+    def publish_neighbors_avarage_temp(self):
         
+        data = {}
+        data['d'] = {}
+        data['d']['timestamp'] = time.time()
+        data['d']['event'] = 'average_temperature'
+        data['d']['temp_average'] = self.relayedSensedEvents['temperature']['neighbors_average']
+        data['d']['temp_count'] = self.relayedSensedEvents['temperature']['neighbors_counter']
+        data['d']['temp_sum'] = self.relayedSensedEvents['temperature']['neighbors_sum']
+            
+        try:
+            encoded_data = json.dumps(data)
+            #print "Sent avarage temp:" + encoded_data
+
+            self.send_to_mqtt(encoded_data)
+            log.info('Sent neighbors avarage temperature to Mqtt. Data: ' + encoded_data)
+            return True
+        except:
+            log.error('Invalid average temparature encoded data string')
+            return False
+
     # This is called all the time and causes errors if you leave it out.
     def handle_write(self):
         pass
@@ -111,16 +131,11 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application, 
     
     def publish_relayed_sensed_event(self, relayedSensedEvent):
         if relayedSensedEvent.data:
-            print "DATA"
-            print relayedSensedEvent.data
             event = {}
             event['d'] = relayedSensedEvent.data
 
             try:
                 encoded_event = json.dumps(event)
-                print "ENCODED EVENT " + encoded_event
-                print "PUBLISH ... "
-
                 if encoded_event:
                     self.send_to_mqtt(encoded_event)
                     return True
