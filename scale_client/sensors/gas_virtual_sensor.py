@@ -2,8 +2,8 @@ from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
 
 
 class GasVirtualSensor(AnalogVirtualSensor):
-    def __init__(self, broker, device=None, analog_port=None, threshold=None):
-        super(GasVirtualSensor, self).__init__(broker, device=device, analog_port=analog_port)
+    def __init__(self, broker, device=None, interval=1, analog_port=None, threshold=None):
+        super(GasVirtualSensor, self).__init__(broker, device=device, interval=interval, analog_port=analog_port)
         self._threshold = threshold
 
     def get_type(self):

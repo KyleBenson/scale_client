@@ -4,14 +4,6 @@ from scale_client.core.sensed_event import SensedEvent
 import logging
 log = logging.getLogger(__name__)
 
-from circuits.core.events import Event
-from circuits.core.timers import Timer
-from circuits.core.handlers import handler
-from circuits.core.components import BaseComponent
-
-class ReadSensorData(Event):
-    """Used in circuits implementation to periodically tell a VirtualSensor to call its read() function."""
-
 
 class VirtualSensor(Application):
     """
@@ -30,10 +22,6 @@ class VirtualSensor(Application):
     DEFAULT_PRIORITY = 5
 
     def __init__(self, broker, device=None, interval=1):
-        # NOTE: this circuits-specific hack helps deliver events only to the right channels, that is ReadSensorData
-        # events will only fire to the object that initiated the timer that fires them.  Also note that it MUTS come
-        # before the super() call!
-        BaseComponent.__init__(self, channel=self.__get_channel_name())
         super(VirtualSensor, self).__init__(broker)
 
         # TODO: anonymous device descriptor?
@@ -44,7 +32,7 @@ class VirtualSensor(Application):
         """
         A unique human-readable identifier of the type of sensor this object represents.
         """
-        return "VirtualSensor"
+        return "virtual_sensor"
 
     def read_raw(self):
         """
@@ -52,7 +40,7 @@ class VirtualSensor(Application):
         necessary, to return a raw sensor reading.
         :return: raw data
         """
-        return "SensedEvent"
+        return None #"SensedEvent"
 
     def read(self):
         """
@@ -86,6 +74,13 @@ class VirtualSensor(Application):
         :return:
         """
         self._wait_period = period
+        try:
+            self._timer.reset(self._wait_period)
+        except AttributeError:
+            pass
+        # TODO: be able to reset the timer to update this time once it's
+        # started, which will require keeping a handle to the underlying timer
+        # object...
 
     def policy_check(self, event):
         """
@@ -96,23 +91,11 @@ class VirtualSensor(Application):
         """
         return True
 
-    def on_start(self):
-        """
-        Override this function to initiate connections to any 'physical' sensor devices, which may include opening
-        connections to e.g. Twitter feeds.  Don't forget to call this version, though, if you want to make use of the
-        periodic sensing feature, which will continually read data at the rate specified by get_next_wait_period(),
-        publishing any SensedEvents gleaned from read() if they pass policy_check().
-        To use this feature, do the following at the end of your implementation: super(YourSensorClass, self).on_start()
-        """
-        self._timer = Timer(self._wait_period, ReadSensorData(), self.__get_channel_name(), persist=True)
-        self._timer.register(self)
-
-    @handler("ReadSensorData")
     def _do_sensor_read(self):
         """
         This function actually reads sensor data and then publishes it if it passes the policy_check()
         """
-        log.debug("ReadSensorData event received; reading...")
+        log.debug("%s reading sensor data..." % self.get_type())
 
         event = self.read()
         if event is None:
@@ -122,10 +105,13 @@ class VirtualSensor(Application):
             # we specify the event's class because that is how topics are currently implemented using circuits
             self.publish(event)
 
-    def __get_channel_name(self):
+    def on_start(self):
         """
-        Returns a channel name to be used by circuits for routing events properly.  Currently just the class name.
-        :return:
+        Override this function to initiate connections to any 'physical' sensor devices, which may include opening
+        connections to e.g. Twitter feeds.  Don't forget to call this version, though, if you want to make use of the
+        periodic sensing feature, which will continually read data at the rate specified by get_next_wait_period(),
+        publishing any SensedEvents gleaned from read() if they pass policy_check().
+        To use this feature, do the following at the end of your implementation: super(YourSensorClass, self).on_start()
         """
-        # TODO: make this instance unique so e.g. two Heartbeat sensors could run at once
-        return self.__class__.__name__
+        self.timed_call(self._wait_period, VirtualSensor._do_sensor_read, repeat=True)
+

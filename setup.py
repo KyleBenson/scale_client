@@ -1,31 +1,43 @@
 #!/usr/bin/env python
 
-import socket
-from distutils.core import setup
+from setuptools import setup
 
+# Generic info about package
 NAME = "scale_client"
 VERSION = "0.2"
 DESC = "Safe Community Awareness and Alerting Network (SCALE) client"
 AUTHOR = "Kyle Benson"
 AUTHOR_EMAIL = "kebenson@uci.edu"
 URL = "https://github.com/KyleBenson/SmartAmericaSensors"
+
+# Specific information about package contents
 PACKAGES = ["scale_client", "scale_client.core",
-            "scale_client.sensors", "scale_client.event_sinks"]
+            "scale_client.sensors", "scale_client.event_sinks",
+			"scale_client.applications"]
 PACKAGE_DATA = {"scale_client": ["config/*"]}
-DATA_FILES = [("/etc/init.d", ["scripts/scale_daemon"])]
+DAEMON_LOCATION = "/etc/init.d"
+DATA_FILES = [(DAEMON_LOCATION, ["scripts/scale_daemon"])]
 
-setup(name = NAME,
-      version = VERSION,
-      description = DESC,
-      author = AUTHOR,
-      author_email = AUTHOR_EMAIL,
-      url = URL,
-      packages = PACKAGES,
-      package_data = PACKAGE_DATA,
-      data_files = DATA_FILES,
-      requires = ['circuits', 'pyserial', 'mosquitto',
-              # TODO: how to only require this on a pi?
-              # 'spidev',
-              ]
+# Gather requires info from requirements.txt
+with open('requirements.txt') as F:
+    requirements = [l.strip() for l in F.readlines() if not l.startswith("#")]
+
+# Check whether we will be able to install the daemon or not
+try:
+    with open(DAEMON_LOCATION, 'w') as F:
+        pass
+except IOError:
+    print "Can't access daemon location. Skipping daemon installation..."
+    DATA_FILES = None
+
+setup(name=NAME,
+      version=VERSION,
+      description=DESC,
+      author=AUTHOR,
+      author_email=AUTHOR_EMAIL,
+      url=URL,
+	  packages=PACKAGES,
+      package_data=PACKAGE_DATA,
+      data_files=DATA_FILES,
+      install_requires=requirements,
       )
-

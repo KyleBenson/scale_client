@@ -1,5 +1,6 @@
 # This configuration file spins up a client with dummy sensors and publishes via MQTT
-# ideal for testing on a laptop :)
+# Ideal for testing on a laptop :)
+
 EventSinks:
     - MQTTEventSink:
         class: "mqtt_event_sink.MQTTEventSink"
@@ -12,6 +13,10 @@ EventSinks:
         #password: "xottyHH5j9v2"
         keepalive: 60
         #need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
+
+Applications:
+    - Thread:
+        class: "dummy_threaded_application.DummyThreadedApplication"
 
 Sensors:
     - HBSensor:
