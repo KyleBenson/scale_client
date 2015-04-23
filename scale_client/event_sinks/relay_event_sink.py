@@ -45,9 +45,7 @@ class AsyncoreClientUDP(asyncore.dispatcher):
             self.buffer = self.buffer[sent:]
 
 class RelayEventSink(EventSink, ScaleNetworkManager):
-    SCAN_INTERVAL = 60 # 1 min
-    SOCKET_CONNECTION_REFRESH_INTERVAL = 360 # 3 mins 
-    def __init__(self, broker, relay_port):
+    def __init__(self, broker, relay_port, scan_interval, refresh_socket_conns):
         EventSink.__init__(self, broker)
         
         ScaleNetworkManager.__init__(self, broker)
@@ -61,6 +59,9 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         #print self.mesh_host_id
         #self.display_neighbors()
 
+        self.scan_interval = scan_interval;
+        self.refresh_socket_conns = refresh_socket_conns;
+
         self._relay_port = relay_port
         self.last_time_scanned = time.time()
         self.last_time_refreshed= time.time()
@@ -72,8 +73,6 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         for index in self._neighbors:
             neighbor_ip_address = self.neighbors[index].get_ip_address()
             if neighbor_ip_address:
-                #if self._neighbor_connections[neighbor_ip_address]:
-                #    self._neighbor_connections[neighbor_ip_address].handle_close()
                 self._neighbor_connections[neighbor_ip_address] = AsyncoreClientUDP(neighbor_ip_address, self._relay_port)
 
     def on_start(self):
@@ -89,7 +88,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         '''
         
         # Rescan the local network to have updated info
-        if (time.time() - self.last_time_scanned) > self.SCAN_INTERVAL:
+        if (time.time() - self.last_time_scanned) > self.scan_interval:
             self.scan_all_interfaces()
             self.update_neighbors()
             self.scan_arp_address()
@@ -129,7 +128,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         encoded_relay_event = json.dumps(relay_event)
         #print "Replaying event: " + encoded_relay_event 
         
-        if (time.time() - self.last_time_refreshed) > self.SOCKET_CONNECTION_REFRESH_INTERVAL:
+        if (time.time() - self.last_time_refreshed) > self.refresh_socket_conns:
             self.create_connection_to_neighbors()
             self.last_time_refreshed = time.time()
 

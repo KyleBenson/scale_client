@@ -111,7 +111,7 @@ class ScaleNetworkManager():
         batman_ip_address = self.get_interface_ip_address(self.batman_interface)
         if batman_ip_address:
             # annouce node's ip address to other neighbor nodes
-            command = "arping -A " + batman_ip_address + " -c 3"
+            command = "arping -A " + batman_ip_address + " -c 1"
             log.info("Broadcast node ip: " + command)
 
             proc = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)

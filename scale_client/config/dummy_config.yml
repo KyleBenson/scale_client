@@ -15,6 +15,8 @@ EventSinks:
     - RelayEventSink:
         class: "relay_event_sink.RelayEventSink"
         relay_port: 3868
+        scan_interval: 5 # every hour
+        refresh_socket_conns: 600 # every 10 min
 
 Applications:
     - Thread:

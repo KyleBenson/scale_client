@@ -106,7 +106,7 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application, 
         data['d']['event'] = 'average_temperature'
         data['d']['temp_average'] = self.relayedSensedEvents['temperature']['neighbors_average']
         data['d']['temp_count'] = self.relayedSensedEvents['temperature']['neighbors_counter']
-        data['d']['temp_sum'] = self.relayedSensedEvents['temperature']['neighbors_sum']
+        data['d']['temp_sum'] = round(self.relayedSensedEvents['temperature']['neighbors_sum'])
             
         try:
             encoded_data = json.dumps(data)
