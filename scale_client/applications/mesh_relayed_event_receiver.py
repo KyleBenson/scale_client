@@ -23,8 +23,9 @@ import logging
 log = logging.getLogger(__name__)
 
 class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application, MqttRelayer):
-    def __init__(self):
+    def __init__(self, broker):
         asyncore.dispatcher.__init__(self)
+	Application.__init__(self, broker)
         
         self.mqtt_topic = "iot-1/d/%012x/evt/%s/json" % (get_mac(), "%s")
         self.mqtt_hostname = "dime.smartamerica.io"
@@ -71,19 +72,17 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application, 
             if(self.relayedSensedEvent.sensor == 'temperature'):
                 self.calculate_neighbors_average_temp()
 
-            """
-            Can not publish relayed sensed event back to the appication,
-            more thoughts need to be spent here
+	
             print "RELAYED EVENT"
             print self.relayedSensedEvent
             print "PUBLISHING EVENT"
             sensedEvent = self.convert_to_sensed_event(self.relayedSensedEvent)
             print sensedEvent
             self.publish(sensedEvent)
-            """
+
     def calculate_neighbors_average_temp(self):
-        self.relayedSensedEvents['temperature']['neighbors_sum'] += self.relayedSensedEvent.data['value']
-        self.relayedSensedEvents['temperature']['neighbors_counter'] += 1
+        self.relayedSensedEvents['temperature']['neighbors_sum'] += self.relayedSensedEvent.data['value'] 
+	self.relayedSensedEvents['temperature']['neighbors_counter'] += 1
 
         # calculate avarage temparature of all neighbors after receiving 5 
         if(self.relayedSensedEvents['temperature']['neighbors_counter'] > 5):
@@ -143,10 +142,10 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application, 
                 log.error('Invalid relayed encoded event ')
                 return False
 
-def f(nsec):
-    AsyncoreReceiverUDP()
+def f(nsec, broker):
+    AsyncoreReceiverUDP(broker)
     asyncore.loop()
 
 class MeshRelayedEventReceiver(ThreadedApplication): 
     def on_start(self):
-        self.run_in_background(f, 3)
+        self.run_in_background(f, 3, self._broker)

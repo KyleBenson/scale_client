@@ -28,7 +28,7 @@ class RelayedSensedEvent(Event):
 
         if relayed_sensed_event:
             self.sensor = relayed_sensed_event['sensor']
-            self.priority = relayed_sensed_event['priority']
+            self.priority = 100 #relayed_sensed_event['priority']
             self.data = relayed_sensed_event['data']
             self.timestamp = relayed_sensed_event['timestamp']
             self.source = relayed_sensed_event['source']

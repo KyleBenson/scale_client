@@ -126,7 +126,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
 
 
         encoded_relay_event = json.dumps(relay_event)
-        #print "Replaying event: " + encoded_relay_event 
+        print "Replaying event: " + encoded_relay_event 
         
         if (time.time() - self.last_time_refreshed) > self.refresh_socket_conns:
             self.create_connection_to_neighbors()
