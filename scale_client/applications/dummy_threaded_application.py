@@ -10,11 +10,6 @@ log = logging.getLogger(__name__)
 def f(self, nsecs):
     while True:
         log.debug("separate ThreadedApplication is just sleeping...")
-
-        structured_data = {"event": "temperature", "value": 100}
-
-        event = SensedEvent("temperature", structured_data, 5)
-	self.publish(event)
         sleep(nsecs)
 
 class DummyThreadedApplication(ThreadedApplication, Application):
@@ -25,9 +20,4 @@ class DummyThreadedApplication(ThreadedApplication, Application):
     """
 
     def on_start(self):
-        structured_data = {"event": "temperature", "value": 100}
-
-        event = SensedEvent("temperature", structured_data, 5)
-	self.publish(event)
-
         self.run_in_background(f, self, 10)

@@ -66,6 +66,14 @@ class MQTTEventSink(EventSink):
         topic_event_type = event["d"]["event"]
         topic = self._topic % topic_event_type
 
+        # Check to see if event is from neighbors 
+        # and need to be published to Mqtt server
+        if "published" in event["d"]:
+            if event["d"]["published"] == 1:
+                return True
+            else:
+                del event["d"]["published"]
+
         # Publish message
         res, mid = self._client.publish(topic, encoded_event)
         if res == mosquitto.MOSQ_ERR_SUCCESS:

@@ -23,16 +23,6 @@ Applications:
         class: "dummy_threaded_application.DummyThreadedApplication"
     - MeshRelayedEventReceiver:
         class: "mesh_relayed_event_receiver.MeshRelayedEventReceiver"
-    - MqttRelayer:
-        class: "mqtt_relayer.MqttRelayer"
-        hostname: "dime.smartamerica.io"
-        #hostname: "m2m.eclipse.org"
-        hostport: 1883
-        username: null
-        #username: "vbjsfwul"
-        password: null
-        #password: "xottyHH5j9v2"
-        keepalive: 60
 
 Sensors:
     - HBSensor:
@@ -57,10 +47,6 @@ Sensors:
     - DummySeismicSensor:
         class: "dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
         dev_name: "accel"
-    - MeshSensor:
-        class: "mesh_virtual_sensor.MeshVirtualSensor"
-        relay_port: 3868
-        dev_name: "meshSensor"
 
 Networks:
     - NetworkManager:

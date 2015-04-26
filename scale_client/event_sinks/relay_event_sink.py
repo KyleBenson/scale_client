@@ -117,6 +117,14 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         relay_event['sensed_event'] = json.loads(encoded_event)
 
         if self.has_connection():
+            try:
+                # Done relay events for MeshSensor if
+                # if it has been published by current client
+                if relay_event['sensed_event']['d']['event'] == 'MeshSensor':
+                    return True
+            except:
+                return False
+
             relay_event['published'] = 1
         else:
             relay_event['published'] = 0
@@ -126,7 +134,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
 
 
         encoded_relay_event = json.dumps(relay_event)
-        print "Replaying event: " + encoded_relay_event 
+        #print "Replaying event: " + encoded_relay_event 
         
         if (time.time() - self.last_time_refreshed) > self.refresh_socket_conns:
             self.create_connection_to_neighbors()
