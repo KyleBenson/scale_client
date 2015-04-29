@@ -68,6 +68,8 @@ class LocationManager(Application):
 			ack = SensedEvent(sensor="lman",
 					data={"event": "location_manager_ack", "value": self},
 					priority=4)
+			log.debug("send ack to event reporter");
+		
 		value = None
 		if best_device is not None:
 			best_location = self._location_pool[best_device]
