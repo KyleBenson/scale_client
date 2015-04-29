@@ -15,14 +15,14 @@ class HighHeatVirtualSensor(VirtualSensor):
         if event.data['event'] == 'temperature' and event.data['value'] > threshold:
             self.publish(SensedEvent("high heat sensor",
                                      {"event": "high_heat",
-                                      "value": "HOT!",
+                                      "value": "HOT",
                                       'condition': {
                                           "threshold": {
                                               "operator": ">",
                                               "value": threshold
                                           }
                                       }
-                                     }, 10))
+                                     }, 4))
 
 
     def policy_check(self, event):

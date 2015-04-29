@@ -8,11 +8,12 @@ EventSinks:
         #hostname: "m2m.eclipse.org"
         hostport: 1883
         username: null
-        #username: "vbjsfwul"
         password: null
-        #password: "xottyHH5j9v2"
         keepalive: 60
-        #need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
+
+Applications:
+    - LocationManager:
+        class: "location_manager.LocationManager"
 
 Sensors:
     - HBSensor:
@@ -35,6 +36,8 @@ Sensors:
         threshold: 500
     #- RawAnalogSensor:
     #    class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
-    #    dev_name: "raw2"
+    #    dev_name: "raw0"
     #    analog_port: 2
-
+    - GeoIPSensor:
+        class: "location_sensors.geo_ip_virtual_sensor.GeoIPVirtualSensor"
+        dev_name: "geoip0"

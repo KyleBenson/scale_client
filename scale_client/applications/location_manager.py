@@ -2,6 +2,7 @@ from scale_client.core.application import Application
 from scale_client.core.sensed_event import SensedEvent
 
 import time
+import copy
 import logging
 log = logging.getLogger(__name__)
 
@@ -13,13 +14,13 @@ class LocationManager(Application):
 	It reports location changes to other components for them to tag SensedEvent
 	"""
 	def __init__(self, broker):
-		Application.__init__(self, broker)
+		super(LocationManager, self).__init__(broker)
 
 		# Keep location coordinates and its time-stamp, associated with source
 		# Format: sensor: {"lat": , "lon": , "alt": , "expire": , "priority": }
 		self._location_pool = {}
 
-	SOURCE_SUPPORT = ["geo_ip"]
+	SOURCE_SUPPORT = ["geo_ip", "fake_location"]
 
 	def on_event(self, event, topic):
 		"""
@@ -37,6 +38,8 @@ class LocationManager(Application):
 			"alt": None,
 			"expire": data["exp"],
 			"priority": event.priority}
+		if "alt" in data:
+			item["alt"] = data["alt"]
 		self._location_pool[event.sensor] = item
 
 		#Update location pool and choose a best location to report
@@ -49,7 +52,7 @@ class LocationManager(Application):
 				"value": self._location_pool[best_device]}
 		up = SensedEvent(sensor = "location",
 				data = sd,
-				priority = 5)
+				priority = 8)
 		self.publish(up)
 
 	def _update_location(self):

@@ -13,5 +13,10 @@ class HeartbeatVirtualSensor(VirtualSensor):
         return "heartbeat"
 
     def read_raw(self):
-        log.debug("Heartbeat read")
+        # log.debug("Heartbeat read")
         return "heartbeat"
+
+    def read(self):
+    	raw = self.read_raw()
+    	event = self.make_event_with_raw_data(raw, priority=10)
+    	return event

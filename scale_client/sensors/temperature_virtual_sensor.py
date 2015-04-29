@@ -11,7 +11,7 @@ class TemperatureVirtualSensor(VirtualSensor):
     def __init__(
         self, broker, device=None, threshold=24.0, daemon_path='temperature-streams'
     ):
-        VirtualSensor.__init__(self, broker, device)
+        super(TemperatureVirtualSensor, self).__init__(broker, device)
         self._daemon_path = daemon_path
         self._threshold = threshold
         self._result = None
