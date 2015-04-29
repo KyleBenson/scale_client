@@ -11,22 +11,22 @@ Sensors:
         dev_name: "hb0"
         #interval: 1
     - DummyPIRSensor:
-        class: "dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
+        class: "dummy_sensors.dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
         dev_name: "pir0"
     - DummyLightSensor:
-        class: "dummy_light_virtual_sensor.DummyLightVirtualSensor"
+        class: "dummy_sensors.dummy_light_virtual_sensor.DummyLightVirtualSensor"
         dev_name: "light0"
         threshold: 400
     - DummyGasSensor:
-        class: "dummy_gas_virtual_sensor.DummyGasVirtualSensor"
+        class: "dummy_sensors.dummy_gas_virtual_sensor.DummyGasVirtualSensor"
         dev_name: "gas0"
         threshold: 500
     - DummyTempSensor:
-        class: "dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
+        class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
         dev_name: "cel0"
         threshold: 24.0
     - DummySeismicSensor:
-        class: "dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
+        class: "dummy_sensors.dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
         dev_name: "accel"
     - HighHeatSensor:
         class: "high_heat_virtual_sensor.HighHeatVirtualSensor"
