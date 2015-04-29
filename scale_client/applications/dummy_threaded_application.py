@@ -9,6 +9,8 @@ def f(nsecs):
     while True:
         log.debug("Separate ThreadedApplication is just sleeping...")
         sleep(nsecs)
+        log.debug("Separate ThreadedApplication is just snoozing...")
+        sleep(nsecs)
 
 
 class DummyThreadedApplication(ThreadedApplication):
