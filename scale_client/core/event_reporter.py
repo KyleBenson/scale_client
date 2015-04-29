@@ -1,6 +1,8 @@
 from application import Application 
 
 import time
+import logging
+log = logging.getLogger(__name__)
 
 class EventReporter(Application):
     """
@@ -13,8 +15,6 @@ class EventReporter(Application):
     def __init__(self, broker):
         super(EventReporter, self).__init__(broker)
         self.__sinks = []
-
-        # Location info maintenance
         self._lman = None
 
     def add_sink(self, sink):
@@ -37,9 +37,11 @@ class EventReporter(Application):
         """
         et = event.get_type()
         ed = event.data["value"] #ed = event.get_raw_data()
+        log.debug("received event type: " + et)
 
         if et == "location_manager_ack":
             self._lman = ed
+            log.debug("received location manager: " + type(self._lman))
             return
 
         # Ignorance
