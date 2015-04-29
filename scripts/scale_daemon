@@ -37,6 +37,8 @@ if grep -q sheeva /etc/hostname; then #XXX
 DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/sheeva_config.yml"
 elif grep -q pi /etc/hostname; then
 DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/pi_config.yml"
+elif grep -q cycle /etc/hostname; then
+DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/cycle_config.yml"
 fi
 
 else exit 2; # If module scale_client is not found in pip list

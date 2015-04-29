@@ -132,7 +132,7 @@ if vs_t.connect():
 vs_t = GPSIWLSensor(
 	queue = queue,
 	device_sensor = DeviceDescriptor("iwls1"),
-	interval = 1.5,
+	interval = 2,
 	if_name = IW_NAME
 )
 if vs_t.connect():
