@@ -10,7 +10,7 @@ SCALE_VS_MAGIC_LN = r"\$\$\$_SCALE_VS_MAGIC_LN_\$\$\$"
 
 class CSNVirtualSensor(VirtualSensor):
     def __init__(self, broker, device=None):
-        VirtualSensor.__init__(self, broker, device)
+        super(CSNVirtualSensor, self).__init__(broker, device)
         self._reading_regexp = re.compile(r'.*readings: ([\-\+]?[0-9]*(\.[0-9]+)?)')
         self._magic_ln_regexp = re.compile(SCALE_VS_MAGIC_LN)
         self._result = None

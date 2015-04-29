@@ -10,7 +10,7 @@ class AnalogVirtualSensor(VirtualSensor):
     """
 
     def __init__(self, broker, device=None, interval=1, analog_port=None):
-        VirtualSensor.__init__(self, broker, device, interval)
+        super(AnalogVirtualSensor, self).__init__(broker, device, interval)
         self._port = analog_port
         self._spi = None
 

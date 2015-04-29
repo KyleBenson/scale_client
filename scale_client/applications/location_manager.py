@@ -13,7 +13,7 @@ class LocationManager(Application):
 	It reports location changes to other components for them to tag SensedEvent
 	"""
 	def __init__(self, broker):
-		Application.__init__(self, broker)
+		super(LocationManager, self).__init__(broker)
 
 		# Keep location coordinates and its time-stamp, associated with source
 		# Format: sensor: {"lat": , "lon": , "alt": , "expire": , "priority": }
