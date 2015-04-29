@@ -63,7 +63,7 @@ class LocationManager(Application):
 
 		# if not best_device:
 		# 	return
-		
+
 		if not self._ack_success:
 			ack = SensedEvent(sensor="lman",
 					data={"event": "location_manager_ack", "value": self},
@@ -80,7 +80,7 @@ class LocationManager(Application):
 			return
 		if self._last_value is None and value is None:
 			return
-		if type(self._last_value) != type(value)
+		if type(self._last_value) != type(value):
 			or self._last_value["lon"] != value["lon"]
 			or self._last_value["lat"] != value["lat"]
 			or self._last_value["alt"] != value["alt"]:
