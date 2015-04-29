@@ -2,6 +2,7 @@ from scale_client.core.application import Application
 from scale_client.core.sensed_event import SensedEvent
 
 import time
+import copy
 import logging
 log = logging.getLogger(__name__)
 
@@ -32,11 +33,13 @@ class LocationManager(Application):
 		if not et in LocationManager.SOURCE_SUPPORT:
 			return
 		log.debug("event from " + et)
-		item = {"lat": data["lat"],
-			"lon": data["lon"],
-			"alt": None,
-			"expire": data["exp"],
-			"priority": event.priority}
+		# item = {"lat": data["lat"],
+		# 	"lon": data["lon"],
+		# 	"alt": None,
+		# 	"expire": data["exp"],
+		# 	"priority": event.priority}
+		item = copy.copy(data)
+		item["priority"] = event.priority
 		self._location_pool[event.sensor] = item
 
 		#Update location pool and choose a best location to report
