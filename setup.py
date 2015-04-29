@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Generic info about package
 NAME = "scale_client"
@@ -13,7 +13,7 @@ URL = "https://github.com/KyleBenson/SmartAmericaSensors"
 # Specific information about package contents
 PACKAGES = ["scale_client", "scale_client.core",
             "scale_client.sensors", "scale_client.event_sinks",
-			"scale_client.applications"]
+            "scale_client.applications"]
 PACKAGE_DATA = {"scale_client": ["config/*"]}
 DAEMON_LOCATION = "/etc/init.d"
 DATA_FILES = [(DAEMON_LOCATION, ["scripts/scale_daemon"])]
@@ -24,7 +24,7 @@ with open('requirements.txt') as F:
 
 # Check whether we will be able to install the daemon or not
 try:
-    with open(DAEMON_LOCATION, 'w') as F:
+    with open(DATA_FILES[0][1][0], 'w') as F:
         pass
 except IOError:
     print "Can't access daemon location. Skipping daemon installation..."
@@ -36,7 +36,8 @@ setup(name=NAME,
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       url=URL,
-	  packages=PACKAGES,
+      # packages=PACKAGES,
+      packages=find_packages(),
       package_data=PACKAGE_DATA,
       data_files=DATA_FILES,
       install_requires=requirements,
