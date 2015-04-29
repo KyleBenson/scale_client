@@ -41,7 +41,7 @@ class EventReporter(Application):
 
         if et == "location_manager_ack":
             self._lman = ed
-            log.debug("received location manager: " + type(self._lman))
+            log.debug("received location manager")
             return
 
         # Ignorance

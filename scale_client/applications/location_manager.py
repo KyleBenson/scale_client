@@ -95,4 +95,4 @@ class LocationManager(Application):
 		self._ack_success = True
 		self._update_location()
 		if self._last_value is not None:
-			event["geotag"] = copy.copy(self._last_value)
+			event.data["geotag"] = copy.copy(self._last_value)
