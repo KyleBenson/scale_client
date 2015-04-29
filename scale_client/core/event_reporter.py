@@ -58,6 +58,8 @@ class EventReporter(Application):
         elif type(self._location) == type({}):
             event.data["geotag"] = {"lon": self._location["lon"],
                                     "lat": self._location["lat"]}
+            if "alt" in self._location:
+            	event.data["geotag"]["alt"] = self._location["alt"]
         else: raise ValueError
 
         # Send event to sinks
