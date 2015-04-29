@@ -20,7 +20,7 @@ class ThreadedVirtualSensor(VirtualSensor):
 
 	def sensor_loop(self, interval):
 		while True:
-			_do_sensor_read()
+			self._do_sensor_read()
 			sleep(interval)
 
 	def on_start(self):
