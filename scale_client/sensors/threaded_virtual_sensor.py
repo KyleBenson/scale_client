@@ -17,5 +17,10 @@ class ThreadedVirtualSensor(VirtualSensor):
 	def run_in_background(self, f, *args, **kwargs):
 		self.fire(task(f, *args, **kwargs), self._get_channel_name())
 
+	def sensor_loop(self, interval):
+		while True:
+			_do_sensor_read()
+			sleep(interval)
+
 	def on_start(self):
-		self.run_in_background(VirtualSensor.on_start, self)
+		self.run_in_background(self.sensor_loop, self._wait_period)
