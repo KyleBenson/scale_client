@@ -15,7 +15,7 @@ class EventReporter(Application):
         self.__sinks = []
 
         # Location info maintenance
-        self._location = None
+        self._lman = None
 
     def add_sink(self, sink):
         """
@@ -38,28 +38,15 @@ class EventReporter(Application):
         et = event.get_type()
         ed = event.data["value"] #ed = event.get_raw_data()
 
-        # Ignorance
-        if et == "geo_ip":
+        if et == "location_manager_ack":
+            self._lman = ed
             return
 
-        # Location info maintenance XXX: Looks thread-unsafe
-        if et == "location_update":
-            if not "lat" in ed or not "lon" in ed:
-                raise ValueError # This should not happen
-            self._location = ed
-        elif self._location is not None:
-            if self._location["expire"] < time.time():
-                sefl._location = None
-                #TODO: What else can we do? Request a location update?
-
-        #TODO: Tag the event
-        if self._location is None:
-            pass
-        elif type(self._location) == type({}):
-            event.data["geotag"] = {"lon": self._location["lon"],
-                                    "lat": self._location["lat"],
-                                    "alt": self._location["alt"]}
-        else: raise ValueError
+        # Ignorance
+        if self._lman is not None:
+            if et in self._lman.SOURCE_SUPPORT:
+                return
+            self._lman.tag_event(event)
 
         # Send event to sinks
         for sink in self.__sinks:

@@ -13,21 +13,24 @@ class LocationManager(Application):
 
 	It reports location changes to other components for them to tag SensedEvent
 	"""
-	def __init__(self, broker):
+	def __init__(self, broker, report_update=True):
 		super(LocationManager, self).__init__(broker)
 
 		# Keep location coordinates and its time-stamp, associated with source
 		# Format: sensor: {"lat": , "lon": , "alt": , "expire": , "priority": }
 		self._location_pool = {}
+		self._report_update = report_update
+		self._last_value = None
+		self._ack_success = False
 
-	SOURCE_SUPPORT = ["geo_ip", "fake_location"]
+	SOURCE_SUPPORT = ["geo_ip", "gps", "fake_location", "rand_location"]
 
 	def on_event(self, event, topic):
 		"""
 		LocationManager should deal with all location events published by
 		location providers.
 		"""
-		#Analyze event
+		# Analyze event
 		et = event.get_type()
 		data = event.get_raw_data()
 		if not et in LocationManager.SOURCE_SUPPORT:
@@ -41,19 +44,7 @@ class LocationManager(Application):
 		if "alt" in data:
 			item["alt"] = data["alt"]
 		self._location_pool[event.sensor] = item
-
-		#Update location pool and choose a best location to report
-		best_device = self._update_location()
-
-		#Publish the best location
-		if not best_device:
-			return
-		sd = {"event": "location_update",
-				"value": self._location_pool[best_device]}
-		up = SensedEvent(sensor = "location",
-				data = sd,
-				priority = 8)
-		self.publish(up)
+		self._update_location()
 
 	def _update_location(self):
 		"""
@@ -70,5 +61,38 @@ class LocationManager(Application):
 				best_device = device
 				highest_pri = self._location_pool[device]["priority"]
 
-		return best_device
+		# if not best_device:
+		# 	return
+		
+		if not self._ack_success:
+			ack = SensedEvent(sensor="lman",
+					data={"event": "location_manager_ack", "value": self},
+					priority=4)
+		value = None
+		if best_device is not None:
+			best_location = self._location_pool[best_device]
+			value = {}
+			value["lat"] = best_location["lat"]
+			value["lon"] = best_location["lon"]
+			value["alt"] = best_location["alt"]
 
+		if value is not None and type(value) != type({}):
+			return
+		if self._last_value is None and value is None:
+			return
+		if type(self._last_value) != type(value)
+			or self._last_value["lon"] != value["lon"]
+			or self._last_value["lat"] != value["lat"]
+			or self._last_value["alt"] != value["alt"]:
+			if self._report_update:
+				up = SensedEvent(sensor="lman",
+						data={"event": "location_update", "value": value},
+						priority=8)
+				self.publish(up)
+			self._last_value = value
+
+	def tag_event(self, event):
+		self._ack_success = True
+		self._update_location()
+		if self._last_value is not None:
+			event["geotag"] = copy.copy(self._last_value)
