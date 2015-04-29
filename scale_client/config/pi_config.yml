@@ -35,6 +35,8 @@ Sensors:
         threshold: 500
     #- RawAnalogSensor:
     #    class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
-    #    dev_name: "raw2"
+    #    dev_name: "raw0"
     #    analog_port: 2
-
+    - GeoIPSensor:
+        class: "geo_ip_virtual_sensor.GeoIPVirtualSensor"
+        dev_name: "geoip0"

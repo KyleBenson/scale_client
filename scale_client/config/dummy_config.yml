@@ -41,3 +41,6 @@ Sensors:
     - DummySeismicSensor:
         class: "dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
         dev_name: "accel"
+    - GeoIPSensor:
+        class: "geo_ip_virtual_sensor.GeoIPVirtualSensor"
+        dev_name: "geoip0"

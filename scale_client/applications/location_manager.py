@@ -49,7 +49,7 @@ class LocationManager(Application):
 				"value": self._location_pool[best_device]}
 		up = SensedEvent(sensor = "location",
 				data = sd,
-				priority = 5)
+				priority = 8)
 		self.publish(up)
 
 	def _update_location(self):
