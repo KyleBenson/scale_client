@@ -48,7 +48,8 @@ class EventReporter(Application):
         if self._lman is not None:
             if et in self._lman.SOURCE_SUPPORT:
                 return
-            self._lman.tag_event(event)
+            if et != "location_update":
+            	self._lman.tag_event(event)
 
         # Send event to sinks
         for sink in self.__sinks:
