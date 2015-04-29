@@ -20,7 +20,7 @@ class LocationManager(Application):
 		# Format: sensor: {"lat": , "lon": , "alt": , "expire": , "priority": }
 		self._location_pool = {}
 
-	SOURCE_SUPPORT = ["geo_ip", "fake_location"]
+	SOURCE_SUPPORT = ["geo_ip", "fake_location", "gps"]
 
 	def on_event(self, event, topic):
 		"""
