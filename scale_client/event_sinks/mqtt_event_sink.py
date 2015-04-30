@@ -100,4 +100,4 @@ class MQTTEventSink(EventSink):
 
     def encode_event(self, event):
         # return event.to_json()
-        json.dumps({"d": event.to_map()})
+        return json.dumps({"d": event.to_map()})
