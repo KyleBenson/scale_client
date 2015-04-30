@@ -32,7 +32,7 @@ class InternetAccessVirtualSensor(ThreadedVirtualSensor):
 	def policy_check(self, data):
 		raw = data.get_raw_data()
 		success = False
-		if raw != self._last_value or self._report_timer + self._report_threshold > get_time():
+		if raw != self._last_value or self._report_timer + self._report_threshold < get_time():
 			self._report_timer = get_time()
 			success = True
 		self._last_value = raw
