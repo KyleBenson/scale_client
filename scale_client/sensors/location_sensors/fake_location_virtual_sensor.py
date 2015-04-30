@@ -19,6 +19,8 @@ class FakeLocationVirtualSensor(VirtualSensor):
 				raise TypeError
 			self._tag["alt"] = alt
 
+	DEFAULT_PRIORITY = 3
+
 	def get_type(self):
 		return "fake_location"
 
@@ -26,11 +28,6 @@ class FakeLocationVirtualSensor(VirtualSensor):
 		raw = copy.copy(self._tag)
 		raw["exp"] = time.time() + self._exp
 		return raw
-
-	def read(self):
-		raw = self.read_raw()
-		event = self.make_event_with_raw_data(raw, priority=3)
-		return event
 
 	def policy_check(self, data):
 		return True

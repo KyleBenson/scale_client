@@ -1,5 +1,5 @@
 {
-	"SCALE_raw_Temp_Sheeva":"01",
-	"SCALE_high_heat_Sheeva":"02",
-	"SCALE_pick_detected_Sheeva":"05"
+	"temperature":"01",
+	"temperature_high":"02",
+	"seismic":"05"
 }

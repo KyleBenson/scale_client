@@ -15,6 +15,8 @@ class CSNVirtualSensor(VirtualSensor):
         self._magic_ln_regexp = re.compile(SCALE_VS_MAGIC_LN)
         self._result = None
 
+    DEFAULT_PRIORITY = 4
+
     def get_type(self):
         return "seismic"
 

@@ -1,6 +1,6 @@
 from scale_client.sensors.threaded_virtual_sensor import ThreadedVirtualSensor
 
-from urllib import urlopen
+from urllib2 import urlopen
 import json
 import time
 import logging
@@ -25,6 +25,8 @@ class GeoIPVirtualSensor(ThreadedVirtualSensor):
 				raise TypeError
 			self._lookup_url += "/" + mock_ip
 
+	DEFAULT_PRIORITY = 9
+
 	def get_type(self):
 		return "geo_ip"
 
@@ -32,18 +34,15 @@ class GeoIPVirtualSensor(ThreadedVirtualSensor):
 		try:
 			ret = urlopen(self._lookup_url).read().strip()
 			obj = json.loads(ret)
-		except Error:
+		except Exception:
 			return None
-		raw = {"lat": obj["lat"],
+		raw = {
+				"lat": obj["lat"],
 				"lon": obj["lon"],
 				"ip": obj["query"],
-				"exp": time.time() + self._exp} # Expire in 10 minutes
+				"exp": time.time() + self._exp
+			} # Expire in 10 minutes
 		return raw
-	
-	def read(self):
-		raw = self.read_raw()
-		event = self.make_event_with_raw_data(raw, priority=9)
-		return event
 
 	def policy_check(self, data):
 		raw = data.get_raw_data()

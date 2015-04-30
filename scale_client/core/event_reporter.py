@@ -16,6 +16,7 @@ class EventReporter(Application):
         super(EventReporter, self).__init__(broker)
         self.__sinks = []
         self._lman = None
+        self._neta = None
 
     def add_sink(self, sink):
         """
@@ -36,7 +37,7 @@ class EventReporter(Application):
         we should determine whether to report it or not and then do so.
         """
         et = event.get_type()
-        ed = event.data["value"] #ed = event.get_raw_data()
+        ed = event.get_raw_data()
         log.debug("received event type: " + et)
 
         if et == "location_manager_ack":
@@ -44,12 +45,23 @@ class EventReporter(Application):
             log.debug("received location manager")
             return
 
+        if et == "internet_access":
+            self._neta = ed
+            if ed is not None:
+            	if ed:
+            		log.info("Internet access successful")
+            	else:
+            		log.info("Internet access failed")
+            else:
+            	log.info("Internet access status unknown")
+            return
+
         # Ignorance
         if self._lman is not None:
             if et in self._lman.SOURCE_SUPPORT:
                 return
             if et != "location_update":
-            	self._lman.tag_event(event)
+                self._lman.tag_event(event)
 
         # Send event to sinks
         for sink in self.__sinks:

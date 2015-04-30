@@ -1,4 +1,5 @@
 import socket
+import json
 
 import mosquitto
 from mosquitto import Mosquitto
@@ -12,7 +13,7 @@ from uuid import getnode as get_mac
 
 class MQTTEventSink(EventSink):
     def __init__(self, broker,
-                topic="iot-1/d/%012x/evt/%s/json" % (get_mac(), "%s"),
+                topic="iot-1/d/%012x/evt/%s/json",
                 hostname=None,
                 hostport=1883,
                 username=None,
@@ -23,7 +24,8 @@ class MQTTEventSink(EventSink):
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
         self._client.on_publish = self._on_publish
-        self._topic = topic
+        self._topic_format = topic
+        self._topic = self._topic_format % (0, "%s")
 
         self._hostname = hostname
         self._hostport = hostport
@@ -32,8 +34,10 @@ class MQTTEventSink(EventSink):
         self._keepalive = keepalive
 
         self._loopflag = False
+        self._neta = None
 
     def _on_connect(self, mosq, obj, rc):
+    	self._topic = self._topic_format % (get_mac(), "%s")
         log.debug("MQTT publisher connected: " + str(rc))
 
     def _on_disconnect(self, mosq, obj, rc):
@@ -79,9 +83,21 @@ class MQTTEventSink(EventSink):
         return True
 
     def check_available(self, event):
+        if self._neta is not None and not self._neta:
+            return False
         if not self._loopflag:
             if not self._try_connect():
                 log.error("MQTT publisher failure: Cannot connect")
                 return False
-        # TODO: backpressure?
         return True
+
+    def on_event(self, event, topic):
+        et = event.get_type()
+        ed = event.get_raw_data()
+
+        if et == "internet_access":
+            self._neta = ed
+
+    def encode_event(self, event):
+        # return event.to_json()
+        return json.dumps({"d": event.to_map()})

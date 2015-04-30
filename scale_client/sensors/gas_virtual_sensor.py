@@ -2,9 +2,11 @@ from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
 
 
 class GasVirtualSensor(AnalogVirtualSensor):
-    def __init__(self, broker, device=None, interval=1, analog_port=None, threshold=None):
+    def __init__(self, broker, device=None, interval=1, analog_port=None, threshold=400):
         super(GasVirtualSensor, self).__init__(broker, device=device, interval=interval, analog_port=analog_port)
         self._threshold = threshold
+
+    DEFAULT_PRIORITY = 3
 
     def get_type(self):
         return "explosive_gas"
@@ -13,8 +15,8 @@ class GasVirtualSensor(AnalogVirtualSensor):
         event = super(GasVirtualSensor, self).read()
         event.data['condition'] = {
                 "threshold": {
-                "operator": ">",
-                "value": self._threshold
+                    "operator": ">",
+                    "value": self._threshold
                 }
             }
         return event

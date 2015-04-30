@@ -36,11 +36,13 @@ class LocationManager(Application):
 		if not et in LocationManager.SOURCE_SUPPORT:
 			return
 		log.debug("event from " + et)
-		item = {"lat": data["lat"],
-			"lon": data["lon"],
-			"alt": None,
-			"expire": data["exp"],
-			"priority": event.priority}
+		item = {
+				"lat": data["lat"],
+				"lon": data["lon"],
+				"alt": None,
+				"expire": data["exp"],
+				"priority": event.priority
+			}
 		if "alt" in data:
 			item["alt"] = data["alt"]
 		self._location_pool[event.sensor] = item

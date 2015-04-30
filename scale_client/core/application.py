@@ -13,7 +13,7 @@ class timer_expired_event(Event):
 
 # TODO: have smart choosing of implementations where multiple classes are implemented in this module and
 # the one true "Application" implementation is exported as whichever the best of those is that can be imported
-# (or that is specified in config??).  It seems that handling this exporting in core/__init__.py will lead to issues
+# (or that is specified in config?).  It seems that handling this exporting in core/__init__.py will lead to issues
 # when another class, e.g. event_reporter, wants to import Application as relative imports apparently cannot be used
 # in a non-package
 
@@ -226,7 +226,7 @@ class Application(BaseComponent):
         """
         # TODO: this is going to be near-impossible with circuits alone since they've adopted the convention of
         # subscribing by class type.  This doesn't allow hierarchies like "subscribe to all network-related events",
-        # let alone the advanced content-based subscriptions that we're going to want eventually... maybe channels???
+        # let alone the advanced content-based subscriptions that we're going to want eventually... maybe channels?
         raise NotImplementedError()
         self.addHandler(f)
 

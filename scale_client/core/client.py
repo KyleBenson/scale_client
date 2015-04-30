@@ -129,7 +129,7 @@ class ScaleClient:
                     else 'scale_client.sensors.' + sensor_config['class']
                 cls = self._get_class_by_name(cls_name)
 
-                # copy config s so we can tweak it as necessary to expose only correct kwargs
+                # copy config so we can tweak it as necessary to expose only correct kwargs
                 new_sensor_config = sensor_config.copy()
                 new_sensor_config.pop('class')
                 new_sensor_config.pop('dev_name')
