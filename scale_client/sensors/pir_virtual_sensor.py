@@ -19,16 +19,16 @@ class PIRVirtualSensor(GPIOVirtualSensor):
 
     def policy_check(self, data):
         data = data.get_raw_data()
-        should_report = False
+        success = False
 
         # State transitions
         if self._state == PIRVirtualSensor.IDLE and data == PIRVirtualSensor.ACTIVE:
             self._state = PIRVirtualSensor.ACTIVE
-            should_report = True
+            success = True
         elif self._state == PIRVirtualSensor.ACTIVE and data == PIRVirtualSensor.IDLE:
             self._state = PIRVirtualSensor.IDLE
             self._inact_timer = get_time()
-            should_report = True
+            success = True
 
         # Here we check if the sensor has not been active for some time period, in which case we publish a different
         # type of event to notify that this sensor is still active
@@ -50,5 +50,4 @@ class PIRVirtualSensor(GPIOVirtualSensor):
                     )
                 )
             self._inact_timer = get_time()
-
-        return should_report
+        return success

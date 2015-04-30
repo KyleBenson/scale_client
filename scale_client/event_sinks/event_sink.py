@@ -17,7 +17,7 @@ class EventSink(Application):
         """
         return self.send(self.encode_event(event))
 
-    def send(self, event):
+    def send(self, encoded_event):
         """
         This function is the heart of every EventSink.  Use it to actually send raw data representing a SensedEvent
         over some connection.
@@ -40,5 +40,4 @@ class EventSink(Application):
         :param event: SensedEvent to encode
         :return: event encoded in a format ready to be immediately pushed to send(event)
         """
-        encoded_event = event.to_json()
-        return encoded_event
+        raise NotImplementedError()

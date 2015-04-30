@@ -47,6 +47,4 @@ class TemperatureVirtualSensor(VirtualSensor):
         return event
 
     def policy_check(self, event):
-        if event.data['value'] > self._threshold:
-            return True
-        return False
+        return event.data['value'] > self._threshold
