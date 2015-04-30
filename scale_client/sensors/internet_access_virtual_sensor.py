@@ -18,6 +18,8 @@ class InternetAccessVirtualSensor(ThreadedVirtualSensor):
 			raise TypeError
 		self._timeout = timeout
 
+	DEFAULT_PRIORITY = 8
+
 	def get_type(self):
 		return "internet_access"
 
@@ -26,11 +28,6 @@ class InternetAccessVirtualSensor(ThreadedVirtualSensor):
 		if res != 0:
 			return False
 		return True
-	
-	def read(self):
-		raw = self.read_raw()
-		event = self.make_event_with_raw_data(raw, priority=8)
-		return event
 
 	def policy_check(self, data):
 		raw = data.get_raw_data()

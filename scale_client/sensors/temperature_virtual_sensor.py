@@ -15,6 +15,8 @@ class TemperatureVirtualSensor(VirtualSensor):
         self._result = None
         self._regexp = re.compile(r'Device ([^:]*): Sensor ([0-9]*): Temperature: ([0-9\.]*)')
 
+    DEFAULT_PRIORITY = 5
+
     def get_type(self):
         return "temperature"
 

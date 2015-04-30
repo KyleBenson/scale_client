@@ -18,7 +18,6 @@ class VirtualSensor(Application):
     Open implementation questions:
       1) How to handle sampling rates, modifying priorities, and turning sensors on/off remotely?
     """
-    # TODO: verify that this can be overridden by base classes and function properly.
     DEFAULT_PRIORITY = 5
 
     def __init__(self, broker, device=None, interval=1):

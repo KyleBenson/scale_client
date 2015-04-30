@@ -10,6 +10,7 @@ class LightVirtualSensor(AnalogVirtualSensor):
         self._threshold = threshold
         self._state = LightVirtualSensor.DARK
 
+    DEFAULT_PRIORITY = 7
     DARK = 0
     BRIGHT = 1
 

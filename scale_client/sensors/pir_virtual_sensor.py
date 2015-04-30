@@ -9,6 +9,7 @@ class PIRVirtualSensor(GPIOVirtualSensor):
         super(PIRVirtualSensor, self).__init__(broker, device, interval, gpio_pin)
         self._state = PIRVirtualSensor.IDLE
 
+    DEFAULT_PRIORITY = 7
     IDLE = 0
     ACTIVE = 1
 

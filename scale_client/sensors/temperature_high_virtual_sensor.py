@@ -9,6 +9,8 @@ class TemperatureHighVirtualSensor(VirtualSensor):
         super(TemperatureHighVirtualSensor, self).__init__(broker=broker, device=device, interval=None)
         self._threshold = threshold
 
+    DEFAULT_PRIORITY = 4
+
     def get_type(self):
         return "temperature_high"
 
@@ -20,7 +22,7 @@ class TemperatureHighVirtualSensor(VirtualSensor):
             return
 
         if ed > self._threshold:
-            new_event = self.make_event_with_raw_data(ed, priority=4)
+            new_event = self.make_event_with_raw_data(ed, priority=self.__class__.DEFAULT_PRIORITY)
             new_event.data["condition"] = {
                     "threshold": {
                         "operator": ">",

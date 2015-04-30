@@ -8,6 +8,8 @@ EventSinks:
 Applications:
     - Thread:
         class: "dummy_threaded_application.DummyThreadedApplication"
+    - LocationManager:
+        class: "location_manager.LocationManager"
 
 Sensors:
     - HBSensor:

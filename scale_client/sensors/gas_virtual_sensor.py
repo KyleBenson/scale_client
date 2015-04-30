@@ -6,6 +6,8 @@ class GasVirtualSensor(AnalogVirtualSensor):
         super(GasVirtualSensor, self).__init__(broker, device=device, interval=interval, analog_port=analog_port)
         self._threshold = threshold
 
+    DEFAULT_PRIORITY = 3
+
     def get_type(self):
         return "explosive_gas"
 

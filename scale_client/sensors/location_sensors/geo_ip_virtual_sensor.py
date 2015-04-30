@@ -25,6 +25,8 @@ class GeoIPVirtualSensor(ThreadedVirtualSensor):
 				raise TypeError
 			self._lookup_url += "/" + mock_ip
 
+	DEFAULT_PRIORITY = 9
+
 	def get_type(self):
 		return "geo_ip"
 
@@ -41,11 +43,6 @@ class GeoIPVirtualSensor(ThreadedVirtualSensor):
 				"exp": time.time() + self._exp
 			} # Expire in 10 minutes
 		return raw
-	
-	def read(self):
-		raw = self.read_raw()
-		event = self.make_event_with_raw_data(raw, priority=9)
-		return event
 
 	def policy_check(self, data):
 		raw = data.get_raw_data()
