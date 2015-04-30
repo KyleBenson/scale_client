@@ -31,5 +31,6 @@ class AnalogVirtualSensor(VirtualSensor):
             self._spi.open(0, 0)
         except IOError:
             log.error("Failed to open analog device: " + self.device.device)
+            return
 
         super(AnalogVirtualSensor, self).on_start()
