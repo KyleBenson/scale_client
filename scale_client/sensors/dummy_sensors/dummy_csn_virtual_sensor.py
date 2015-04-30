@@ -22,8 +22,12 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
         VirtualSensor.on_start(self)
 
     def read_raw(self):
-        readings = []
+    	try:
+    		self._timer
+    	except Error:
+    		return []
 
+        readings = []
         if self._whatflag:
             readings.append(self._rand.random() * 0.1)
             readings.append(self._rand.random() * 0.1)
@@ -32,12 +36,12 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
             readings.append(0.0)
             readings.append(0.0)
             readings.append(self._rand.random() * 0.1)
-
         self._whatflag = not self._whatflag
 
         # reset the timer to a random time so that events appear more dynamically
         # NOTE: this relies on the circuits implementation!  consider it a hack!
         wait_time = self._rand.random() * 2 * DummyCSNVirtualSensor.WAIT_MEAN
+
         self._timer.reset(wait_time)
 
         return readings
