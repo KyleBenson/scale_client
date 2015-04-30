@@ -1,7 +1,7 @@
 from random import *
 
 from scale_client.sensors.gas_virtual_sensor import GasVirtualSensor
-# from scale_client.sensors.virtual_sensor import VirtualSensor
+from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
 
 
 class DummyGasVirtualSensor(GasVirtualSensor):
@@ -19,7 +19,7 @@ class DummyGasVirtualSensor(GasVirtualSensor):
 
     def on_start(self):
         # avoid opening any connections to real sensors, so skip the on_start() of our parents
-        super(GasVirtualSensor, self).on_start()
+        super(AnalogVirtualSensor, self).on_start()
 
     def read_raw(self):
         if self._rand.random() < self._prob:
