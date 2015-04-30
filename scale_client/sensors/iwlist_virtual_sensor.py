@@ -4,9 +4,9 @@ from iwlib import iwlist
 from scale_client.core.sensed_event import SensedEvent
 from scale_client.sensors.virtual_sensor import VirtualSensor
 
-class IWListScanVirtualSensor(VirtualSensor):
-	def __init__(self, queue, device_sensor, interval = 300, if_name = None):
-		VirtualSensor.__init__(self, queue, device_sensor)
+class IWListVirtualSensor(VirtualSensor):
+	def __init__(self, broker, device=None, interval = 4, if_name = None):
+		super(IWListVirtualSensor, self).__init__(broker, device=device, interval=interval)
 		self._interval = interval
 		self._if_name = if_name
 
