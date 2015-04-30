@@ -13,9 +13,7 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
         CSNVirtualSensor.__init__(self, broker, device=device)
         self._rand = Random()
         self._rand.seed()
-        #TODO: what in the world is this?
         self._whatflag = True
-
 
     WAIT_MEAN = 10
 

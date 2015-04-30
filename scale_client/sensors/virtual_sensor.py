@@ -113,6 +113,5 @@ class VirtualSensor(Application):
         publishing any SensedEvents gleaned from read() if they pass policy_check().
         To use this feature, do the following at the end of your implementation: super(YourSensorClass, self).on_start()
         """
-        self._do_sensor_read()
+        self.timed_call(0, VirtualSensor._do_sensor_read, repeat=False)
         self.timed_call(self._wait_period, VirtualSensor._do_sensor_read, repeat=True)
-
