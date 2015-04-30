@@ -1,6 +1,6 @@
 from scale_client.sensors.threaded_virtual_sensor import ThreadedVirtualSensor
 
-from urllib import urlopen
+from urllib2 import urlopen
 import json
 import time
 import logging
