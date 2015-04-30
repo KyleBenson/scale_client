@@ -47,6 +47,13 @@ class EventReporter(Application):
 
         if et == "internet_access":
             self._neta = ed
+            if ed is not None:
+            	if ed:
+            		log.info("Internet access successful")
+            	else:
+            		log.info("Internet access failed")
+            else:
+            	log.info("Internet access status unknown")
             return
 
         # Ignorance
