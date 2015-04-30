@@ -32,7 +32,7 @@ class GeoIPVirtualSensor(ThreadedVirtualSensor):
 		try:
 			ret = urlopen(self._lookup_url).read().strip()
 			obj = json.loads(ret)
-		except Error:
+		except Exception:
 			return None
 		raw = {"lat": obj["lat"],
 				"lon": obj["lon"],

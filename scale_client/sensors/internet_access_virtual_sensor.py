@@ -20,7 +20,7 @@ class InternetAccessVirtualSensor(ThreadedVirtualSensor):
 	def read_raw(self):
 		try:
 			urlopen(self._lookup_url, timeout=self._timeout)
-		except Error:
+		except Exception:
 			return False
 		return True
 	
