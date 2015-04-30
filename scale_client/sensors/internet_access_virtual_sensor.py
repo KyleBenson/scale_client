@@ -22,7 +22,7 @@ class InternetAccessVirtualSensor(ThreadedVirtualSensor):
 		return "internet_access"
 
 	def read_raw(self):
-		res = os.system("ping -c 1 -w %s " % self._timeout + hostname + " >/dev/null 2>&1")
+		res = os.system("ping -c 1 -w %s " % self._timeout + self._ping_host + " >/dev/null 2>&1")
 		if res != 0:
 			return False
 		return True
