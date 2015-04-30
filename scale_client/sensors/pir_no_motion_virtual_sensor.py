@@ -46,7 +46,7 @@ class PIRNoMotionVirtualSensor(VirtualSensor):
 
     def policy_check(self, event):
     	if self._inact_timer is not None:
-    		if self._inact_timer + self.inact_threshold < get_time():
+    		if self._inact_timer + self._inact_threshold < get_time():
     			self._inact_timer = get_time()
     			return True
         return False
