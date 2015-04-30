@@ -25,4 +25,4 @@ Sensors:
     #     threshold: 24.0
     # - CSNSensor:
     #     class: "csn_virtual_sensor.CSNVirtualSensor"
-    #     dev_name: "accel"
+    #     dev_name: "accel0"

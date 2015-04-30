@@ -19,7 +19,7 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
 
     def on_start(self):
         # Avoid opening any connections to real sensors, so skip the on_start() of our parent
-        # VirtualSensor.on_start(self)
+        # super(CSNVirtualSensor, self).on_start()
         self.timed_call(self._wait_period, VirtualSensor._do_sensor_read, repeat=True)
 
     def read_raw(self):
@@ -39,5 +39,4 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
         wait_time = self._rand.random() * 2 * DummyCSNVirtualSensor.WAIT_MEAN
 
         self._timer.reset(wait_time)
-
         return readings

@@ -18,7 +18,7 @@ class VirtualSensor(Application):
     Open implementation questions:
       1) How to handle sampling rates, modifying priorities, and turning sensors on/off remotely?
     """
-    # TODO: verify that this can be overridden by base classes and function properly.  also document
+    # TODO: verify that this can be overridden by base classes and function properly.
     DEFAULT_PRIORITY = 5
 
     def __init__(self, broker, device=None, interval=1):
@@ -40,7 +40,7 @@ class VirtualSensor(Application):
         necessary, to return a raw sensor reading.
         :return: raw data
         """
-        return None #"SensedEvent"
+        return None
 
     def read(self):
         """
@@ -102,7 +102,6 @@ class VirtualSensor(Application):
             log.error("SensedEvent is None! Default policy is to not report.")
             return
         if self.policy_check(event):
-            # we specify the event's class because that is how topics are currently implemented using circuits
             self.publish(event)
 
     def on_start(self):
@@ -113,5 +112,7 @@ class VirtualSensor(Application):
         publishing any SensedEvents gleaned from read() if they pass policy_check().
         To use this feature, do the following at the end of your implementation: super(YourSensorClass, self).on_start()
         """
+        if self._wait_period is None:
+            return
         self._do_sensor_read()
         self.timed_call(self._wait_period, VirtualSensor._do_sensor_read, repeat=True)

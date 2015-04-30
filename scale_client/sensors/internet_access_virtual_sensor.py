@@ -11,7 +11,7 @@ class InternetAccessVirtualSensor(ThreadedVirtualSensor):
 		super(InternetAccessVirtualSensor, self).__init__(broker, device=device, interval=interval)
 		self._ping_host = ping_host
 		self._last_value = None
-		self._report_timer = get_time()
+		self._report_timer = None
 		self._report_threshold = _report_threshold
 
 		if type(timeout) != type(0):
@@ -35,7 +35,7 @@ class InternetAccessVirtualSensor(ThreadedVirtualSensor):
 	def policy_check(self, data):
 		raw = data.get_raw_data()
 		success = False
-		if raw != self._last_value or self._report_timer + self._report_threshold < get_time():
+		if raw != self._last_value or self._report_timer is None or self._report_timer + self._report_threshold < get_time():
 			self._report_timer = get_time()
 			success = True
 		self._last_value = raw

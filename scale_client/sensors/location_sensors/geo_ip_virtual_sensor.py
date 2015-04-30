@@ -34,10 +34,12 @@ class GeoIPVirtualSensor(ThreadedVirtualSensor):
 			obj = json.loads(ret)
 		except Exception:
 			return None
-		raw = {"lat": obj["lat"],
+		raw = {
+				"lat": obj["lat"],
 				"lon": obj["lon"],
 				"ip": obj["query"],
-				"exp": time.time() + self._exp} # Expire in 10 minutes
+				"exp": time.time() + self._exp
+			} # Expire in 10 minutes
 		return raw
 	
 	def read(self):

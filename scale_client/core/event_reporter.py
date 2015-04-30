@@ -37,7 +37,7 @@ class EventReporter(Application):
         we should determine whether to report it or not and then do so.
         """
         et = event.get_type()
-        ed = event.get_raw_data() #ed = event.data["value"]
+        ed = event.get_raw_data()
         log.debug("received event type: " + et)
 
         if et == "location_manager_ack":

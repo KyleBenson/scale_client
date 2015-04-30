@@ -1,14 +1,14 @@
 from random import *
 
 from scale_client.sensors.gas_virtual_sensor import GasVirtualSensor
-from scale_client.sensors.virtual_sensor import VirtualSensor
+# from scale_client.sensors.virtual_sensor import VirtualSensor
 
 
 class DummyGasVirtualSensor(GasVirtualSensor):
-    def __init__(self, broker, device=None, threshold=None, prob=0.05):
+    def __init__(self, broker, device=None, interval=1, threshold=400, prob=0.05):
         self._rand = Random()
         # we aren't specifying an analog port as the on_start() override takes care of avoiding the check for a legit 1
-        super(DummyGasVirtualSensor, self).__init__(broker, device=device, threshold=threshold)
+        super(DummyGasVirtualSensor, self).__init__(broker, device=device, interval=interval, threshold=threshold)
         self._rand.seed()
         self._prob = prob
         self._darkflag = True
@@ -19,7 +19,7 @@ class DummyGasVirtualSensor(GasVirtualSensor):
 
     def on_start(self):
         # avoid opening any connections to real sensors, so skip the on_start() of our parents
-        VirtualSensor.on_start(self)
+        super(GasVirtualSensor, self).on_start()
 
     def read_raw(self):
         if self._rand.random() < self._prob:

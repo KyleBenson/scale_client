@@ -12,10 +12,8 @@ class RawAnalogVirtualSensor(AnalogVirtualSensor):
         return "raw_analog"
 
     def read(self):
-        # event = super(RawAnalogVirtualSensor, self).read()
         raw = self.read_raw()
         event = self.make_event_with_raw_data(raw, priority=9)
-        # event.data['condition'] = {}
         return event
 
     def policy_check(self, data):
