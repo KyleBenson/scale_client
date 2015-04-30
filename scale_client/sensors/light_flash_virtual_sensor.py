@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class LightFlashVirtualSensor(VirtualSensor):
     def __init__(self, broker, device=None, flash_delta=600):
-        super(LightFlashVirtualSensor, self).__init__(self, broker=broker, device=device, interval=None)
+        super(LightFlashVirtualSensor, self).__init__(broker=broker, device=device, interval=None)
         self._flash_delta = flash_delta
         self._last_value = None
 

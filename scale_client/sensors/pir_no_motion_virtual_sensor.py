@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class PIRNoMotionVirtualSensor(VirtualSensor):
     def __init__(self, broker, device=None, inact_threshold=600):
-        super(PIRNoMotionVirtualSensor, self).__init__(self, broker=broker, device=device, interval=None)
+        super(PIRNoMotionVirtualSensor, self).__init__(broker=broker, device=device, interval=None)
         self._inact_timer = None
         self._inact_threshold = inact_threshold
 
