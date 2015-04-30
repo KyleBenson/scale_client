@@ -74,5 +74,5 @@ class SensedEvent(Event):
 
         return ret
 
-    # def to_json(self):
-    #     return json.dumps({"d": self.to_map()})
+    def to_json(self):
+        return json.dumps({"d": self.to_map()})

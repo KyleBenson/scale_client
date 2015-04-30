@@ -1,6 +1,6 @@
 from scale_client.sensors.threaded_virtual_sensor import ThreadedVirtualSensor
 
-from urllib import urlopen, request
+from urllib import urlopen
 from time import time as get_time
 import logging
 log = logging.getLogger(__name__)
