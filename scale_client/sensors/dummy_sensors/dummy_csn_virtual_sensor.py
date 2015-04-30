@@ -24,7 +24,7 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
     def read_raw(self):
     	try:
     		self._timer
-    	except Error:
+    	except NameError:
     		return []
 
         readings = []
