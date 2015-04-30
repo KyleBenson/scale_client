@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 class InternetAccessVirtualSensor(ThreadedVirtualSensor):
 	def __init__(self, broker, device=None, interval=10, lookup_url="http://www.google.com", timeout=5, timer_threshold=60):
-		super(GeoIPVirtualSensor, self).__init__(broker, device=device, interval=interval)
+		super(InternetAccessVirtualSensor, self).__init__(broker, device=device, interval=interval)
 		self._lookup_url = lookup_url
 		self._timeout = timeout
 		self._last_value = None
