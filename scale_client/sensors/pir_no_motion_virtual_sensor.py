@@ -26,7 +26,7 @@ class PIRNoMotionVirtualSensor(VirtualSensor):
             if self._inact_timer is None:
                 self._inact_timer = get_time()
             elif self._inact_timer + self.inact_threshold < get_time():
-                new_event = self.make_event_with_raw_data(raw, priority=7)
+                new_event = self.make_event_with_raw_data(ed, priority=7)
                 new_event.data["condition"] = {
                         "inactive_time": {
                             "operator": ">",

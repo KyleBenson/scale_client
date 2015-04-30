@@ -20,7 +20,7 @@ class TemperatureHighVirtualSensor(VirtualSensor):
             return
 
         if ed > self._threshold:
-            new_event = self.make_event_with_raw_data(raw, priority=4)
+            new_event = self.make_event_with_raw_data(ed, priority=4)
             new_event.data["condition"] = {
                     "threshold": {
                         "operator": ">",

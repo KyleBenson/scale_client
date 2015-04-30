@@ -25,7 +25,7 @@ class LightFlashVirtualSensor(VirtualSensor):
         if self._last_value is None:
             pass
         elif ed - self._last_value > self._flash_delta:
-            new_event = self.make_event_with_raw_data(raw, priority=7)
+            new_event = self.make_event_with_raw_data(ed, priority=7)
             new_event.data["condition"] = {
                     "delta": {
                         "operator": ">",
