@@ -1,26 +1,29 @@
 from scale_client.sensors.threaded_virtual_sensor import ThreadedVirtualSensor
 
-from urllib2 import urlopen
+# from urllib2 import urlopen
+import os
 from time import time as get_time
 import logging
 log = logging.getLogger(__name__)
 
 class InternetAccessVirtualSensor(ThreadedVirtualSensor):
-	def __init__(self, broker, device=None, interval=5, lookup_url="http://www.google.com", timeout=2, _report_threshold=60):
+	def __init__(self, broker, device=None, interval=5, ping_host="8.8.4.4", timeout=2, _report_threshold=60):
 		super(InternetAccessVirtualSensor, self).__init__(broker, device=device, interval=interval)
-		self._lookup_url = lookup_url
-		self._timeout = timeout
+		self._ping_host = ping_host
 		self._last_value = None
 		self._report_timer = get_time()
 		self._report_threshold = _report_threshold
+
+		if type(timeout) != type(0):
+			raise TypeError
+		self._timeout = timeout
 
 	def get_type(self):
 		return "internet_access"
 
 	def read_raw(self):
-		try:
-			urlopen(self._lookup_url, timeout=self._timeout)
-		except Exception:
+		res = os.system("ping -c 1 -w %s " % self._timeout + hostname + " >/dev/null 2>&1")
+		if res != 0:
 			return False
 		return True
 	
