@@ -36,10 +36,14 @@ Sensors:
     #    dev_name: "gas0"
     #    analog_port: 0 
     #    threshold: 500
-    - RawAnalogSensor:
-        class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
-        dev_name: "raw0"
-        analog_port: 2
+    #- RawAnalogSensor:
+    #    class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
+    #    dev_name: "raw0"
+    #    analog_port: 2
     - GeoIPSensor:
         class: "location_sensors.geo_ip_virtual_sensor.GeoIPVirtualSensor"
         dev_name: "geoip0"
+    - InternetAccessSensor:
+        class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
+        dev_name: "net0"
+
