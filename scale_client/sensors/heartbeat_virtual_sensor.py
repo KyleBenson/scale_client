@@ -8,10 +8,10 @@ class HeartbeatVirtualSensor(VirtualSensor):
     """
     This sensor simply publishes a heartbeat event every interval seconds.
     """
-
     def get_type(self):
         return "heartbeat"
 
+    DEFAULT_PRIORITY = 10
+
     def read_raw(self):
-        log.debug("Heartbeat read")
         return "heartbeat"

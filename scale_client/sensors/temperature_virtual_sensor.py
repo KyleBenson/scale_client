@@ -8,14 +8,14 @@ log = logging.getLogger(__name__)
 
 
 class TemperatureVirtualSensor(VirtualSensor):
-    def __init__(
-        self, broker, device=None, threshold=24.0, daemon_path='temperature-streams'
-    ):
-        VirtualSensor.__init__(self, broker, device)
+    def __init__(self, broker, device=None, threshold=24.0, daemon_path='temperature-streams'):
+        super(TemperatureVirtualSensor, self).__init__(broker, device)
         self._daemon_path = daemon_path
         self._threshold = threshold
         self._result = None
         self._regexp = re.compile(r'Device ([^:]*): Sensor ([0-9]*): Temperature: ([0-9\.]*)')
+
+    DEFAULT_PRIORITY = 5
 
     def get_type(self):
         return "temperature"
@@ -41,14 +41,12 @@ class TemperatureVirtualSensor(VirtualSensor):
         event = super(TemperatureVirtualSensor, self).read()
         event.data['condition'] = {
                 "threshold": {
-                "operator": ">",
-                "value": self._threshold
+                    "operator": ">",
+                    "value": self._threshold
                 }
             }
 
         return event
 
     def policy_check(self, event):
-        if event.data['value'] > self._threshold:
-            return True
-        return False
+        return event.data['value'] > self._threshold

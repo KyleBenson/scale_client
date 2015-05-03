@@ -9,7 +9,9 @@ log = logging.getLogger(__name__)
 
 def f(self, nsecs):
     while True:
-        log.debug("separate ThreadedApplication is just sleeping...")
+        log.debug("Separate ThreadedApplication is just sleeping...")
+        sleep(nsecs)
+        log.debug("Separate ThreadedApplication is just snoozing...")
         sleep(nsecs)
 
 class DummyThreadedApplication(ThreadedApplication, Application):

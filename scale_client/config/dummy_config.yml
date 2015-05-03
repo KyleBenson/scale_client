@@ -1,5 +1,6 @@
-# This configuration file spins up a client with dummy sensors and publishes via MQTT
-# ideal for testing on a laptop :)
+# This configuration spins up a client with dummy sensors and publishes via MQTT
+# Ideal for testing on a laptop :)
+
 EventSinks:
     - MQTTEventSink:
         class: "mqtt_event_sink.MQTTEventSink"
@@ -7,9 +8,7 @@ EventSinks:
         #hostname: "m2m.eclipse.org"
         hostport: 1883
         username: null
-        #username: "vbjsfwul"
         password: null
-        #password: "xottyHH5j9v2"
         keepalive: 60
         #need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
     - RelayEventSink:
@@ -23,6 +22,8 @@ Applications:
         class: "dummy_threaded_application.DummyThreadedApplication"
     - MeshRelayedEventReceiver:
         class: "mesh_relayed_event_receiver.MeshRelayedEventReceiver"
+    - LocationManager:
+        class: "location_manager.LocationManager"
 
 Sensors:
     - HBSensor:
@@ -30,23 +31,35 @@ Sensors:
         dev_name: "hb0"
         interval: 60
     - DummyPIRSensor:
-        class: "dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
+        class: "dummy_sensors.dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
         dev_name: "pir0"
     - DummyLightSensor:
-        class: "dummy_light_virtual_sensor.DummyLightVirtualSensor"
+        class: "dummy_sensors.dummy_light_virtual_sensor.DummyLightVirtualSensor"
         dev_name: "light0"
-        threshold: 400
     - DummyGasSensor:
-        class: "dummy_gas_virtual_sensor.DummyGasVirtualSensor"
+        class: "dummy_sensors.dummy_gas_virtual_sensor.DummyGasVirtualSensor"
         dev_name: "gas0"
-        threshold: 500
     - DummyTempSensor:
-        class: "dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
+        class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
         dev_name: "cel0"
-        threshold: 24.0
     - DummySeismicSensor:
-        class: "dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
-        dev_name: "accel"
+        class: "dummy_sensors.dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
+        dev_name: "accel0"
+    - GeoIPSensor:
+        class: "location_sensors.geo_ip_virtual_sensor.GeoIPVirtualSensor"
+        dev_name: "geoip0"
+    - InternetAccessSensor:
+        class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
+        dev_name: "net0"
+    - PIRNoMotionSensor:
+        class: "pir_no_motion_virtual_sensor.PIRNoMotionVirtualSensor"
+        dev_name: "nomot0"
+    - LightFlashSensor:
+        class: "light_flash_virtual_sensor.LightFlashVirtualSensor"
+        dev_name: "flash0"
+    - TempHighSensor:
+        class: "temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
+        dev_name: "heat0"
 
 Networks:
     - NetworkManager:

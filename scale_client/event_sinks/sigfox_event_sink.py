@@ -49,14 +49,14 @@ class SigfoxEventSink(EventSink):
         log.info("Sigfox adapter connected")
         self.__is_available = True
 
-    def send(self, coded_event):
+    def send(self, encoded_event):
         #TODO: should define false code to indicate different fault reason
-        #if coded_event is False:
+        #if encoded_event is False:
         #    return False
         try:
             #self._ser.write(topic+"||"+msg+'\r\n')
             #use the above paras to send actual sensor data
-            self._ser.write(coded_event)
+            self._ser.write(encoded_event)
         except Exception as err:
             self._ex_handler(err)
             return False
@@ -175,6 +175,6 @@ class SigfoxEventSink(EventSink):
         hex_payload = hex_payload_type + hex_payload_vd+ hex_payload_value + hex_payload_priority + hex_payload_cb
 
         # Publish message "||" can be redefined. but '\r\n' is mandatory
-        coded_event = "at$ss=" + hex_payload + "\r\n"
-        log.debug("Sigfox Ready to Send: " + str(coded_event))
-        return str(coded_event)
+        encoded_event = "at$ss=" + hex_payload + "\r\n"
+        log.debug("Sigfox Ready to Send: " + str(encoded_event))
+        return str(encoded_event)

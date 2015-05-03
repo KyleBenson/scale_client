@@ -1,5 +1,8 @@
-from application import Application
+from application import Application 
 
+import time
+import logging
+log = logging.getLogger(__name__)
 
 class EventReporter(Application):
     """
@@ -12,20 +15,55 @@ class EventReporter(Application):
     def __init__(self, broker):
         super(EventReporter, self).__init__(broker)
         self.__sinks = []
+        self._lman = None
+        self._neta = None
 
     def add_sink(self, sink):
         """
-        Registers the given EventSink with the EventReporter.  Note that the order in which you add them matters as we
-        currently have no other way of distinguishing the priority in which the EventReporter should consider each
-        EventSink (currently it tries the first added one, then second...).
+        Registers the given EventSink with the EventReporter.
+        Note that the order in which you add them matters as we
+        currently have no other way of distinguishing the priority 
+        in which the EventReporter should consider each
+        EventSink (currently it tries the first added one, then second...)
         :param sink:
         """
         self.__sinks.append(sink)
 
-    # TODO: remove_sink???
+    #TODO: remove_sink?
 
     def on_event(self, event, topic):
-        """Every time any SensedEvent is published, we should determine whether to report it or not and then do so."""
+        """
+        Every time any SensedEvent is published, 
+        we should determine whether to report it or not and then do so.
+        """
+        et = event.get_type()
+        ed = event.get_raw_data()
+        log.debug("received event type: " + et)
+
+        if et == "location_manager_ack":
+            self._lman = ed
+            log.debug("received location manager")
+            return
+
+        if et == "internet_access":
+            self._neta = ed
+            if ed is not None:
+            	if ed:
+            		log.info("Internet access successful")
+            	else:
+            		log.info("Internet access failed")
+            else:
+            	log.info("Internet access status unknown")
+            return
+
+        # Ignorance
+        if self._lman is not None:
+            if et in self._lman.SOURCE_SUPPORT:
+                return
+            if et != "location_update":
+                self._lman.tag_event(event)
+
+        # Send event to sinks
         for sink in self.__sinks:
             if sink.check_available(event):
                 sink.send_event(event)

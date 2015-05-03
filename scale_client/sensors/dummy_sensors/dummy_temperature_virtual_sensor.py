@@ -9,10 +9,10 @@ class DummyTemperatureVirtualSensor(TemperatureVirtualSensor):
         self._rand = Random()
         self._rand.seed()
         self._darkflag = True
-        self.CEL_MEAN = threshold + 20
+        self.CEL_MEAN = threshold
 
     def read_raw(self):
-        return round(self.CEL_MEAN + self._rand.random() * 6 - 3, 2)
+        return round(self.CEL_MEAN + self._rand.random() * 12 - 6, 2)
 
     def on_start(self):
         # avoid opening any connections to real sensors, so skip the on_start() of our parent

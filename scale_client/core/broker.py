@@ -5,7 +5,7 @@ log = logging.getLogger(__name__)
 
 #NOTE: THIS ISN'T NEEDED CURRENTLY SINCE CIRCUITS HANDLES ALL THE BROKERING!
 
-#TODO: abstract base class??  same with App?
+#TODO: abstract base class?  same with App?
 class Broker(Thread):
     """
     This purely abstract (TODO!!!!) base class represents the API for the local publish-subscribe broker than handles routing and

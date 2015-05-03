@@ -1,4 +1,3 @@
-# Hasn't been officially tested!
 Main:
     event_queue_size: 4096
 
@@ -9,14 +8,12 @@ EventSinks:
         #hostname: "m2m.eclipse.org"
         hostport: 1883
         username: null
-        #username: "vbjsfwul"
         password: null
-        #password: "xottyHH5j9v2"
         keepalive: 60
-        #need to insert address before using: topic: "iot-1/d/%012x/evt/%s/json"
-     - EventRelayer:
-	class: "relay_event_sink.RelayEventSink"
-	relay_port: 3388
+
+Applications:
+    - LocationManager:
+        class: "location_manager.LocationManager"
 
 Sensors:
     - HBSensor:
@@ -31,14 +28,23 @@ Sensors:
         class: "light_virtual_sensor.LightVirtualSensor"
         dev_name: "light0"
         analog_port: 3
-        threshold: 400
     - GasSensor:
         class: "gas_virtual_sensor.GasVirtualSensor"
         dev_name: "gas0"
-        analog_port: 0 
-        threshold: 500
+        analog_port: 0
     #- RawAnalogSensor:
     #    class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
-    #    dev_name: "raw2"
+    #    dev_name: "raw0"
     #    analog_port: 2
-
+    - GeoIPSensor:
+        class: "location_sensors.geo_ip_virtual_sensor.GeoIPVirtualSensor"
+        dev_name: "geoip0"
+    - InternetAccessSensor:
+        class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
+        dev_name: "net0"
+    - PIRNoMotionSensor:
+        class: "pir_no_motion_virtual_sensor.PIRNoMotionVirtualSensor"
+        dev_name: "nomot0"
+    - LightFlashSensor:
+        class: "light_flash_virtual_sensor.LightFlashVirtualSensor"
+        dev_name: "flash0"

@@ -13,19 +13,17 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
         CSNVirtualSensor.__init__(self, broker, device=device)
         self._rand = Random()
         self._rand.seed()
-        #TODO: what in the world is this?
         self._whatflag = True
-
 
     WAIT_MEAN = 10
 
     def on_start(self):
-        # avoid opening any connections to real sensors, so skip the on_start() of our parent
-        VirtualSensor.on_start(self)
+        # Avoid opening any connections to real sensors, so skip the on_start() of our parent
+        # super(CSNVirtualSensor, self).on_start()
+        self.timed_call(self._wait_period, VirtualSensor._do_sensor_read, repeat=True)
 
     def read_raw(self):
         readings = []
-
         if self._whatflag:
             readings.append(self._rand.random() * 0.1)
             readings.append(self._rand.random() * 0.1)
@@ -34,12 +32,11 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
             readings.append(0.0)
             readings.append(0.0)
             readings.append(self._rand.random() * 0.1)
-
         self._whatflag = not self._whatflag
 
         # reset the timer to a random time so that events appear more dynamically
         # NOTE: this relies on the circuits implementation!  consider it a hack!
         wait_time = self._rand.random() * 2 * DummyCSNVirtualSensor.WAIT_MEAN
-        self._timer.reset(wait_time)
 
+        self._timer.reset(wait_time)
         return readings
