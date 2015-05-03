@@ -11,6 +11,7 @@ from subprocess import Popen, PIPE
 
 import re
 import os
+import os.path
 
 class Neighbor():
     mac_address = ''
@@ -56,10 +57,19 @@ class ScaleNetworkManager():
         self.batman_interface = batman_interface
         self.batman_originators_file = batman_originators_file
         self.scan_all_interfaces()
-        self.update_neighbors()
+
+        if self.batman_is_active():
+            self.update_neighbors()
+            
         self.broadcast_host_ip()
         self.scan_arp_address();
         
+    def batman_is_active(self):
+        if os.path.isfile(self.batman_originators_file):
+            return True
+        else:
+            return False
+
     def get_batman_interface(self):
         return self.batman_interface
 
@@ -165,22 +175,26 @@ class ScaleNetworkManager():
         and last seen
         '''
 
-        output = open(self.batman_originators_file, 'r')
+        try:
+            output = open(self.batman_originators_file, 'r')
         
-        line_index = 0
-        for line in output:
-            if line_index > 1:
-                if len(line) > 0:
-                    parts = line.split(' ')
-                    if len(parts[0]) > 0:
-                        mac_address = parts[0].strip()
-                        if mac_address not in self.neighbors.keys():
-                            neighbor = Neighbor(mac_address, '', parts[4])
-                            self.neighbors[mac_address] = neighbor
-                        else:
-                            self.neighbors[mac_address].set_last_seen(parts[4])
+            line_index = 0
+            for line in output:
+                if line_index > 1:
+                    if len(line) > 0:
+                        parts = line.split(' ')
+                        if len(parts[0]) > 0:
+                            mac_address = parts[0].strip()
+                            if mac_address not in self.neighbors.keys():
+                                neighbor = Neighbor(mac_address, '', parts[4])
+                                self.neighbors[mac_address] = neighbor
+                            else:
+                                self.neighbors[mac_address].set_last_seen(parts[4])
 
-            line_index += 1
+                line_index += 1
+        except AttributeError:
+            log.error('Failed to open batman orginators file')
+
         return
 
     def get_neighbors(self):

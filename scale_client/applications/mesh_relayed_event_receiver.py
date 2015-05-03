@@ -51,9 +51,9 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
             if(self.relayedSensedEvent.sensor == 'temperature'):
                 self.calculate_neighbors_average_temp()
 
-            #print "RELAYED EVENT"
-            #print self.relayedSensedEvent
-            #print "PUBLISHING EVENT"
+            print "RELAYED EVENT"
+            print self.relayedSensedEvent
+            print "PUBLISHING EVENT"
             sensedEvent = self.convert_to_sensed_event(self.relayedSensedEvent)
 
             # Publish relayed events from neighbors 

@@ -67,7 +67,8 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         self.last_time_refreshed= time.time()
 
         self._neighbor_connections = {}
-        self.create_connection_to_neighbors()
+        if self.batman_is_active():
+            self.create_connection_to_neighbors()
 
     def create_connection_to_neighbors(self):
         for index in self._neighbors:
@@ -112,6 +113,11 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         to neighbor nodes if it finds any
         '''
 
+        # Skip the rest if batman 
+        # is not active on the current node
+        if not self.batman_is_active():
+            return False
+
         relay_event = {}
         relay_event['source'] = self.mesh_host_id
         relay_event['sensed_event'] = json.loads(encoded_event)
@@ -134,7 +140,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
 
 
         encoded_relay_event = json.dumps(relay_event)
-        #print "Replaying event: " + encoded_relay_event 
+        print "Replaying event: " + encoded_relay_event 
         
         if (time.time() - self.last_time_refreshed) > self.refresh_socket_conns:
             self.create_connection_to_neighbors()
@@ -149,3 +155,14 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
 
     def check_available(self, event):
         return True
+
+    def on_event(self, event, topic):
+        et = event.get_type()
+        ed = event.get_raw_data()
+
+        if et == "internet_access":
+            self._neta = ed
+
+    def encode_event(self, event):
+        # return event.to_json()
+        return json.dumps({"d": event.to_map()})
