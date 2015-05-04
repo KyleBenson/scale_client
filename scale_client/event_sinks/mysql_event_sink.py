@@ -22,7 +22,8 @@ class MySQLEventSink(EventSink):
 			database = None
 			db_table = "events"
 
-		event = peewee.CharField(max_length = 32)
+		sensor = peewee.CharField(max_length = 16)
+		event = peewee.CharField(max_length = 64)
 		priority = peewee.IntegerField()
 		timestamp = peewee.DoubleField()
 		geotag = peewee.TextField(null = True)
@@ -68,6 +69,7 @@ class MySQLEventSink(EventSink):
 		if "geotag" in event.data:
 			geotag = event.data["geotag"]
 		encoded_event = self.EventRecord(
+				sensor=event.sensor,
 				event=event.data["event"],
 				priority=event.priority,
 				timestamp=event.timestamp,
