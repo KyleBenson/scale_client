@@ -82,9 +82,13 @@ class EventReporter(Application):
                 if sink.send_event(event):
                     published = True
                 # TODO: only send via one of the sinks?
-        if published:
-            return
-        #log.debug("event not published")
+
+        if hasattr(event, "db_record"): # from database
+            if published: # update database record
+                event.db_record["upload_time"] = time.time()
+        else: # not from database
+            if published: # no need to insert into database
+                return
         if self._mysql_sink is not None:
             if self._mysql_sink.check_available(event):
                 self._mysql_sink.send_event(event)
