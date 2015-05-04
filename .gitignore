@@ -47,3 +47,6 @@ scale_client/.idea/workspace.xml
 
 # PyCharm IDE
 .idea
+
+# peewee
+peewee.db

@@ -4,6 +4,8 @@ import time
 import logging
 log = logging.getLogger(__name__)
 
+from scale_client.event_sinks.mysql_event_sink import MySQLEventSink
+
 class EventReporter(Application):
     """
     The EventReporter is a special-purpose Application that is the sole entity responsible
@@ -17,6 +19,7 @@ class EventReporter(Application):
         self.__sinks = []
         self._lman = None
         self._neta = None
+        self._mysql_sink = None
 
     def add_sink(self, sink):
         """
@@ -64,18 +67,29 @@ class EventReporter(Application):
                 self._lman.tag_event(event)
 
         # Send event to sinks
+        published = False
         for sink in self.__sinks:
-            if sink.check_available(event):
-                sink.send_event(event)
+            if isinstance(sink, MySQLEventSink):
+                if self._mysql_sink is None:
+                    self._mysql_sink = sink
+                try:
+                    self.__sinks.remove(sink)
+                    log.info("found MySQL database connector")
+                except ValueError:
+                    pass
+                next
+            elif sink.check_available(event):
+                if sink.send_event(event):
+                    published = True
                 # TODO: only send via one of the sinks?
+        if published:
+            return
+        #log.debug("event not published")
+        if self._mysql_sink is not None:
+            if self._mysql_sink.check_available(event):
+                self._mysql_sink.send_event(event)
 
 """
-import threading
-import time
-from threading import Thread
-from sensed_event import SensedEvent
-import sys
-
 class EventReporter(Thread):
 	def __init__(self, queue):
 		Thread.__init__(self)
@@ -83,13 +97,6 @@ class EventReporter(Thread):
 		self._ls_pb = []
 		self._ls_queue = []
 		self._dict_pb = {}
-
-	def append_publisher(self, pb):
-		pb_name = pb.get_name()
-		if pb_name in self._dict_pb:
-			print >>sys.stderr, "Publisher name %s is already taken." % pb_name
-		self._ls_pb.append(pb)
-		self._dict_pb[pb_name] = pb
 
 	def send_callback(self, pb, event, result, reason = None):
 		# print pb.get_name() + " returns " + str(result)
