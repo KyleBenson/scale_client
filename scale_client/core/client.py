@@ -132,9 +132,10 @@ class ScaleClient:
                 # copy config so we can tweak it as necessary to expose only correct kwargs
                 new_sensor_config = sensor_config.copy()
                 new_sensor_config.pop('class')
-                new_sensor_config.pop('dev_name')
+                dev_name = new_sensor_config.get("dev_name", "vs%i" % n_sensors)
+                new_sensor_config.pop('dev_name', dev_name)
 
-                cls(self.__broker, device=DeviceDescriptor(new_sensor_config.get("dev_name", "vs%i" % n_sensors)),
+                cls(self.__broker, device=DeviceDescriptor(dev_name),
                     **new_sensor_config)
                 n_sensors += 1
                 log.info("Virtual sensor created from config: %s" % sensor_config)
