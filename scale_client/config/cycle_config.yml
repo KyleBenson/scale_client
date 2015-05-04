@@ -46,4 +46,8 @@ Sensors:
     - InternetAccessSensor:
         class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
         dev_name: "net0"
+    - IWListSensor:
+        class: "iwlist_virtual_sensor.IWListVirtualSensor"
+        dev_name: "iw0"
+        if_name: "wlan0"
 
