@@ -1,5 +1,6 @@
 *.py[cod]
-# salt stuff?
+
+# Mac OS
 *.DS_Store
 
 # C extensions
