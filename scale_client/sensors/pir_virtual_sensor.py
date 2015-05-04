@@ -26,7 +26,7 @@ class PIRVirtualSensor(GPIOVirtualSensor):
             success = True
         elif self._state == PIRVirtualSensor.ACTIVE and raw == PIRVirtualSensor.IDLE:
             self._state = PIRVirtualSensor.IDLE
-            self._inact_timer = get_time()
+            # self._inact_timer = get_time()
             success = True
 
         return success
