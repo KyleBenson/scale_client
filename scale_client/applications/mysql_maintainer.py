@@ -6,9 +6,9 @@ import peewee
 import logging
 log = logging.getLogger(__name__)
 
-class MySQLReader(Application):
+class MySQLMaintainer(Application):
 	def __init__(self, broker, dbname, username, password, interval=10):
-		super(MySQLReader, self).__init__(broker)
+		super(MySQLMaintainer, self).__init__(broker)
 
 		self._interval = interval
 		self._dbname = dbname
@@ -50,7 +50,7 @@ class MySQLReader(Application):
 		if self._interval is None:
 			return
 		self._cron()
-		self.timed_call(self._interval, MySQLReader._cron, repeat=True)
+		self.timed_call(self._interval, MySQLMaintainer._cron, repeat=True)
 
 	def _cron(self):
 		if self._db is None:
@@ -89,6 +89,8 @@ class MySQLReader(Application):
 			id_list.append(rec.id)
 			event_list.append(event)
 		log.info("fetched %d record(s)" % len(id_list))
+		if len(id_list) < 1:
+			return
 		
 		try:
 			self.EventRecord.update(
