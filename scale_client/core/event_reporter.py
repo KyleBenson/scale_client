@@ -4,6 +4,7 @@ import time
 import logging
 log = logging.getLogger(__name__)
 
+from scale_client.core.sensed_event import SensedEvent
 from scale_client.event_sinks.mysql_event_sink import MySQLEventSink
 
 class EventReporter(Application):
@@ -51,12 +52,14 @@ class EventReporter(Application):
         if et == "internet_access":
             self._neta = ed
             if ed is not None:
-            	if ed:
-            		log.info("Internet access successful")
-            	else:
-            		log.info("Internet access failed")
+                if ed:
+                    log.info("Internet access successful")
+                else:
+                    log.info("Internet access failed")
             else:
-            	log.info("Internet access status unknown")
+                log.info("Internet access status unknown")
+            return
+        elif et == "publisher_state":
             return
 
         # Ignorance
@@ -83,32 +86,27 @@ class EventReporter(Application):
                     published = True
                 # TODO: only send via one of the sinks?
 
+        # Update publisher state
+        if published:
+            self._cast_publisher_state(published, 8)
         if hasattr(event, "db_record"): # from database
             if published: # update database record
                 event.db_record["upload_time"] = time.time()
+            else:
+                # Update publisher state
+                self._cast_publisher_state(published, 7)
         else: # not from database
             if published: # no need to insert into database
                 return
         if self._mysql_sink is not None:
             if self._mysql_sink.check_available(event):
                 self._mysql_sink.send_event(event)
+    
+    def _cast_publisher_state(self, published, priority):
+        ps = SensedEvent(
+                sensor="event_reporter",
+                data={"event": "publisher_state", "value": published},
+                priority=priority
+            )
+        self.publish(ps)
 
-"""
-	def send_callback(self, pb, event, result, reason = None):
-		# print pb.get_name() + " returns " + str(result)
-		if pb.get_name() == "MQTT":
-			if hasattr(event, "dbtableid"):
-				if "MySQL" in self._dict_pb:
-					if result == True:
-						self._dict_pb["MySQL"].update_upldstamp(
-							event.dbtableid,
-							time.time()
-						)
-					elif result == False:
-						self._dict_pb["MySQL"].update_upldstamp(
-							event.dbtableid,
-							None
-						)
-
-		return True 
-"""

@@ -16,6 +16,8 @@ class MySQLMaintainer(Application):
 		self._password = password
 
 		self._db = None
+		self._neta = None
+		self._puba = None
 	
 	class EventRecord(peewee.Model):
 		class Meta:
@@ -57,37 +59,44 @@ class MySQLMaintainer(Application):
 			if not self._try_connect():
 				return
 
-		#TODO: Check for Internet access
+		# Check for available publishers
+		if not self._puba:
+			log.info("no available publisher reported")
+			return
+
+		# Check for Internet access
+		#if self._neta is not None and not self._neta:
+		#	return
 
 		res_list = None
-		try:
-			res_list = self.EventRecord.select().where(self.EventRecord.upload_time == None)
-		except peewee.OperationalError:
-			log.debug("table is not ready")
-		if res_list is None:
-			return
-		
 		id_list = []
 		event_list = []
-		for rec in res_list:
-			structured_data = {
-					"event": rec.event,
-					"value": json.loads(rec.value_json)
-				}
-			if rec.geotag is not None:
-				structured_data["geotag"] = rec.geotag
-			event = SensedEvent(
-					rec.sensor,
-					structured_data,
-					rec.priority,
-					timestamp = rec.timestamp
-				)
-			event.db_record = {
-					"table_id": rec.id,
-					"upload_time": rec.upload_time # should be None
-				}
-			id_list.append(rec.id)
-			event_list.append(event)
+		try:
+			res_list = self.EventRecord.select().where(self.EventRecord.upload_time == None)
+			for rec in res_list:
+				structured_data = {
+						"event": rec.event,
+						"value": json.loads(rec.value_json)
+					}
+				if rec.geotag is not None:
+					structured_data["geotag"] = rec.geotag
+				event = SensedEvent(
+						rec.sensor,
+						structured_data,
+						rec.priority,
+						timestamp = rec.timestamp
+					)
+				event.db_record = {
+						"table_id": rec.id,
+						"upload_time": rec.upload_time # should be None
+					}
+				id_list.append(rec.id)
+				event_list.append(event)
+		except peewee.OperationalError, err:
+			log.error(str(err))
+			self._db = None
+			return
+
 		log.info("fetched %d record(s)" % len(id_list))
 		if len(id_list) < 1:
 			return
@@ -96,11 +105,22 @@ class MySQLMaintainer(Application):
 			self.EventRecord.update(
 					upload_time = -4.0
 				).where(self.EventRecord.id << id_list).execute()
-		except peewee.OperationalError:
-			log.debug("unable to update table, will not publish")
+		except peewee.OperationalError, err:
+			log.error(str(err))
+			self._db = None
 			return
 
 		for event in event_list:
 			if event is None:
 				continue
 			self.publish(event)
+	
+	def on_event(self, event, topic):
+		et = event.get_type()
+		ed = event.get_raw_data()
+
+		if et == "internet_access":
+			self._neta = ed
+		elif et == "publisher_state":
+			self._puba = ed
+

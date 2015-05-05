@@ -12,10 +12,20 @@ EventSinks:
         username: null
         password: null
         keepalive: 60
+    - MySQLDatabase:
+        class: "mysql_event_sink.MySQLEventSink"
+        dbname: "scale_cycle"
+        username: "scale_usr"
+        password: "123456"
 
 Applications:
     - LocationManager:
         class: "location_manager.LocationManager"
+    - MySQLDatabase:
+        class: "mysql_maintainer.MySQLMaintainer"
+        dbname: "scale_cycle"
+        username: "scale_usr"
+        password: "123456"
 
 Sensors:
     - HBSensor:
@@ -50,4 +60,7 @@ Sensors:
         class: "iwlist_virtual_sensor.IWListVirtualSensor"
         dev_name: "iw0"
         if_name: "wlan0"
+    - GPSSensor:
+        class: "location_sensors.gps_virtual_sensor.GPSVirtualSensor"
+        dev_name: "gps0"
 
