@@ -1,5 +1,4 @@
 import json
-import sys
 import peewee
 
 from scale_client.event_sinks.event_sink import EventSink
@@ -46,7 +45,7 @@ class MySQLEventSink(EventSink):
 			return False
 		try:
 			self.EventRecord.create_table()
-			log.info("Created table: "+ str(self.EventRecord._meta.db_table))
+			log.info("created table: "+ str(self.EventRecord._meta.db_table))
 		except peewee.OperationalError:
 			pass
 		return True

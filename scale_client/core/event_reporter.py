@@ -94,14 +94,6 @@ class EventReporter(Application):
                 self._mysql_sink.send_event(event)
 
 """
-class EventReporter(Thread):
-	def __init__(self, queue):
-		Thread.__init__(self)
-		self._queue = queue
-		self._ls_pb = []
-		self._ls_queue = []
-		self._dict_pb = {}
-
 	def send_callback(self, pb, event, result, reason = None):
 		# print pb.get_name() + " returns " + str(result)
 		if pb.get_name() == "MQTT":
@@ -119,18 +111,4 @@ class EventReporter(Thread):
 						)
 
 		return True 
-
-	def run(self):
-		while True:
-			event = self._queue.get()
-
-			pb_j = None
-			if hasattr(event, "gpstamp") and not hasattr(event, "dbtableid"):
-				if "MySQL" in self._dict_pb:
-					pb_j = self._dict_pb["MySQL"]
-			else:
-				if "MQTT" in self._dict_pb:
-					pb_j = self._dict_pb["MQTT"]
-			if pb_j is not None:
-				pb_j.send(event)
 """

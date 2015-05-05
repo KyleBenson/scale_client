@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger(__name__)
 
 class IWListVirtualSensor(ThreadedVirtualSensor):
-	def __init__(self, broker, device=None, interval = 4, if_name = None):
+	def __init__(self, broker, device=None, interval=4, if_name=None):
 		super(IWListVirtualSensor, self).__init__(broker, device=device, interval=interval)
 		self._interval = interval
 		self._if_name = if_name # Interface device name, for example: wlan0
@@ -66,26 +66,4 @@ class IWListVirtualSensor(ThreadedVirtualSensor):
 	
 	def policy_check(self, data):
 		return True
-
-"""
-	def policy_check(self, data):
-		ls_ap = data
-		ls_event = []
-		timestamp = time.time()
-
-		for ap in ls_ap:
-			ls_event.append(
-				SensedEvent(
-					sensor = self.device.device,
-					msg = {
-						"event": self.get_type(),
-						"value": ap,
-						"condition": {}
-					},
-					priority = 9,
-					timestamp = timestamp
-				)
-			)
-		return ls_event
-"""
 
