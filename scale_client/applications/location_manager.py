@@ -63,7 +63,7 @@ class LocationManager(Application):
 		best_device = None
 		highest_pri = None
 
-		for device in self._location_pool:
+		for device in list(self._location_pool):
 			if self._location_pool[device]["expire"] < time.time():
 				self._location_pool.pop(device, None)
 				continue
