@@ -97,5 +97,8 @@ class MySQLEventSink(EventSink):
 		except peewee.OperationalError, err:
 			log.error(str(err))
 			self._db = None
+		except peewee.ProgrammingError, err:
+			log.error(str(err))
+			self._db = None
 		return False
 

@@ -3,6 +3,8 @@ from scale_client.core.sensed_event import SensedEvent
 
 import json
 import peewee
+from threading import Lock
+
 import logging
 log = logging.getLogger(__name__)
 
@@ -18,6 +20,7 @@ class MySQLMaintainer(Application):
 		self._db = None
 		self._neta = None
 		self._puba = None
+		self._db_lock = Lock()
 	
 	class EventRecord(peewee.Model):
 		class Meta:
@@ -49,9 +52,10 @@ class MySQLMaintainer(Application):
 		return True
 	
 	def on_start(self):
+		self._try_connect()
+		self._clean_up()
 		if self._interval is None:
 			return
-		self._cron()
 		self.timed_call(self._interval, MySQLMaintainer._cron, repeat=True)
 
 	def _cron(self):
@@ -71,6 +75,7 @@ class MySQLMaintainer(Application):
 		res_list = None
 		id_list = []
 		event_list = []
+		self._db_lock.acquire()
 		try:
 			res_list = self.EventRecord.select().where(self.EventRecord.upload_time == None)
 			for rec in res_list:
@@ -96,11 +101,18 @@ class MySQLMaintainer(Application):
 			log.error(str(err))
 			self._db = None
 			return
+		except peewee.ProgrammingError, err:
+			log.error(str(err))
+			self._db = None
+			return
+		finally:
+			self._db_lock.release()
 
 		log.info("fetched %d record(s)" % len(id_list))
 		if len(id_list) < 1:
 			return
 		
+		self._db_lock.acquire()
 		try:
 			self.EventRecord.update(
 					upload_time = -4.0
@@ -109,6 +121,8 @@ class MySQLMaintainer(Application):
 			log.error(str(err))
 			self._db = None
 			return
+		finally:
+			self._db_lock.release()
 
 		for event in event_list:
 			if event is None:
@@ -123,4 +137,22 @@ class MySQLMaintainer(Application):
 			self._neta = ed
 		elif et == "publisher_state":
 			self._puba = ed
+
+	def _clean_up(self):
+		if self._db is None:
+			return
+		self._db_lock.acquire()
+		try:
+			self.EventRecord.delete().where(
+					self.EventRecord.upload_time > 0.0
+				).execute()
+			log.info("MySQL database cleaned up")
+		except peewee.OperationalError, err:
+			log.error(str(err))
+			self._db = None
+		except peewee.ProgrammingError, err:
+			log.error(str(err))
+			self._db = None
+		finally:
+			self._db_lock.release()
 
