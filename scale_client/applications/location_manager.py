@@ -3,6 +3,8 @@ from scale_client.core.sensed_event import SensedEvent
 
 import time
 import copy
+from threading import Lock
+
 import logging
 log = logging.getLogger(__name__)
 
@@ -22,6 +24,7 @@ class LocationManager(Application):
 		self._report_update = report_update
 		self._last_value = None
 		self._ack_success = False
+		self._pool_lock = Lock()
 
 	SOURCE_SUPPORT = ["geo_ip", "gps", "fake_location", "rand_location"]
 
@@ -45,8 +48,12 @@ class LocationManager(Application):
 			}
 		if "alt" in data:
 			item["alt"] = data["alt"]
-		self._location_pool[event.sensor] = item
-		self._update_location()
+		self._pool_lock.acquire()
+		try:
+			self._location_pool[event.sensor] = item
+			self._update_location()
+		finally:
+			self._pool_lock.release()
 
 	def _update_location(self):
 		"""
@@ -56,7 +63,7 @@ class LocationManager(Application):
 		best_device = None
 		highest_pri = None
 
-		for device in self._location_pool:
+		for device in list(self._location_pool):
 			if self._location_pool[device]["expire"] < time.time():
 				self._location_pool.pop(device, None)
 				continue
@@ -96,6 +103,10 @@ class LocationManager(Application):
 
 	def tag_event(self, event):
 		self._ack_success = True
-		self._update_location()
+		self._pool_lock.acquire()
+		try:
+			self._update_location()
+		finally:
+			self._pool_lock.release()
 		if self._last_value is not None:
 			event.data["geotag"] = copy.copy(self._last_value)
