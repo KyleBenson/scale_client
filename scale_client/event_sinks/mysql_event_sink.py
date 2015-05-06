@@ -40,19 +40,28 @@ class MySQLEventSink(EventSink):
 		except peewee.OperationalError, err:
 			self._db = None
 			log.error(str(err))
-		self.EventRecord._meta.database = self._db
+		self._set_db()
 		if self._db is None:
 			return False
 		self._create_table()
 		return True
-
-	def _create_table(self):
+	
+	def _set_db(self, record_kls=None):
+		if record_kls is None:
+			self._set_db(self.EventRecord)
+			return
+		record_kls._meta.database = self._db
+	
+	def _create_table(self, record_kls=None):
+		if record_kls is None:
+			self._create_table(self.EventRecord)
+			return
 		try:
-			self.EventRecord.create_table()
-			log.info("created table: "+ str(self.EventRecord._meta.db_table))
+			record_kls.create_table()
+			log.info("created table: "+ str(record_kls._meta.db_table))
 		except peewee.OperationalError:
 			pass
-
+	
 	def on_start(self):
 		self._try_connect()
 
