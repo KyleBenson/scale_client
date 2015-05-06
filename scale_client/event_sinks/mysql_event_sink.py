@@ -78,7 +78,7 @@ class MySQLEventSink(EventSink):
 		# If event is NOT from database, insert into database
 		geotag = None
 		if "geotag" in event.data:
-			geotag = event.data["geotag"]
+			geotag = json.dumps(event.data["geotag"])
 		encoded_event = self.EventRecord(
 				sensor=event.sensor,
 				event=event.data["event"],

@@ -61,7 +61,7 @@ class MySQLClassifiedEventSink(MySQLEventSink):
 		# If event is NOT from database
 		geotag = None
 		if "geotag" in event.data:
-			geotag = event.data["geotag"]
+			geotag = json.dumps(event.data["geotag"])
 		kls = self._kls_types[et]
 		encoded_event = kls(
 				sensor=event.sensor,

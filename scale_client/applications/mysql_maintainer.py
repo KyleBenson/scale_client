@@ -82,7 +82,7 @@ class MySQLMaintainer(Application):
 						"value": json.loads(rec.value_json)
 					}
 				if rec.geotag is not None:
-					structured_data["geotag"] = rec.geotag
+					structured_data["geotag"] = json.loads(rec.geotag)
 				event = SensedEvent(
 						rec.sensor,
 						structured_data,
