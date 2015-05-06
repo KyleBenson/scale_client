@@ -17,6 +17,14 @@ EventSinks:
         dbname: "scale_cycle"
         username: "scale_usr"
         password: "123456"
+    - MySQLDatabaseClassified:
+        class: "mysql_classified_event_sink.MySQLClassifiedEventSink"
+        dbname: "scale_cycle"
+        username: "scale_usr"
+        password: "123456"
+        event_types:
+            - "location_update"
+            - "iwlist_scan"
 
 Applications:
     - LocationManager:
