@@ -5,7 +5,6 @@ import logging
 log = logging.getLogger(__name__)
 
 from scale_client.core.sensed_event import SensedEvent
-from scale_client.event_sinks.mysql_event_sink import MySQLEventSink
 
 class EventReporter(Application):
     """
@@ -73,7 +72,7 @@ class EventReporter(Application):
         # Send event to sinks
         published = False
         for sink in self.__sinks:
-            if isinstance(sink, MySQLEventSink):
+            if type(sink).__name__ == "MySQLEventSink":
                 if self._mysql_sink is None:
                     self._mysql_sink = sink
                 try:

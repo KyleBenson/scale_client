@@ -17,38 +17,76 @@ class MySQLClassifiedEventSink(MySQLEventSink):
 		# Create class objects for each event type
 		for event_type in event_types:
 			if event_type in self._kls_types:
-				log.info("duplicate item in list event_types")
+				log.warning("duplicate item in list event_types")
 				next
 			try:
 				self._kls_types[event_type] = self._create_kls(event_type)
-			except TypeError:
-				log.error("incorrect item in list event_types")
+			except TypeError, err:
+				log.error(str(err))
 	
 	def _create_kls(self, event_type):
 		if type(event_type) != type(""):
 			raise TypeError
 
-		class ClassifiedEventRecord(MySQLEventSink.EventRecord):
+		class ClassifiedEventRecord(self.EventRecord):
 			class Meta:
 				database = None
-				db_table = event_type
+				db_table = "type_" + event_type
 		return ClassifiedEventRecord
 
 	def _set_db(self, record_kls=None):
 		if record_kls is None:
 			for kls in self._kls_types:
-				self._set_db(kls)
+				self._set_db(self._kls_types[kls])
 			return
-		super(MySQLClassifiedEventSink, self)._set_db(self, record_kls)
+		super(MySQLClassifiedEventSink, self)._set_db(record_kls)
 
 	def _create_table(self, record_kls=None):
 		if record_kls is None:
 			for kls in self._kls_types:
-				self._create_table(kls)
+				self._create_table(self._kls_types[kls])
 			return
-		super(MySQLClassifiedEventSink, self)._create_table(self, record_kls)
+		super(MySQLClassifiedEventSink, self)._create_table(record_kls)
 
 	def encode_event(self, event):
-		#TODO: implement
-		raise NotImplementedError
+		# If event is from database, ignore
+		if hasattr(event, "db_record"):
+			return None
+
+		# Filter other events
+		et = event.get_type()
+		if not et in self._kls_types:
+			return None
+
+		# If event is NOT from database
+		geotag = None
+		if "geotag" in event.data:
+			geotag = event.data["geotag"]
+		kls = self._kls_types[et]
+		encoded_event = kls(
+				sensor=event.sensor,
+				event=event.data["event"],
+				priority=event.priority,
+				timestamp=event.timestamp,
+				geotag=geotag,
+				value_json=json.dumps(event.data["value"])
+			)
+		return encoded_event
 	
+	def send(self, encoded_event):
+		if encoded_event is None:
+			return False
+
+		try:
+			if isinstance(encoded_event, self.EventRecord):
+				encoded_event.save()
+				log.info("MySQL record saved to: " + str(encoded_event._meta.db_table))
+				return False # to avoid influence on normal behavior
+		except peewee.OperationalError, err:
+			log.error(str(err))
+			self._db = None
+		except peewee.ProgrammingError, err:
+			log.error(str(err))
+			self._db = None
+		return False
+
