@@ -2,6 +2,7 @@ from scale_client.core.application import Application
 from scale_client.core.sensed_event import SensedEvent
 
 import json
+import time
 import peewee
 from threading import Lock
 
@@ -64,13 +65,10 @@ class MySQLMaintainer(Application):
 				return
 
 		# Check for available publishers
+		# Will not check for Internet access
 		if not self._puba:
 			log.info("no available publisher reported")
 			return
-
-		# Check for Internet access
-		#if self._neta is not None and not self._neta:
-		#	return
 
 		res_list = None
 		id_list = []
@@ -139,12 +137,26 @@ class MySQLMaintainer(Application):
 			self._puba = ed
 
 	def _clean_up(self):
+		"""
+		This method cleans up the `events` table for already-uploaded events.
+		Records in database have initial `upload_time` as None.
+		A successful publish of record will update `upload_time` for the event.
+		"""
+		# currently only called once at start up
+		#XXX: should be called whlie running for longer runs of client
+
 		if self._db is None:
 			return
 		self._db_lock.acquire()
 		try:
+			# Delete uploaded events
 			self.EventRecord.delete().where(
 					self.EventRecord.upload_time > 0.0
+				).execute()
+
+			# Delete unexpected events: loaded but not processed
+			self.EventRecord.delete().where(
+					self.EventRecord.upload_time < 0.0 and self.EventRecord.timestamp < time.time() - 300
 				).execute()
 			log.info("MySQL database cleaned up")
 		except peewee.OperationalError, err:

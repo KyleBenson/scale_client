@@ -21,6 +21,7 @@ class EventReporter(Application):
         self._lman = None
         self._neta = None
         self._mysql_sink = None
+        self._puba = None
 
     def add_sink(self, sink):
         """
@@ -103,6 +104,9 @@ class EventReporter(Application):
                 self._mysql_sink.send_event(event)
     
     def _cast_publisher_state(self, published, priority):
+        if self._puba is not None and self._puba == published:
+            return
+        self._puba = published
         ps = SensedEvent(
                 sensor="event_reporter",
                 data={"event": "publisher_state", "value": published},
