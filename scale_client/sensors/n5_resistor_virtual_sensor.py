@@ -24,6 +24,7 @@ class N5ResistorVirtualSensor(AnalogVirtualSensor):
 		adcout = super(N5ResistorVirtualSensor, self).read_raw()
 		adcmax = self.READ_MAX or self.HDWR_MAX
 		volt_x = 1.0 * self.VOLT_ADC * adcout / adcmax
+		log.debug("volt_x = " + str(volt_x))
 		if volt_x == 0.0: #XXX
 			return None
 		rsst_s = (1.0 * self.VOLT_ALL / volt_x - 1) * self.RSST_STD
