@@ -20,6 +20,8 @@ DIR=/usr/local/scale/scale_client/core
 DAEMON="$PYTHON"
 DAEMON_OPTS="-m scale_client"
 
+CONFIG_SPEC="/etc/scale/client/config.yml"
+
 #PIP_LS=$(pip freeze)
 #echo "$PIP_LS" | grep -q "scale\-client"
 
@@ -33,12 +35,16 @@ CONFIG_PATH="$MODULE_PATH/config"
 #echo "MODULE_PATH=$MODULE_PATH"
 #echo "CONFIG_PATH=$CONFIG_PATH"
 
-if grep -q sheeva /etc/hostname; then #XXX
-DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/sheeva_config.yml"
-elif grep -q pi /etc/hostname; then
-DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/pi_config.yml"
-elif grep -q cycle /etc/hostname; then
-DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/cycle_config.yml"
+if [ -e $CONFIG_SPEC ]; then
+	DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_SPEC"
+else
+	if grep -q sheeva /etc/hostname; then #XXX
+	DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/sheeva_config.yml"
+	elif grep -q pi /etc/hostname; then
+	DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/pi_config.yml"
+	elif grep -q cycle /etc/hostname; then
+	DAEMON_OPTS="$DAEMON_OPTS --config $CONFIG_PATH/cycle_config.yml"
+	fi
 fi
 
 else exit 2; # If module scale_client is not found in pip list

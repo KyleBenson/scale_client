@@ -48,3 +48,10 @@ Sensors:
     - LightFlashSensor:
         class: "light_flash_virtual_sensor.LightFlashVirtualSensor"
         dev_name: "flash0"
+    #- TemperatureSensor:
+    #    class: "temperature_virtual_sensor.TemperatureVirtualSensor"
+    #    dev_name: "cel0"
+    #- TemperatureHighSensor:
+    #    class: "temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
+    #    dev_name: "heat0"
+

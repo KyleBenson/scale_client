@@ -44,6 +44,12 @@ Configuration files are written in the *YAML* language.  See examples in the `sc
 
 Note that each section (other than `Main`) lists the configurations for a number of Python classes.  The core system will try to create an instance of each listed class and run it within the SCALE environment on startup.  Of particular importance are the class names, which are resolved either relative to the topmost directory or to the corresponding directory within `scale_client` (e.g. `scale_client/sensors` for `Sensors`).  The remaining arguments for each class are passed directly to the class's constructor as kwargs, so ensure you include all necessary ones, spell them properly, and verify that the value is legitimate or it may create an error during runtime.  SCALE tries to gracefully log these errors and not start up the class in question when one occurs, and so it is your responsibility to enable logging during testing and verify that the classes are configured and run properly.
 
+### Location for machine-specific configuration file
+
+The SCALE daemon as a system service will always try to load `/etc/scale/client/config.yml` on start-up, for a machine-specific configuration file. If it fails, it will turn to load one of the default configuration files that come with the package.
+
+The setup script `setup.py` will create the directory `/etc/scale/client` recursively and put an example configuration file `example-config.yml` inside. Your machine-specific configuration file will NOT be overwritten during setup.
+
 Extending and modifying
 -----------------------
 

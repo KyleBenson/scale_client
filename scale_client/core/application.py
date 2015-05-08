@@ -112,6 +112,7 @@ class Application(BaseComponent):
             topic = event.__class__
         ret = self._publish(event, topic)
         self.on_publish(event, topic)
+
         return ret
 
     def subscribe(self, topic):
