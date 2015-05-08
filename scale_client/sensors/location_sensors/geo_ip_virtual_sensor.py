@@ -36,6 +36,10 @@ class GeoIPVirtualSensor(ThreadedVirtualSensor):
 			obj = json.loads(ret)
 		except Exception:
 			return None
+		if type(obj) != type({}):
+			return None
+		if not "lat" in obj or not "lon" in obj or not "query" in obj:
+			return None
 		raw = {
 				"lat": obj["lat"],
 				"lon": obj["lon"],
