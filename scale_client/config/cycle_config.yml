@@ -4,6 +4,8 @@ Main:
     event_queue_size: 4096
 
 EventSinks:
+    #- LogEventSink:
+    #    class: "log_event_sink.LogEventSink"
     - MQTTPublisher:
         class: "mqtt_event_sink.MQTTEventSink"
         hostname: "dime.smartamerica.io"
