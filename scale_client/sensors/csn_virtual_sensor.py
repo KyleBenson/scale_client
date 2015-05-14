@@ -31,7 +31,11 @@ class CSNVirtualSensor(VirtualSensor):
 
     def read_raw(self):
         readings = []
+        print "ARE YOU HERE?"
         for ln in iter(self._result.stdout.readline, ''):
+            print "FOUND ANYTHING HERE? "
+            print ln
+
             log.debug("Line: " + ln.rstrip())
             magic_ln_match = self._magic_ln_regexp.match(ln.rstrip())
             if magic_ln_match:

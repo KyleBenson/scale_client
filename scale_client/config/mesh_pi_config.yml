@@ -30,21 +30,6 @@ Sensors:
         class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
         dev_name: "hb0"
         interval: 60
-    - DummyPIRSensor:
-        class: "dummy_sensors.dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
-        dev_name: "pir0"
-    - DummyLightSensor:
-        class: "dummy_sensors.dummy_light_virtual_sensor.DummyLightVirtualSensor"
-        dev_name: "light0"
-    - DummyGasSensor:
-        class: "dummy_sensors.dummy_gas_virtual_sensor.DummyGasVirtualSensor"
-        dev_name: "gas0"
-    - DummyTempSensor:
-        class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
-        dev_name: "cel0"
-    - DummySeismicSensor:
-        class: "dummy_sensors.dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
-        dev_name: "accel0"
     - GeoIPSensor:
         class: "location_sensors.geo_ip_virtual_sensor.GeoIPVirtualSensor"
         dev_name: "geoip0"

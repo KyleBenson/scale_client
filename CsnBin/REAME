@@ -1,0 +1,21 @@
+1. Need to add a host file record to forward CSN client traffic to the virtual CSN server on local
+    
+$ 127.0.0.1 csn-server.appspot.com
+
+2. We use Web2py to receive traffic from CSN client, to install Web2py:
+
+$ pip install WebOb
+$ pip install Paste
+$ pip install webapp2
+
+3. We also need Google protoc lib to decode message from CSN client. To install it, run the following commands:
+
+sudo curl -O http://iweb.dl.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.9/libusb-1.0.9.tar.bz2 
+sudo tar -zxvf protobuf-2.5.0.tar.gz
+cd protobuf-2.5.0
+sudo ./configure --prefix=/usr/local
+sudo make
+sudo make install
+cd ../
+
+
