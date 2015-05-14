@@ -52,32 +52,31 @@ class CreateHandler(api_handler.ProtobufHandler):
         self.response_pb.client_secret = self.generate_secret(current_time)
 
         self.write_response()
-	print('\n\nCreateHandler request')
-	print(self.request_pb)
-	print('\n\nCreateHandler response')
-	print(self.response_pb)
+        print('\n\nCreateHandler request')
+        print(self.request_pb)
+        print('\n\nCreateHandler response')
+        print(self.response_pb)
 
     def generate_secret(environment, current_time):
         """
-    	Create a random value using the system environment and time as a seed.
+    	   Create a random value using the system environment and time as a seed.
 
-    	Parameters
-    	----------
-    	environment : webapp2.environment
-        Used to provide additional entropy when hashing with the system time.
+    	   Parameters
+    	   ----------
+    	   environment : webapp2.environment
+            Used to provide additional entropy when hashing with the system time.
 
-    	Notes
-    	-----
-    	This generator should be sufficiently random for our limited purposes, but
-    	PyCrypto_ is available as a Python 2.7 library on App Engine if additional
-    	security is desired.
+    	   Notes
+    	   -----
+    	   This generator should be sufficiently random for our limited purposes, but
+    	   PyCrypto_ is available as a Python 2.7 library on App Engine if additional
+    	   security is desired.
 
-    	.. _PyCrypto: https://www.dlitz.net/software/pycrypto/
+        	.. _PyCrypto: https://www.dlitz.net/software/pycrypto/
 
-    	"""
-    	secret_hash = hashlib.sha256('{}/{}'.format(
-                                 environment, util.date_format(current_time)))
-    	return secret_hash.hexdigest()
+    	   """
+        secret_hash = hashlib.sha256('{}/{}'.format(environment, util.date_format(current_time)))
+        return secret_hash.hexdigest()
 
 
 class UpdateHandler(api_handler.ProtobufHandler):
@@ -95,16 +94,18 @@ class UpdateHandler(api_handler.ProtobufHandler):
         Calls `perform_update` and returns newly generated `Sensor` ids.
 
         """
-	if self.request_pb.new_sensors:
+        
+        if self.request_pb.new_sensors:
             self.response_pb.sensor_ids.append(0)
 
         self.write_response(
         	'No changes to client requested or all properties are '
                 'already at their desired values.')
-	print('\n\nUpdateHanler Request')
-	print(self.request_pb)
-	print('\n\nUpdateHanler Response')
-	print(self.response_pb)
+        
+        print('\n\nUpdateHanler Request')
+        print(self.request_pb)
+        print('\n\nUpdateHanler Response')
+        print(self.response_pb)
 
 class MetadataHandler(api_handler.ProtobufHandler):
     """
@@ -117,29 +118,28 @@ class MetadataHandler(api_handler.ProtobufHandler):
     RESPONSE_OBJ = client_messages_pb2.ClientMetadataResponse
 
     def post_pb(self, client_id_str=None):
-	self.response_pb.client_data.latitude =  0.0
-
+        self.response_pb.client_data.latitude =  0.0
         self.response_pb.client_data.longitude =  0.0
-	#self.response_pb.client_data.location_source_type = 'SERVER_DEFAULT'
-	#self.response_pb.client_data.mobility_type = 'DESKTOP'
-	#self.response_pb.client_data.software_version = '2.2b3'
-	#self.response_pb.client_data.operating_system = 'Linux'
 
-	#self.response_pb.sensor_data.sensor_id = 0
-  	#self.response_pb.sensor_data.sensor_type = 'ACCELEROMETER_3_AXIS'
-  	#self.response_pb.sensor_data.model = 'Phidgets 1056'
-  	#self.response_pb.sensor_data.serial = 252391
-  	#self.response_pb.sensor_data.calibrated = 'true'
-  	#self.response_pb.sensor_data.units = 'g'
-  	#self.response_pb.sensor_data.num_samples = 50
-  	#self.response_pb.sensor_data.sample_window_size = 1
+        #self.response_pb.client_data.location_source_type = 'SERVER_DEFAULT'
+        #self.response_pb.client_data.mobility_type = 'DESKTOP'
+        #self.response_pb.client_data.software_version = '2.2b3'
+        #self.response_pb.client_data.operating_system = 'Linux'
+        #self.response_pb.sensor_data.sensor_id = 0
+        #self.response_pb.sensor_data.sensor_type = 'ACCELEROMETER_3_AXIS'
+        #self.response_pb.sensor_data.model = 'Phidgets 1056'
+        #self.response_pb.sensor_data.serial = 252391
+        #self.response_pb.sensor_data.calibrated = 'true'
+        #self.response_pb.sensor_data.units = 'g'
+        #self.response_pb.sensor_data.num_samples = 50
+        #self.response_pb.sensor_data.sample_window_size = 1
 
         self.write_response()
-
-	print('\n\nmetadata request ')
-	print(self.request_pb)
-	print('\n\nmetadata response ')
-	print(self.response_pb)
+        
+        print('\n\nmetadata request ')
+        print(self.request_pb)
+        print('\n\nmetadata response ')
+        print(self.response_pb)
 
 '''
 class KeyValueHandler(api_handler.ProtobufHandler):

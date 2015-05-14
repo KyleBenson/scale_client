@@ -57,7 +57,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         self.mesh_host_id = self.batman_ip + "_" + self.batman_mac
 
         #print self.mesh_host_id
-        #self.display_neighbors()
+        self.display_neighbors()
 
         self.scan_interval = scan_interval;
         self.refresh_socket_conns = refresh_socket_conns;
