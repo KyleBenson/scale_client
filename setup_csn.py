@@ -21,11 +21,11 @@ try:
     subprocess.call("pip install webapp2", shell=True)
     subprocess.call("apt-get install python-protobuf -y", shell=True)
 
-    os.system("cp " + CSND_BIN + " /usr/sbin/")
-    os.system("cp " + CSN_CONFIG_BIN + " /usr/sbin/")
+    os.system("cp " + CSND_BIN + " /usr/local/sbin/")
+    os.system("cp " + CSN_CONFIG_BIN + " /usr/local/sbin/")
     os.system("cp " + CSND_INI + " /etc/init.d/")
 
-    subprocess.call("update-rc.d csnd defaults", shell=True)
+    subprocess.call("update-rc.d csnd defaults 98 02", shell=True)
     subprocess.call("/etc/init.d/csnd start", shell=True)
 except IOError:
     print "Failed to setup virtual CSN server and CSN client"

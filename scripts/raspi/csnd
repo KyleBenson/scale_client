@@ -1,81 +1,51 @@
-#!/bin/sh
-### BEGIN INIT INFO
+#! /bin/sh -e
 
-PATH=/sbin:/bin:/usr/sbin:/usr/bin
-DESC="CSN Deamon"
-NAME="csnd"
-DAEMON="/usr/sbin/$NAME"
-SCRIPTNAME=/etc/init.d/$NAME
+#### BEGIN INIT INFO
+# Provides:          CSN
+# Required-Start:    $network $time $local_fs
+# Required-Stop:     $network $time $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: CSN client daemon
+# Description:       Background daemon to poll CSN phidget 1056 device
+### END INIT INFO
 
-# Gracefully exit if the package has been removed.
+#
+# Author:       Richard Guy <help@communityseismicnetwork.org>
+#
+
+set -e
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+DAEMON=/usr/local/sbin/csnd
+
 test -x $DAEMON || exit 0
 
 . /lib/lsb/init-functions
 
-# Include csnd defaults if available.
-test -f /etc/default/csnd  && . /etc/default/csnd
-
-#
-#       Function that starts the daemon/service.
-#
-d_start() {
-    $DAEMON start
-}
-
-#
-#       Function that stops the daemon/service.
-#
-d_stop() {
-    $DAEMON stop
-}
-
-#
-#       Function that reload the config file for the daemon/service.
-#
-d_reload() {
-    d_stop
-    d_start
-}
-
-d_restart() {
-    $DAEMON restart
-}
-
-#
-#       Function that check the status of the daemon/service.
-#
-d_status() {
-    $DAEMON -c && echo "$DESC is running" || echo "$DESC is not running"
-}
-
 case "$1" in
     start)
-        log_daemon_msg "Starting $DESC" "$NAME"
-        d_start
+        log_daemon_msg "Starting CSN daemon" "csnd"
+        start_daemon $DAEMON $1
         log_end_msg $?
-        ;;
-    stop)
-        log_daemon_msg "Stopping $DESC" "$NAME"
-        d_stop
-        log_end_msg $?
-        ;;
-    reload|force-reload)
-        log_daemon_msg "Reloading services for $DESC" "$NAME"
-        d_reload
-        log_end_msg $?
-        ;;
-    restart)
-        log_daemon_msg "Restarting $DESC" "$NAME"
-	d_restart
-        log_end_msg $?
-        ;;
-    status)
-        d_status
-        ;;
-    *)
-        echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload|reload}" >&2
-        exit 1
-        ;;
-esac
+    ;;
 
+    stop)
+        log_daemon_msg "Stopping CSN daemon" "csnd"
+        $DAEMON $1
+        log_end_msg $?
+    ;;
+
+    force-reload|restart)
+        $0 stop
+        $0 start
+    ;;
+
+    *)
+
+    echo "Usage: /etc/init.d/csnd {start|stop|restart|force-reload}"
+
+    exit 1
+    ;;
+esac
 exit 0
