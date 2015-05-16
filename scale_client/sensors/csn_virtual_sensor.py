@@ -1,4 +1,5 @@
 import re
+import os
 import subprocess
 from scale_client.sensors.virtual_sensor import VirtualSensor
 
@@ -13,6 +14,7 @@ class CSNVirtualSensor(VirtualSensor):
         super(CSNVirtualSensor, self).__init__(broker, device)
         self._reading_regexp = re.compile(r'.*readings: ([\-\+]?[0-9]*(\.[0-9]+)?)')
         self._magic_ln_regexp = re.compile(SCALE_VS_MAGIC_LN)
+        self._virtual_server = os.getcwd() + "/scale_client/sensors/virtual_csn_server/main.py"
         self._result = None
 
     DEFAULT_PRIORITY = 4
@@ -23,7 +25,7 @@ class CSNVirtualSensor(VirtualSensor):
     def on_start(self):
         # TODO: asynchronous callback when something is actually available on this pipe
         self._result = subprocess.Popen(
-            ["/root/SmartAmericaSensors/scale_client/virtual_csn_server/main.py"],
+            [self._virtual_server],
             shell=True,
             stdout=subprocess.PIPE
         )
@@ -31,11 +33,7 @@ class CSNVirtualSensor(VirtualSensor):
 
     def read_raw(self):
         readings = []
-        print "ARE YOU HERE?"
         for ln in iter(self._result.stdout.readline, ''):
-            print "FOUND ANYTHING HERE? "
-            print ln
-
             log.debug("Line: " + ln.rstrip())
             magic_ln_match = self._magic_ln_regexp.match(ln.rstrip())
             if magic_ln_match:
