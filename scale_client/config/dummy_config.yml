@@ -52,6 +52,3 @@ Sensors:
     - TempHighSensor:
         class: "temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
         dev_name: "heat0"
-    - CSNSensor:
-        class: "csn_virtual_sensor.CSNVirtualSensor"
-        dev_name: "accel0"

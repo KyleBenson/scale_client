@@ -1,23 +1,26 @@
 import re
 import os
 import subprocess
-from scale_client.sensors.virtual_sensor import VirtualSensor
+import sys
+import scale_client
+from scale_client.sensors.threaded_virtual_sensor import ThreadedVirtualSensor
 
 import logging
 log = logging.getLogger(__name__)
 
-SCALE_VS_MAGIC_LN = r"\$\$\$_SCALE_VS_MAGIC_LN_\$\$\$"
 
-
-class CSNVirtualSensor(VirtualSensor):
+class CSNVirtualSensor(ThreadedVirtualSensor):
     def __init__(self, broker, device=None):
         super(CSNVirtualSensor, self).__init__(broker, device)
         self._reading_regexp = re.compile(r'.*readings: ([\-\+]?[0-9]*(\.[0-9]+)?)')
-        self._magic_ln_regexp = re.compile(SCALE_VS_MAGIC_LN)
-        self._virtual_server = os.getcwd() + "/scale_client/sensors/virtual_csn_server/main.py"
+        self._magic_ln_regexp = re.compile(self.SCALE_VS_MAGIC_LN)
+
+        scale_client_path = os.path.dirname(scale_client.__file__)
+        self._virtual_server = scale_client_path + "/sensors/virtual_csn_server/main.py"
         self._result = None
 
     DEFAULT_PRIORITY = 4
+    SCALE_VS_MAGIC_LN = r"\$\$\$_SCALE_VS_MAGIC_LN_\$\$\$"
 
     def get_type(self):
         return "seismic"
@@ -25,8 +28,8 @@ class CSNVirtualSensor(VirtualSensor):
     def on_start(self):
         # TODO: asynchronous callback when something is actually available on this pipe
         self._result = subprocess.Popen(
-            [self._virtual_server],
-            shell=True,
+            [sys.executable, self._virtual_server],
+            shell=False,
             stdout=subprocess.PIPE
         )
         super(CSNVirtualSensor, self).on_start()
@@ -48,6 +51,7 @@ class CSNVirtualSensor(VirtualSensor):
     def policy_check(self, data):
         data = data.get_raw_data()
         if len(data) < 3:
-            log.warn("Not sure why there are less than 3 components to the CSN reading")
+            if len(data) > 0:
+                log.warn("Not sure why there are less than 3 components to the CSN reading")
             return False
         return True
