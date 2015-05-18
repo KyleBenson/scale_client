@@ -33,6 +33,10 @@ class LocationManager(Application):
 		LocationManager should deal with all location events published by
 		location providers.
 		"""
+		# Ignore events from database
+		if hasattr(event, "db_record"):
+			return
+
 		# Analyze event
 		et = event.get_type()
 		data = event.get_raw_data()
@@ -50,6 +54,7 @@ class LocationManager(Application):
 			item["alt"] = data["alt"]
 		self._pool_lock.acquire()
 		try:
+			#XXX: maybe check if timestamp is newer before update?
 			self._location_pool[event.sensor] = item
 			self._update_location()
 		finally:

@@ -4,6 +4,8 @@ import time
 import logging
 log = logging.getLogger(__name__)
 
+from scale_client.core.sensed_event import SensedEvent
+
 class EventReporter(Application):
     """
     The EventReporter is a special-purpose Application that is the sole entity responsible
@@ -17,6 +19,8 @@ class EventReporter(Application):
         self.__sinks = []
         self._lman = None
         self._neta = None
+        self._mysql_sink = None
+        self._puba = None
 
     def add_sink(self, sink):
         """
@@ -48,12 +52,14 @@ class EventReporter(Application):
         if et == "internet_access":
             self._neta = ed
             if ed is not None:
-            	if ed:
-            		log.info("Internet access successful")
-            	else:
-            		log.info("Internet access failed")
+                if ed:
+                    log.info("Internet access successful")
+                else:
+                    log.info("Internet access failed")
             else:
-            	log.info("Internet access status unknown")
+                log.info("Internet access status unknown")
+            return
+        elif et == "publisher_state":
             return
 
         # Ignorance
@@ -64,7 +70,46 @@ class EventReporter(Application):
                 self._lman.tag_event(event)
 
         # Send event to sinks
+        published = False
         for sink in self.__sinks:
-            if sink.check_available(event):
-                sink.send_event(event)
+            if type(sink).__name__ == "MySQLEventSink":
+                if self._mysql_sink is None:
+                    self._mysql_sink = sink
+                try:
+                    self.__sinks.remove(sink)
+                    log.info("found MySQL database connector")
+                except ValueError:
+                    pass
+                next
+            elif sink.check_available(event):
+                if sink.send_event(event):
+                    published = True
                 # TODO: only send via one of the sinks?
+
+        # Update publisher state
+        if published:
+            self._cast_publisher_state(published, 8)
+        if hasattr(event, "db_record"): # from database
+            if published: # update database record
+                event.db_record["upload_time"] = time.time()
+            else:
+                # Update publisher state
+                self._cast_publisher_state(published, 7)
+        else: # not from database
+            if published: # no need to insert into database
+                return
+        if self._mysql_sink is not None:
+            if self._mysql_sink.check_available(event):
+                self._mysql_sink.send_event(event)
+    
+    def _cast_publisher_state(self, published, priority):
+        if self._puba is not None and self._puba == published:
+            return
+        self._puba = published
+        ps = SensedEvent(
+                sensor="event_reporter",
+                data={"event": "publisher_state", "value": published},
+                priority=priority
+            )
+        self.publish(ps)
+
