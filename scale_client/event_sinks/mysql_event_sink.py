@@ -28,6 +28,7 @@ class MySQLEventSink(EventSink):
 		geotag = peewee.TextField(null = True)
 		value_json = peewee.TextField()
 		upload_time = peewee.DoubleField(null = True)
+		condition = peewee.TextField(null = True)
 
 	def _try_connect(self):
 		self._db = peewee.MySQLDatabase(
@@ -79,13 +80,17 @@ class MySQLEventSink(EventSink):
 		geotag = None
 		if "geotag" in event.data:
 			geotag = json.dumps(event.data["geotag"])
+		condition = None
+		if "condition" in event.data:
+			condition = json.dumps(event.data["condition"])
 		encoded_event = self.EventRecord(
 				sensor=event.sensor,
 				event=event.data["event"],
 				priority=event.priority,
 				timestamp=event.timestamp,
 				geotag=geotag,
-				value_json=json.dumps(event.data["value"])
+				value_json=json.dumps(event.data["value"]),
+				condition=condition
 			)
 		return encoded_event
 	
