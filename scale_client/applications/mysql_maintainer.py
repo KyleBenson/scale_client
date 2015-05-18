@@ -35,6 +35,7 @@ class MySQLMaintainer(Application):
 		geotag = peewee.TextField(null = True)
 		value_json = peewee.TextField()
 		upload_time = peewee.DoubleField(null = True)
+		condition = peewee.TextField(null = True)
 	
 	def _try_connect(self):
 		self._db = peewee.MySQLDatabase(
@@ -83,6 +84,8 @@ class MySQLMaintainer(Application):
 					}
 				if rec.geotag is not None:
 					structured_data["geotag"] = json.loads(rec.geotag)
+				if rec.condition is not None:
+					structured_data["condition"] = json.loads(rec.condition)
 				event = SensedEvent(
 						rec.sensor,
 						structured_data,

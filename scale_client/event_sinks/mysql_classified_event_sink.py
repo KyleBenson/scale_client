@@ -62,6 +62,9 @@ class MySQLClassifiedEventSink(MySQLEventSink):
 		geotag = None
 		if "geotag" in event.data:
 			geotag = json.dumps(event.data["geotag"])
+		condition = None
+		if "condition" in event.data:
+			condition = json.dumps(event.data["condition"])
 		kls = self._kls_types[et]
 		encoded_event = kls(
 				sensor=event.sensor,
@@ -69,7 +72,8 @@ class MySQLClassifiedEventSink(MySQLEventSink):
 				priority=event.priority,
 				timestamp=event.timestamp,
 				geotag=geotag,
-				value_json=json.dumps(event.data["value"])
+				value_json=json.dumps(event.data["value"]),
+				condition=condition
 			)
 		return encoded_event
 	
