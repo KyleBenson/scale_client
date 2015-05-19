@@ -203,16 +203,17 @@ class SigfoxEventSink(EventSink):
 
         # 3. Encode Value
         # Temporary method, just encode one float to first 4 bytes. Use for temperature data
-        if hex_payload_type != "01" and hex_payload_type != "02":
-            hex_payload_value = ""
-            for i in range(16):
-                hex_payload_value += "0"
-        else:
-            value_original = event.get_raw_data() #event.data["value"]
-            hex_payload_value = hex(ctypes.c_int.from_buffer(ctypes.c_float(value_original)).value)[2:]
+        value_original = event.get_raw_data() #event.data["value"]
 
-            for i in range(8):
-                hex_payload_value += "0"
+        if type(value_original) == type(9.0): # Handle float value
+            hex_payload_value = hex(ctypes.c_int.from_buffer(ctypes.c_float(value_original)).value)[2:]
+            #for i in range(8):
+            #    hex_payload_value += "0"
+            hex_payload_value += "0" * 8
+        else:
+            #for i in range(16):
+            #    hex_payload_value += "0"
+            hex_payload_value = "0" * 16
 
         # 4. Encode Priority
         priority_original = event.priority
