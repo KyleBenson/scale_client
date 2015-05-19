@@ -21,6 +21,9 @@ EventSinks:
         dbname: "scale_client"
         username: "scale_usr"
         password: "123456"
+    #- SigfoxPublisher:
+    #    class: "sigfox_event_sink.SigfoxEventSink"
+    #    serialport: "/dev/ttyUSB0"
 
 Applications:
     - LocationManager:
