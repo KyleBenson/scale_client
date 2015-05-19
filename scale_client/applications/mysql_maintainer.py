@@ -10,7 +10,7 @@ import logging
 log = logging.getLogger(__name__)
 
 class MySQLMaintainer(Application):
-	def __init__(self, broker, dbname, username, password, interval=10):
+	def __init__(self, broker, dbname, username, password, interval=10, cleanup=43200):
 		super(MySQLMaintainer, self).__init__(broker)
 
 		self._interval = interval
@@ -22,6 +22,8 @@ class MySQLMaintainer(Application):
 		self._neta = None
 		self._puba = None
 		self._db_lock = Lock()
+		self._clean_timer = None
+		self._clean_timeout = cleanup
 	
 	class EventRecord(peewee.Model):
 		class Meta:
@@ -55,7 +57,7 @@ class MySQLMaintainer(Application):
 	
 	def on_start(self):
 		self._try_connect()
-		self._clean_up()
+		#self._clean_up()
 		if self._interval is None:
 			return
 		self.timed_call(self._interval, MySQLMaintainer._cron, repeat=True)
@@ -64,6 +66,11 @@ class MySQLMaintainer(Application):
 		if self._db is None:
 			if not self._try_connect():
 				return
+
+		# Clean up
+		if self._clean_timer is None or self._clean_timer + self._clean_timeout < time.time():
+			self._clean_up()
+			self._clean_timer = time.time()
 
 		# Check for available publishers
 		# Will not check for Internet access
