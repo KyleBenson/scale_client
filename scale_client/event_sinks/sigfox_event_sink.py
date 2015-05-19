@@ -1,5 +1,5 @@
-##1. install python serial package, details can be found at http://pyserial.sourceforge.net/pyserial.html#installation
-##2. change the permission of your device, using "chmod o+rw". In my machine, it is "sudo chmod o+rw /dev/ttyUSB0"
+## 1. Install python serial package, details can be found at http://pyserial.sourceforge.net/pyserial.html#installation
+## 2. Change the permission of your device, using "chmod o+rw". In my machine, it is "sudo chmod o+rw /dev/ttyUSB0"
 
 import logging
 log = logging.getLogger(__name__)
@@ -7,6 +7,9 @@ log = logging.getLogger(__name__)
 from scale_client.event_sinks.event_sink import EventSink
 from scale_client.core.application import handler
 import serial
+import json
+import os
+import time
 
 from circuits.core.timers import Timer
 from circuits.core.events import Event
@@ -17,25 +20,62 @@ class SigfoxCheckEventSent(Event):
 
 
 class SigfoxEventSink(EventSink):
-    def __init__(self,
-                _port='/dev/ttyUSB0',
+    def __init__(self, broker,
+                serialport='/dev/ttyUSB0',
                 _baudrate=9600,
                 _parity=serial.PARITY_NONE,
                 _stopbits=serial.STOPBITS_ONE,
                 _bytesize=serial.EIGHTBITS):
-        EventSink.__init__(self)
-        self._event_type_json_file = "event_type.json"
-        self.__is_available = False
+        EventSink.__init__(self, broker)
+        self._event_type_json_file = "sigfox_event_types.json"
 
-        self._ser = serial.Serial(
-                port=_port,
-                baudrate=_baudrate,
-                parity=_parity,
-                stopbits=_stopbits,
-                bytesize=_bytesize
-            )
+        # Read from event type enum definition file (in JSON format)
+        dirname, filename = os.path.split(os.path.abspath(__file__))
+        log.debug(dirname)
+        type_file = open(dirname + "/" + self._event_type_json_file, "rt")
+        type_stream = type_file.read()
+        self._type_info = json.loads(type_stream)
+
+        self._serialport = serialport;
+        self._baudrate = _baudrate;
+        self._parity = _parity;
+        self._stopbits = _stopbits;
+        self._bytesize = _bytesize;
+
+        self.__is_available = False
+        self._ser = None
+        self._reconnect_timer = None
+        self._reconnect_timeout = 10
+
+    def _try_connect(self):
+        if self._ser is None:
+            try:
+                self._ser = serial.Serial(
+                        port=self._serialport,
+                        baudrate=self._baudrate,
+                        parity=self._parity,
+                        stopbits=self._stopbits,
+                        bytesize=self._bytesize
+                    )
+            except serial.SerialException:
+                pass
+        if self._ser is None:
+            log.error("Sigfox adapter not connected")
+            self._reconnect_timer = time.time()
+            return False
+        if not self._ser.isOpen():
+            self._ser.open()
+        log.info("Sigfox adapter connected")
+        self.__is_available = True
+        self._reconnect_timer = None
+        return True
 
     def check_available(self, event):
+        if not event.get_type() in self._type_info:
+            return False
+        if self._ser is None or not self._ser.isOpen():
+            if self._reconnect_timer is None or self._reconnect_timer + self._reconnect_timeout < time.time():
+                self._try_connect()
         return self.__is_available
 
     def _ex_handler(self, obj):
@@ -44,25 +84,29 @@ class SigfoxEventSink(EventSink):
         log.error(message)
 
     def on_start(self):
-        if not self._ser.isOpen():
-            self._ser.open()
-        log.info("Sigfox adapter connected")
-        self.__is_available = True
+        self._try_connect()
 
     def send(self, encoded_event):
         #TODO: should define false code to indicate different fault reason
-        #if encoded_event is False:
-        #    return False
+        if encoded_event is False:
+            return False
         try:
             #self._ser.write(topic+"||"+msg+'\r\n')
-            #use the above paras to send actual sensor data
+            # Use the above paras to send actual sensor data
+
             self._ser.write(encoded_event)
+        except serial.SerialException:
+            log.error("Sigfox adaper writing failure")
+            self._ser = None
+            self.__is_available = False
+            return False
         except Exception as err:
             self._ex_handler(err)
             return False
 
+        log.info("Sigfox message: " + encoded_event.rstrip())
         self.__is_available = False
-        # check that message was sent ok after a timeout (no way to check that it was received!)
+        # Check that message was sent ok after a timeout (no way to check that it was received!)
         self.set_event_check_timer()
 
     def set_event_check_timer(self, time_to_wait=7):
@@ -72,73 +116,82 @@ class SigfoxEventSink(EventSink):
         :param time: a number of seconds to wait or a datetime object representing when the check should be done
         """
         try:
-            self.__timer.reset(time_to_wait)
+            self._check_timer.reset(time_to_wait)
+            self._check_timer.register(self)
+            log.debug("Timer reset")
         except AttributeError:
-            self.__timer = Timer(time_to_wait, SigfoxCheckEventSent())
-            self.__timer.register(self)
+            self._check_timer = Timer(time_to_wait, SigfoxCheckEventSent())
+            self._check_timer.register(self)
+            log.debug("Timer created")
 
     @handler("SigfoxCheckEventSent")
     def check_event_sent(self):
-        #TODO: do this asynchronously so we don't always wait 7 seconds???
-        if self.receive():
+        #TODO: do this asynchronously so we don't always wait 7 seconds?
+        ret = self.receive()
+        if ret == 0:
             self.__is_available = True
-        else:
+        elif ret == -1:
             log.error("Unable to receive() reply from Sigfox adapter. Resetting timer...")
             self.set_event_check_timer()
+        elif ret == -4: # IndexError
+            self.__is_available = True
+        elif ret == -7: # IOError
+            self._ser = None
+            self.__is_available = False
 
     def receive(self):
-        #read message from the sigfox adapter
-        ret = ''  #return message read
-        while self._ser.inWaiting() > 0:
-            ret += self._ser.read(1)
-        log.debug("read from sigfox adapter: " + ret)
+        # Read message from the sigfox adapter
+        ret = ''  # Return message read
+
+        try:
+            while self._ser.inWaiting() > 0:
+                ret += self._ser.read(1)
+        except IOError:
+            log.error("Sigfox adaper reading failure")
+            return -7
         ret_strings = ret.split('\r\n')
+        log.debug("Read from Sigfox adapter: " + ret)
         try:
             if ret_strings[1] == "OK":
-                return True
+                log.info("Sigfox message sent")
+                return 0
             else:
-                return False
+                log.warning("Sigfox message not sent: " + ret_strings[1])
+                return -1
         except IndexError:
-            log.error("Index Error when dealing with Sigfox return ")
-            return False
+            log.error("Index error when dealing with Sigfox return")
+            return -4
 
     def encode_event(self, event):
-        import json
         import ctypes
-        import os
-        log.debug("encoding event: %s" % event.msg)
 
-        #The Structure of Sigfox message:
+        log.debug("Encoding event: %s" % json.dumps(event.data))
+
+        # The structure of Sigfox message:
         #  at$ss="payload_part"
 
-            #The payload part of Sigfox message have following rules:
-            #1. Each payload character should be Hex character(0-F), which represent half byte.
-            #2. No more than 12 bytes(24 Hex characters)
-            #3. The message should be byte aligned, which means there should be even Hex characters
+            # The payload part of Sigfox message have following rules:
+            # 1. Each payload character should be Hex character (0-F), which represent half byte.
+            # 2. No more than 12 bytes (24 Hex characters)
+            # 3. The message should be byte aligned, which means there should be even Hex characters
 
         hex_payload = " "
 
-        #The Structure of Sigfox message payload:
-        #   Event Type(1 Byte/ 2 Hex Characters)
-        # + Value Descriptor(2 Bytes / 4 Hex Characters) #TODO: Need More Work to Define
-        # + Value(8 Bytes / 16 Hex Characters)
-        # + Priority(4 bits / 1 Hex Characters)
-        # + Control(Reserve bits)(4bits / 1 Hex Characters)
+        # The structure of Sigfox message payload:
+        #   Event Type (1 Byte/ 2 Hex Characters)
+        # + Value Descriptor (2 Bytes / 4 Hex Characters) #TODO: Need More Work to Define
+        # + Value (8 Bytes / 16 Hex Characters)
+        # + Priority (4 bits / 1 Hex Characters)
+        # + Control (Reserve bits)(4bits / 1 Hex Characters)
 
 
         # 1. Encode Event Type
-        event_type_original = event.msg["event"]
-
-        # Read from Event Type Enum Definition File(in JSON format)
-        dirname, filename = os.path.split(os.path.abspath(__file__))
-        type_file = open(dirname+"/"+self._event_type_json_file, "rt")
-        type_stream = type_file.read()
-        type_info = json.loads(type_stream)
+        event_type_original = event.get_type() #event.data["event"]
 
         try:
-            event_type_encoded = type_info[event_type_original]
+            event_type_encoded = self._type_info[event_type_original]
         except KeyError:
-            log.error("Unknown Event: " + event_type_original)
+            log.warning("Unknown event: " + event_type_original)
             return False
         hex_payload_type = event_type_encoded
 
@@ -149,13 +202,13 @@ class SigfoxEventSink(EventSink):
             hex_payload_vd += "0"
 
         # 3. Encode Value
-        # Temporary Method, just encode one float to first 4 bytes. Use for temperature data
+        # Temporary method, just encode one float to first 4 bytes. Use for temperature data
         if hex_payload_type != "01" and hex_payload_type != "02":
             hex_payload_value = ""
             for i in range(16):
                 hex_payload_value += "0"
         else:
-            value_original = event.msg["value"]
+            value_original = event.get_raw_data() #event.data["value"]
             hex_payload_value = hex(ctypes.c_int.from_buffer(ctypes.c_float(value_original)).value)[2:]
 
             for i in range(8):
@@ -164,7 +217,7 @@ class SigfoxEventSink(EventSink):
         # 4. Encode Priority
         priority_original = event.priority
         if priority_original < 0 or priority_original > 15:
-            log.warn("Priority Value Out of Range")
+            log.warning("Priority value out of range")
 
         hex_payload_priority = hex(priority_original)[2] #[0:1] = '0x'
 
@@ -172,9 +225,9 @@ class SigfoxEventSink(EventSink):
         hex_payload_cb = "0"
 
         # 6. Generate Whole Hex Payload
-        hex_payload = hex_payload_type + hex_payload_vd+ hex_payload_value + hex_payload_priority + hex_payload_cb
+        hex_payload = hex_payload_type + hex_payload_vd + hex_payload_value + hex_payload_priority + hex_payload_cb
 
         # Publish message "||" can be redefined. but '\r\n' is mandatory
         encoded_event = "at$ss=" + hex_payload + "\r\n"
-        log.debug("Sigfox Ready to Send: " + str(encoded_event))
+        log.debug("Sigfox encoded: " + str(encoded_event).rstrip())
         return str(encoded_event)
