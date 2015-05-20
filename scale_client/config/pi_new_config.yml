@@ -76,4 +76,7 @@ Sensors:
     - CSNSensor:
         class: "csn_virtual_sensor.CSNVirtualSensor"
         dev_name: "accel0"
+    - UnexpectedMotionSensor:
+        class: "integrated_sensors.unexpected_motion_virtual_sensor.UnexpectedMotionVirtualSensor"
+        dev_name: "uxmot0"
 
