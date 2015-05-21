@@ -15,8 +15,8 @@ class N5ResistorVirtualSensor(AnalogVirtualSensor):
 
 	DEFAULT_PRIORITY = 9
 
-	VOLT_ADC = 3.30
-	VOLT_ALL = 5.00
+	VOLT_ADC = 2.80
+	VOLT_ALL = 5.10
 	RSST_STD = 10.0
 	RSST_AIR = 10.0
 
