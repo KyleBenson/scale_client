@@ -42,8 +42,8 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
     # This is called everytime there is something to read
     def handle_read(self):
         data, addr = self.recvfrom(2048)
-        #print "GOT DATA FROM NEIGHBOR"
-        #print str(addr)+" >> "+data
+        print "GOT DATA FROM NEIGHBOR"
+        print str(addr)+" >> "+data
 
         if data:
             self.relayedSensedEvent.load_data(data)
@@ -55,6 +55,7 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
             print self.relayedSensedEvent
             print "PUBLISHING EVENT"
             sensedEvent = self.convert_to_sensed_event(self.relayedSensedEvent)
+            print sensedEvent
 
             # Publish relayed events from neighbors 
             # to the application

@@ -60,6 +60,13 @@ class RelayedSensedEvent(Event):
         which may include other information such as units, etc.
         :return: raw data
         """
+
+        if 'value' in self.data.keys():
+            return self.data['value']
+        else:
+            return {"event": "unknown_event_type", "value": self.data}
+
+        '''
         data = self.data['value']
         try:
             return data['value']
@@ -67,13 +74,19 @@ class RelayedSensedEvent(Event):
             return data
         except KeyError:
             return data
+        '''
 
     def get_type(self):
         """
         This function tries to intelligently extract the type of SensedEvent as a string.
         :return: event type
         """
-        return self.data['event']
+        try:
+            if 'event' in self.data.keys():
+                return self.data['event']
+            return "unknown_event_type"
+        except TypeError:
+            return "unknown_event_type"
 
     def __repr__(self):
         s = "SensedEvent (%s) with value %s" % (self.get_type(), str(self.get_raw_data()))
