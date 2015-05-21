@@ -12,7 +12,7 @@ import subprocess
 #subprocess.call('userdel charles; rm -rf /home/charles; rm -rf /home/SmartAmericaSensors', shell=True)
 
 SALT_CONFIG_FILE = "/etc/salt/minion"
-SALT_MASTER = iqueue.ics.uci.eud #"128.195.52.93"
+SALT_MASTER = "iqueue.ics.uci.edu" #"128.195.52.93"
 SALT_MASTER_PORT = 4506
 SALT_ID_PREFIX = "raspi"
 
