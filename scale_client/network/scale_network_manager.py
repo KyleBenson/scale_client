@@ -271,8 +271,8 @@ class ScaleNetworkManager():
     def display_neighbors(self):
         for index in self.neighbors:
             neighbor = self.neighbors[index]
-            print "Neighbor mac address: " + neighbor.get_mac_address()
-            print "Neighbor ip address: " + str(neighbor.get_ip_address())
-            print "Neighbor last seen: " + neighbor.get_last_seen()
+            log.info("Neighbor mac address: " + neighbor.get_mac_address())
+            log.info("Neighbor ip address: " + str(neighbor.get_ip_address()))
+            log.info("Neighbor last seen: " + neighbor.get_last_seen())
 
         return

@@ -92,6 +92,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         if (time.time() - self.last_time_scanned) > self.scan_interval:
             self.scan_all_interfaces()
             self.update_neighbors()
+            self.broadcast_host_ip()
             self.scan_arp_address()
             self.last_time_scanned = time.time()
             #reset timer so that we can check again
