@@ -22,6 +22,8 @@ Applications:
         class: "dummy_threaded_application.DummyThreadedApplication"
     - MeshRelayedEventReceiver:
         class: "mesh_relayed_event_receiver.MeshRelayedEventReceiver"
+    - MeshScanNeighbors:
+        class: "mesh_scan_neighbors.MeshScanNeighbors"
     - LocationManager:
         class: "location_manager.LocationManager"
 

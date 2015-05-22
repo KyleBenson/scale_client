@@ -37,13 +37,13 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
 
     # Even though UDP is connectionless this is called when it binds to a port
     def handle_connect(self):
-        log.info("Started listening traffic from neighbor nodes ... ")
+        log.debug("Started listening traffic from neighbor nodes ... ")
         
     # This is called everytime there is something to read
     def handle_read(self):
         data, addr = self.recvfrom(2048)
-        print "GOT DATA FROM NEIGHBOR"
-        print str(addr)+" >> "+data
+        log.debug("GOT DATA FROM NEIGHBOR")
+        log.debu("Source: " + str(addr) + " >> " + data)
 
         if data:
             self.relayedSensedEvent.load_data(data)
@@ -51,11 +51,11 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
             if(self.relayedSensedEvent.sensor == 'temperature'):
                 self.calculate_neighbors_average_temp()
 
-            print "RELAYED EVENT"
-            print self.relayedSensedEvent
-            print "PUBLISHING EVENT"
+            log.debug("RELAYED EVENT")
+            log.debug(self.relayedSensedEvent)
+            log.debug("PUBLISHING EVENT")
             sensedEvent = self.convert_to_sensed_event(self.relayedSensedEvent)
-            print sensedEvent
+            log.debug(sensedEvent)
 
             # Publish relayed events from neighbors 
             # to the application
@@ -92,7 +92,7 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
             encoded_data = json.dumps(data)
             event = SensedEvent(data['event'], data, 5)
             self.publish(event)
-            log.info('Published neighbors avarage temperature to application. Data: ' + encoded_data)
+            log.debug('Published neighbors avarage temperature to application. Data: ' + encoded_data)
 
             return True
         except:

@@ -78,7 +78,7 @@ class ScaleNetworkManager():
         Scan to get ipv4 and mac address of all 
         available interfaces on the device
         '''
-        
+        log.debug('Scan all active network interfaces') 
         #scan for ipv4 addresses
         for interface in self.interfaces:
             command = "ifconfig {0} | grep 'inet addr'".format(interface)
@@ -122,7 +122,7 @@ class ScaleNetworkManager():
         if batman_ip_address:
             # annouce node's ip address to other neighbor nodes
             command = "arping -A " + batman_ip_address + " -c 1"
-            log.info("Broadcast node ip: " + command)
+            log.debug("Broadcast node ip: " + command)
 
             proc = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
             output, error = proc.communicate()
@@ -271,9 +271,9 @@ class ScaleNetworkManager():
     def display_neighbors(self):
         for index in self.neighbors:
             neighbor = self.neighbors[index]
-            log.info("Neighbor mac address: " + neighbor.get_mac_address())
-            log.info("Neighbor ip address: " + str(neighbor.get_ip_address()))
-            log.info("Neighbor last seen: " + neighbor.get_last_seen())
+            log.debug("Neighbor mac address: " + neighbor.get_mac_address())
+            log.debug("Neighbor ip address: " + str(neighbor.get_ip_address()))
+            log.debug("Neighbor last seen: " + neighbor.get_last_seen())
 
         return
 
@@ -291,60 +291,66 @@ class ScaleNetworkManager():
 
          if ip_elements:
              if ip_elements[2]:
-                 #print 'element 2 ' + ip_elements[2]
+                 log.debug('element 2 ' + ip_elements[2])
                  slash_16_ip_block = ip_elements[0] + '.' + ip_elements[1]
                  slash_24_element = ip_elements[2]
-                 #print slash_24_element
+                 log.debug(slash_24_element)
                  self.slash_16_incremental_scanning(slash_16_ip_block, slash_24_element)
          return
 
     def slash_16_incremental_scanning(self, slash_16_ip_block, slash_24_element):
-         '''
-         Ideally, we need to scan the whole slash 16 of 169.254.0.0 to find
-         ipv4 associated with mac addresses from batman originators list
-         (a list of neighbors mac addresses). However, this is an expensive operation.
-         Avahi auto ip assignment seems to pick ip addresses that are close to the current
-         active nodes when it allocates new ip address to joining nodes. Therefore, we just
-         need to scan neighbor ips in the range of current node (go down and up 5 slash 24)
-         '''
-         scan_start_point = int(slash_24_element) - 5;
-         scan_end_point = int(slash_24_element) + 5;
-         if scan_start_point < 1:
-             scan_start_point = 1;
-
-         # Update neighbbors list before scanning for their ip address
-         self.update_neighbors()
-
-         for scanning_slash_24_element in range (scan_start_point, scan_end_point):
-             #check to see if all neighbors ip address
-             #have been identified
-             if self.neighbors_are_all_scanned():
-                 return
-
-             slash_24_ip_block = slash_16_ip_block + '.' + str(scanning_slash_24_element)
-
-             self.scan_subnet_slash_24(slash_24_ip_block)
-             self.scan_arp_address()
-
-         return
-
+        '''
+        Ideally, we need to scan the whole slash 16 of 169.254.0.0 to find
+        ipv4 associated with mac addresses from batman originators list
+        (a list of neighbors mac addresses). However, this is an expensive operation.
+        Avahi auto ip assignment seems to pick ip addresses that are close to the current
+        active nodes when it allocates new ip address to joining nodes. Therefore, we just
+        need to scan neighbor ips in the range of current node (go down and up 5 slash 24)
+        '''
+        scan_start_point = int(slash_24_element) - 5
+        scan_end_point = int(slash_24_element) + 5
+        
+        if scan_start_point < 1:
+            scan_start_point = 1
+        if scan_end_point > 255:
+            scan_end_point = 255
+            
+        # Update neighbbors list before scanning for their ip address
+        self.update_neighbors()
+        
+        for scanning_slash_24_element in range (scan_start_point, scan_end_point):
+            #check to see if all neighbors ip address
+            #have been identified
+            
+            if self.neighbors_are_all_scanned():
+                return
+            
+            slash_24_ip_block = slash_16_ip_block + '.' + str(scanning_slash_24_element)
+            
+            self.scan_subnet_slash_24(slash_24_ip_block)
+            self.scan_arp_address()
+            
+        return
+    
     def neighbors_are_all_scanned(self):
-         '''
-         Check to see if all neighbors in the neighbor list
-         have been identified their ipv4 address through scanning
-         '''
-         for index in self.neighbors:
-             if not self.neighbors[index].get_ip_address().strip():
-                 return False
-         return True
-
+        '''
+        Check to see if all neighbors in the neighbor list
+        have been identified their ipv4 address through scanning
+        '''
+        for index in self.neighbors:
+            if not self.neighbors[index].get_ip_address().strip():
+                return False
+        return True
+        
     def scan_subnet_slash_24(self, slash_24_ip_block):
-         host_batman_ip = self.get_interface_ip_address('wlan0:avahi')
-         with open(os.devnull, "wb") as limbo:
-             for n in range(1, 255):
-                 ip = slash_24_ip_block + ".{0}".format(n)
-
-                 if ip != host_batman_ip:
-                     subprocess.Popen(["ping", "-c", "1", "-n", "-W", "1", ip], stdout=limbo, stderr=limbo)
-         return
+        host_batman_ip = self.get_interface_ip_address('wlan0:avahi')
+        
+        with open(os.devnull, "wb") as limbo:
+            for n in range(1, 255):
+                ip = slash_24_ip_block + ".{0}".format(n)
+                
+                if ip != host_batman_ip:
+                    subprocess.Popen(["ping", "-c", "1", "-n", "-W", "1", ip], stdout=limbo, stderr=limbo)
+                    
+        return
 

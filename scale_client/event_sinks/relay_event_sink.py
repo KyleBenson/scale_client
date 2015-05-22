@@ -92,7 +92,6 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         if (time.time() - self.last_time_scanned) > self.scan_interval:
             self.scan_all_interfaces()
             self.update_neighbors()
-            self.broadcast_host_ip()
             self.scan_arp_address()
             self.last_time_scanned = time.time()
             #reset timer so that we can check again
@@ -141,7 +140,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
 
 
         encoded_relay_event = json.dumps(relay_event)
-        log.info("Replaying event: " + encoded_relay_event) 
+        log.debug("Replaying event: " + encoded_relay_event) 
         
         if (time.time() - self.last_time_refreshed) > self.refresh_socket_conns:
             self.create_connection_to_neighbors()
@@ -152,7 +151,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
             if neighbor_ip_address:
                 if self._neighbor_connections[neighbor_ip_address]:
                     self._neighbor_connections[neighbor_ip_address].buffer += encoded_relay_event
-                    log.info("Forwarded sensed event to neighbor at ip address: " + neighbor_ip_address)
+                    log.debug("Forwarded sensed event to neighbor at ip address: " + neighbor_ip_address)
 
     def check_available(self, event):
         return True
