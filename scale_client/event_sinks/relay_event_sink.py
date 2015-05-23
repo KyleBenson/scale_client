@@ -50,6 +50,13 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         
         ScaleNetworkManager.__init__(self, broker)
 
+        # Initial setup for SCALE Network
+        self.scan_all_interfaces()
+
+        if self.batman_is_active():
+            self.update_neighbors()
+        self.scan_arp_address();
+        
         self._neighbors = self.get_neighbors()
         self.batman_interface = self.get_batman_interface()
         self.batman_ip = self.get_interface_ip_address(self.batman_interface)

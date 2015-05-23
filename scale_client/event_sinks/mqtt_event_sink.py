@@ -8,10 +8,11 @@ import logging
 log = logging.getLogger(__name__)
 
 from scale_client.event_sinks.event_sink import EventSink
+from scale_client.network.scale_network_manager import ScaleNetworkManager
 from uuid import getnode as get_mac
 
 
-class MQTTEventSink(EventSink):
+class MQTTEventSink(EventSink, ScaleNetworkManager):
     def __init__(self, broker,
                 topic="iot-1/d/%012x/evt/%s/json",
                 hostname=None,
@@ -20,6 +21,8 @@ class MQTTEventSink(EventSink):
                 password=None,
                 keepalive=60):
         EventSink.__init__(self, broker)
+        ScaleNetworkManager.__init__(self, broker)
+
         self._client = Mosquitto()
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
@@ -35,6 +38,14 @@ class MQTTEventSink(EventSink):
 
         self._loopflag = False
         self._neta = None
+
+        self.scan_all_interfaces()
+        self.source_ip = None
+        self.source_ip = self.get_interface_ip_address('wlan0')
+        if not self.source_ip:  
+            self.source_ip = self.get_interface_ip_address('eth0')
+        
+
 
     def _on_connect(self, mosq, obj, rc):
     	self._topic = self._topic_format % (get_mac(), "%s")
@@ -70,9 +81,19 @@ class MQTTEventSink(EventSink):
         topic_event_type = event["d"]["event"]
         topic = self._topic % topic_event_type
 
+
+        log.debug('Encoded event: ' + encoded_event)
+        log.debug('Source Ip: ' + self.source_ip)
+
+        # Add source ip package to the message
+        if not "source" in event["d"].keys():
+            event['d']['source'] = self.source_ip
+            encoded_event = json.dumps(event)
+            log.debug('New Encoded event: ' + encoded_event)
+
         # Check to see if event is from neighbors 
         # and need to be published to Mqtt server
-        if "published" in event["d"]:
+        if "published" in event["d"].keys():
             if event["d"]["published"] == 1:
                 return True
             else:

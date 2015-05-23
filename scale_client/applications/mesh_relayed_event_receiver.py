@@ -9,7 +9,6 @@ import time
 from time import sleep
 
 from scale_client.core.threaded_application import ThreadedApplication
-#from scale_client.network.scale_network_manager import ScaleNetworkManager
 from scale_client.core.relayed_sensed_event import RelayedSensedEvent
 from scale_client.core.sensed_event import SensedEvent
 from scale_client.core.application import Application
@@ -43,7 +42,7 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
     def handle_read(self):
         data, addr = self.recvfrom(2048)
         log.debug("GOT DATA FROM NEIGHBOR")
-        log.debu("Source: " + str(addr) + " >> " + data)
+        log.debug("Source: " + str(addr) + " >> " + data)
 
         if data:
             self.relayedSensedEvent.load_data(data)

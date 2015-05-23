@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 def f(self, nsecs):
     scale_mesh_network = ScaleNetworkManager(self, 'Scanner')
-
+    
     while True:
         log.debug("Waking up and scanning neighbors ...")
         scale_mesh_network.scan_all_interfaces()

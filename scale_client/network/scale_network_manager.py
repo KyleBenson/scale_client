@@ -56,13 +56,6 @@ class ScaleNetworkManager():
         self.interfaces['wlan0:avahi'] = {'ip': '', 'mac': '', 'status': 'down'}
         self.batman_interface = batman_interface
         self.batman_originators_file = batman_originators_file
-        self.scan_all_interfaces()
-
-        if self.batman_is_active():
-            self.update_neighbors()
-            
-        self.broadcast_host_ip()
-        self.scan_arp_address();
         
     def batman_is_active(self):
         if os.path.isfile(self.batman_originators_file):
