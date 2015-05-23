@@ -60,8 +60,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         self._neighbors = self.get_neighbors()
         self.batman_interface = self.get_batman_interface()
         self.batman_ip = self.get_interface_ip_address(self.batman_interface)
-        self.batman_mac = self.get_interface_mac_address(self.batman_interface)
-        self.mesh_host_id = self.batman_ip + "_" + self.batman_mac
+        self.mesh_host_id = self.batman_ip
 
         #print self.mesh_host_id
         self.display_neighbors()
@@ -95,9 +94,9 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         next check
         '''
         
+        self.scan_all_interfaces()
         # Rescan the local network to have updated info
         if (time.time() - self.last_time_scanned) > self.scan_interval:
-            self.scan_all_interfaces()
             self.update_neighbors()
             self.scan_arp_address()
             self.last_time_scanned = time.time()

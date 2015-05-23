@@ -28,7 +28,7 @@ class RelayedSensedEvent(Event):
 
         if relayed_sensed_event:
             self.sensor = relayed_sensed_event['sensor']
-            self.priority = 100 #relayed_sensed_event['priority']
+            self.priority = relayed_sensed_event['priority']
             self.data = relayed_sensed_event['data']
             self.timestamp = relayed_sensed_event['timestamp']
             self.source = relayed_sensed_event['source']
@@ -40,11 +40,13 @@ class RelayedSensedEvent(Event):
             relayed_sensed_event = json.loads(relayed_sensed_event_string)
             try:
                 sensed_event = relayed_sensed_event['sensed_event']
+
                 results['sensor'] = sensed_event['d']['event']
                 results['data'] = sensed_event['d']
                 results['priority'] = sensed_event['d']['prio_value']
                 results['timestamp'] = sensed_event['d']['timestamp']
-                results['source'] = relayed_sensed_event['source']
+
+                results['source'] = relayed_sensed_event['source'] + '(mesh)'
                 results['published'] = relayed_sensed_event['published']
             except:
                 log.info('Received an invalid relayedSensedEvent:' + relayed_sensed_event_string)
@@ -65,16 +67,6 @@ class RelayedSensedEvent(Event):
             return self.data['value']
         else:
             return {"event": "unknown_event_type", "value": self.data}
-
-        '''
-        data = self.data['value']
-        try:
-            return data['value']
-        except TypeError:
-            return data
-        except KeyError:
-            return data
-        '''
 
     def get_type(self):
         """

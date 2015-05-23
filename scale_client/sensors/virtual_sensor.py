@@ -103,6 +103,9 @@ class VirtualSensor(Application):
             log.error("SensedEvent is None! Default policy is to not report.")
             return
         if self.policy_check(event):
+            print "PUBLISH SEISMIC EVENT"
+            print event
+
             self.publish(event)
 
     def on_start(self):

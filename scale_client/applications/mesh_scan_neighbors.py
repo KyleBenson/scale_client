@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 def f(self, nsecs):
-    scale_mesh_network = ScaleNetworkManager(self, 'Scanner')
+    scale_mesh_network = ScaleNetworkManager(self, 'wlan0:avahi')
     
     while True:
         log.debug("Waking up and scanning neighbors ...")
