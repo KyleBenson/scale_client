@@ -83,6 +83,10 @@ class ScaleNetworkManager():
                 if found:
                     self.interfaces[interface]['ip'] = found.group(1).strip()
                     self.interfaces[interface]['status'] = 'up'
+                else:
+                    self.interfaces[interface]['ip'] = ''
+                    self.interfaces[interface]['status'] = 'down'
+
 
         #scan for mac addresses
         for interface in self.interfaces:

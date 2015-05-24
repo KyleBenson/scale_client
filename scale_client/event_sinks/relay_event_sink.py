@@ -102,6 +102,9 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
             self.last_time_scanned = time.time()
             #reset timer so that we can check again
 
+        # If ethernet eth0 or wireless interface wlan1
+        # is down, the host is considered as having no 
+        # connection to CSN servers 
         eth0_ip = self.get_interface_ip_address('eth0')
         if eth0_ip:
             return True
