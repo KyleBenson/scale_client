@@ -63,9 +63,6 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
             log.debug("GOT DATA FROM NEIGHBOR")
             log.debug("Source: " + str(addr) + " >> " + data)
 
-            print 'GOT DATA FROM A NEIGHBOR'
-            print 'Source: ' + str(addr) + ', data : ' + data
-
             if data:
                 self.relayedSensedEvent.load_data(data)
 

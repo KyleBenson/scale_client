@@ -97,7 +97,6 @@ class MQTTEventSink(EventSink, ScaleNetworkManager):
             if event["d"]["published"] == 1:
                 return True
             else:
-                print 'GOT AN UNPUBLISHED REPLAY EVENT'
                 del event["d"]["published"]
 
         # Publish message
