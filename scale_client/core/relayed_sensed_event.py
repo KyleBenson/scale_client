@@ -46,7 +46,7 @@ class RelayedSensedEvent(Event):
                 results['priority'] = sensed_event['d']['prio_value']
                 results['timestamp'] = sensed_event['d']['timestamp']
 
-                results['source'] = relayed_sensed_event['source'] + '(mesh)'
+                results['source'] = relayed_sensed_event['source'] + ' (mesh)'
                 results['published'] = relayed_sensed_event['published']
             except:
                 log.info('Received an invalid relayedSensedEvent:' + relayed_sensed_event_string)
