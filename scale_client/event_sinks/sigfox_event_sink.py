@@ -206,10 +206,13 @@ class SigfoxEventSink(EventSink):
         value_original = event.get_raw_data() #event.data["value"]
 
         if type(value_original) == type(9.0): # Handle float value
-            hex_payload_value = hex(ctypes.c_int.from_buffer(ctypes.c_float(value_original)).value)[2:]
+            hex_payload_value = hex(ctypes.c_int.from_buffer(ctypes.c_float(value_original)).value)[2:].zfill(8)
             #for i in range(8):
             #    hex_payload_value += "0"
             hex_payload_value += "0" * 8
+        elif type(value_original) == type(9): # Handle int value
+            hex_payload_value = hex(ctypes.c_int(value_original).value)[2:].zfill(4)
+            hex_payload_value += "0" * 12
         else:
             #for i in range(16):
             #    hex_payload_value += "0"

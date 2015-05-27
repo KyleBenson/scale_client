@@ -1,5 +1,6 @@
 {
-	"temperature": "01",
+	"temperature":      "01",
 	"temperature_high": "02",
-	"seismic": "05"
+	"seismic":          "05",
+	"explosive_gas":    "09"
 }
