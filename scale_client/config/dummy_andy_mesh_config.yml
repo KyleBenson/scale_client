@@ -18,48 +18,23 @@ EventSinks:
         refresh_socket_conns: 600 # every 10 min
 
 Applications:
-    - Thread:
-        class: "dummy_threaded_application.DummyThreadedApplication"
+    - MeshScanNeighbors:
+        class: "mesh_scan_neighbors.MeshScanNeighbors"
     - MeshRelayedEventReceiver:
         class: "mesh_relayed_event_receiver.MeshRelayedEventReceiver"
     - LocationManager:
         class: "location_manager.LocationManager"
 
 Sensors:
-    - HBSensor:
-        class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
-        dev_name: "hb0"
-        interval: 60
-    - DummyPIRSensor:
-        class: "dummy_sensors.dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
-        dev_name: "pir0"
-    - DummyLightSensor:
-        class: "dummy_sensors.dummy_light_virtual_sensor.DummyLightVirtualSensor"
-        dev_name: "light0"
-    - DummyGasSensor:
-        class: "dummy_sensors.dummy_gas_virtual_sensor.DummyGasVirtualSensor"
-        dev_name: "gas0"
-    - DummyTempSensor:
-        class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
-        dev_name: "cel0"
-    - DummySeismicSensor:
-        class: "dummy_sensors.dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
-        dev_name: "accel0"
     - GeoIPSensor:
         class: "location_sensors.geo_ip_virtual_sensor.GeoIPVirtualSensor"
         dev_name: "geoip0"
     - InternetAccessSensor:
         class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
         dev_name: "net0"
-    - PIRNoMotionSensor:
-        class: "pir_no_motion_virtual_sensor.PIRNoMotionVirtualSensor"
-        dev_name: "nomot0"
-    - LightFlashSensor:
-        class: "light_flash_virtual_sensor.LightFlashVirtualSensor"
-        dev_name: "flash0"
-    - TempHighSensor:
-        class: "temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
-        dev_name: "heat0"
+    - CSNSensor:
+        class: "csn_virtual_sensor.CSNVirtualSensor"
+        dev_name: "accel0"
 
 Networks:
     - NetworkManager:

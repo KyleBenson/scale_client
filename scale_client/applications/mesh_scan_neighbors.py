@@ -13,7 +13,7 @@ def f(self, nsecs):
     
     while True:
         log.debug("Waking up and scanning neighbors ...")
-        scale_mesh_network.scan_all_interfaces()
+        scale_mesh_network.scan_avahi_local_network()
         scale_mesh_network.scan_neighbors_ip_address()
         scale_mesh_network.display_neighbors()
 
@@ -28,4 +28,4 @@ class MeshScanNeighbors(ThreadedApplication, Application):
     """
 
     def on_start(self):
-        self.run_in_background(f, self, 60)
+        self.run_in_background(f, self, 600)

@@ -102,6 +102,21 @@ class ScaleNetworkManager():
         return
     
 
+    def scan_avahi_local_network(self):
+        command = "arp-scan --interface={0} --localnet".format(self.batman_interface)
+        proc = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
+        output, error = proc.communicate()
+        exitcode = proc.returncode
+        
+        if error:
+            error_msg = "Failed to arp_scan local network, arp_scan packet may not be installed."
+            error_msg += "Error: " + json.dumps(error)
+            log.error(error_msg);
+
+            return False
+        else:
+            return True 
+
     def broadcast_host_ip(self):
         '''
         Batman only provides neighbors's mac address,
