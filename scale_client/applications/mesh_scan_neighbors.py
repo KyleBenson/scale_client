@@ -28,4 +28,4 @@ class MeshScanNeighbors(ThreadedApplication, Application):
     """
 
     def on_start(self):
-        self.run_in_background(f, self, 600)
+        self.run_in_background(f, self, 3600)
