@@ -50,6 +50,9 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         
         ScaleNetworkManager.__init__(self, broker)
 
+	# Scan on local ip addresses with Avahi ranch
+	self.scan_avahi_local_network()
+
         # Initial setup for SCALE Network
         self.scan_all_interfaces()
 
