@@ -4,6 +4,8 @@
 EventSinks:
     - LogEventSink:
         class: "log_event_sink.LogEventSink"
+    - GeocronEventSink:
+        class: "geocron_event_sink.GeocronEventSink"
 
 Applications:
     - Thread:

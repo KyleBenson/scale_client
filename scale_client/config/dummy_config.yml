@@ -10,6 +10,8 @@ EventSinks:
         username: null
         password: null
         keepalive: 60
+    - GeocronEventSink:
+        class: "geocron_event_sink.GeocronEventSink"
 
 Applications:
     - Thread:
