@@ -2,14 +2,6 @@
 # Ideal for testing on a laptop :)
 
 EventSinks:
-    - MQTTEventSink:
-        class: "mqtt_event_sink.MQTTEventSink"
-        hostname: "dime.smartamerica.io"
-        #hostname: "m2m.eclipse.org"
-        hostport: 1883
-        username: null
-        password: null
-        keepalive: 60
     - GeocronEventSink:
         class: "geocron_event_sink.GeocronEventSink"
 
