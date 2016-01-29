@@ -1,0 +1,10 @@
+package geocron_header;
+
+message GeocronHeader{
+	required bool m_forward =1;
+	required uint32 m_nHops =2;
+	required uint32 m_seq =3;
+	required uint32 m_dest =4;
+	required uint32 m_origin =5;
+	repeated uint32 m_ips =6;
+}
