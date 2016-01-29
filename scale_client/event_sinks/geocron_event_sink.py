@@ -42,9 +42,9 @@ class GeocronEventSink(EventSink):
     def process_header(self, decoded_event, header):
         next_host = socket.inet_ntoa(struct.pack("!I",header.m_ips[0])) #save ip to send to next
         del header.m_ips[0] #remove top ip from hop list
-        decoded_event['header'] = header.SerializeToString()
+        decoded_event['header'] = base64.b64encode(header.SerializeToString())
         reencoded_event = json.dumps(decoded_event)
-        sent = self._s.sendto(reencoded_event, next_host)
+        sent = self._s.sendto(reencoded_event, (next_host,hardcoded_receiver))
         #send here
 
     """
@@ -54,11 +54,12 @@ class GeocronEventSink(EventSink):
         #decode the event and check
         decoded_event = json.loads(event)
         header = base64.b64decode(decoded_event['header'])
-        deserialized_header = header.ParseFromString()
+        deserialized_header = geocron_header_pb2.GeocronHeader()
+        deserialized_header.ParseFromString(header)
         if(deserialized_header.m_dest == client_host): #if header says event belongs here, for now log information to console
             log.info(event)
         else:
-            process_header(decoded_event, deserialized_header)
+            self.process_header(decoded_event, deserialized_header)
 
     """
     Background thread indefinitely listens for messages sent to it and print them to console
@@ -66,6 +67,8 @@ class GeocronEventSink(EventSink):
     def run_in_background(self, s):
         while 1:
             event, addr = s.recvfrom(1024)
+            print event
+            print addr
             self.decode_event(event) #possibly fork off another process? or just handle it?
 
     """
@@ -86,7 +89,7 @@ class GeocronEventSink(EventSink):
     Note: send is called by EventSink's send_event function (as is encode_event to encode the data)
     """
     def send(self, encoded_event):
-        msg = "geocron event sunk: %s" % encoded_event
+        msg = encoded_event
         #log.info(msg)
         sent = self._s.sendto(msg, self._serv_addr)
         print "sent message to client at port 11000"
