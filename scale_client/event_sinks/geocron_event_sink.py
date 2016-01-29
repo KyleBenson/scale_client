@@ -56,7 +56,7 @@ class GeocronEventSink(EventSink):
         header = base64.b64decode(decoded_event['header'])
         deserialized_header = geocron_header_pb2.GeocronHeader()
         deserialized_header.ParseFromString(header)
-        if(deserialized_header.m_dest == client_host): #if header says event belongs here, for now log information to console
+        if(socket.inet_ntoa(struct.pack("!I",deserialized_header.m_dest)) == client_host): #if header says event belongs here, for now log information to console
             log.info(event)
         else:
             self.process_header(decoded_event, deserialized_header)
@@ -67,8 +67,6 @@ class GeocronEventSink(EventSink):
     def run_in_background(self, s):
         while 1:
             event, addr = s.recvfrom(1024)
-            print event
-            print addr
             self.decode_event(event) #possibly fork off another process? or just handle it?
 
     """
