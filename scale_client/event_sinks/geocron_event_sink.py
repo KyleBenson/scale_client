@@ -10,6 +10,8 @@ import base64
 log = logging.getLogger(__name__)
 # go ahead and set the logger to INFO here so that we always log the events in question
 log.setLevel(logging.INFO)
+pi_host_list = ["192.168.0.15", "192.168.0.21", "192.168.0.23", "192.168.0.25", "192.168.0.27", "192.168.0.27"]
+encoded_host_list = [struct.unpack("!I", socket.inet_aton(s))[0] for s in pi_host_list]
 client_host = "192.168.0.17"
 host = "192.168.0.15" 
 port = 10000 #the port this particular sink belongs to
@@ -25,6 +27,7 @@ class GeocronEventSink(EventSink):
         self.thread = None #initialized in init for readability. Will be assigned in build_background_thread
     	self._s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #set up socket to open only once
         self._s.bind(("", port)) 
+        self._test_route = [] #configure hop route here
     	self._serv_addr = (host, hardcoded_receiver) #reception from any host allows transmission. Set up host when configuring header?
         self.build_background_thread()
 
@@ -75,12 +78,12 @@ class GeocronEventSink(EventSink):
     def create_geocron_header(self):
         #geocron information currently hardcoded
     	header = geocron_header_pb2.GeocronHeader()
-        header.m_forward = True
-        header.m_nHops = 1
+        header.m_forward = True #to forward to another client?
+        header.m_nHops = 1 #update? 
         header.m_seq = 1 #what's m_seq for?
-        header.m_origin = struct.unpack("!I", socket.inet_aton("192.168.0.17"))[0]
+        header.m_origin = struct.unpack("!I", socket.inet_aton(host))[0]
         header.m_dest = struct.unpack("!I", socket.inet_aton("192.168.0.17"))[0]
-        header.m_ips.extend([struct.unpack("!I", socket.inet_aton("192.168.0.17"))[0]]) 
+        header.m_ips.extend(self._test_route) #extend hops list here
         return header.SerializeToString()
 
     """
