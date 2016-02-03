@@ -14,6 +14,7 @@ pi_host_list = ["192.168.0.15", "192.168.0.21", "192.168.0.23", "192.168.0.25", 
 encoded_host_list = [struct.unpack("!I", socket.inet_aton(s))[0] for s in pi_host_list]
 host = "192.168.0.17" 
 port = 11000 #the port the client is supposed to send to and receive information from
+encoded_server = struct.unpack("!I", socket.inet_aton("192.168.0.17"))[0] #extend hops list here
 
 class GeocronEventSink(EventSink):
     """
@@ -25,9 +26,9 @@ class GeocronEventSink(EventSink):
     	EventSink.__init__(self, broker)
         self.thread = None #initialized in init for readability. Will be assigned in build_background_thread
     	self._s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #set up socket to open only once
-        self._s.bind(("192.168.0.17", 10000)) 
-        self._test_route = ["192.168.0.17"] #configure hop route here REPLACE 
-    	self._serv_addr = (host, port) #reception from any host allows transmission. Set up host when configuring header?
+        self._s.bind((host, 11000)) 
+        self._test_route = [encoded_server] #configure hop route here REPLACE 
+    	self._serv_addr = ("192.168.0.17", port) #reception from any host allows transmission. Set up host when configuring header?
         self.build_background_thread()
 
     """
@@ -85,7 +86,7 @@ class GeocronEventSink(EventSink):
         if flag:
             header.m_ips.extend(self._test_route)
         else:
-            header.m_ips.extend("192.168.0.17") #extend hops list here
+            header.m_ips.extend([encoded_server]) #extend hops list here
         return header.SerializeToString()
 
     """
