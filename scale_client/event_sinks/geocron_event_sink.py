@@ -10,12 +10,10 @@ import base64
 log = logging.getLogger(__name__)
 # go ahead and set the logger to INFO here so that we always log the events in question
 log.setLevel(logging.INFO)
-pi_host_list = ["192.168.0.15", "192.168.0.21", "192.168.0.23", "192.168.0.25", "192.168.0.27", "192.168.0.27"]
+pi_host_list = ["192.168.0.15", "192.168.0.21", "192.168.0.23", "192.168.0.25", "192.168.0.27", "192.168.0.29"]
 encoded_host_list = [struct.unpack("!I", socket.inet_aton(s))[0] for s in pi_host_list]
-client_host = "192.168.0.17"
-host = "192.168.0.15" 
-port = 10000 #the port this particular sink belongs to
-hardcoded_receiver = 11000 #the port the client is supposed to send to
+host = "192.168.0.17" 
+port = 11000 #the port the client is supposed to send to and receive information from
 
 class GeocronEventSink(EventSink):
     """
@@ -26,9 +24,9 @@ class GeocronEventSink(EventSink):
     	EventSink.__init__(self, broker)
         self.thread = None #initialized in init for readability. Will be assigned in build_background_thread
     	self._s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #set up socket to open only once
-        self._s.bind(("", port)) 
+        self._s.bind(("192.168.0.17", port)) 
         self._test_route = [] #configure hop route here
-    	self._serv_addr = (host, hardcoded_receiver) #reception from any host allows transmission. Set up host when configuring header?
+    	self._serv_addr = (host, port) #reception from any host allows transmission. Set up host when configuring header?
         self.build_background_thread()
 
     """
@@ -47,7 +45,7 @@ class GeocronEventSink(EventSink):
         del header.m_ips[0] #remove top ip from hop list
         decoded_event['header'] = base64.b64encode(header.SerializeToString())
         reencoded_event = json.dumps(decoded_event)
-        sent = self._s.sendto(reencoded_event, (next_host,hardcoded_receiver))
+        sent = self._s.sendto(reencoded_event, (next_host,port))
         #send here
 
     """
@@ -59,7 +57,7 @@ class GeocronEventSink(EventSink):
         header = base64.b64decode(decoded_event['header'])
         deserialized_header = geocron_header_pb2.GeocronHeader()
         deserialized_header.ParseFromString(header)
-        if(socket.inet_ntoa(struct.pack("!I",deserialized_header.m_dest)) == client_host): #if header says event belongs here, for now log information to console
+        if(socket.inet_ntoa(struct.pack("!I",deserialized_header.m_dest)) == host): #if header says event belongs here, for now log information to console
             log.info(event)
         else:
             self.process_header(decoded_event, deserialized_header)
