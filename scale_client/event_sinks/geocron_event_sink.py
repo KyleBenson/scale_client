@@ -19,13 +19,14 @@ class GeocronEventSink(EventSink):
     """
     init sets up listening socket and begins a daemon thread to process sensed events 
     it receives from other clients.
+    CONFIGURE HOPS TESTS BY CHANGING _test_route
     """
     def __init__(self, broker):
     	EventSink.__init__(self, broker)
         self.thread = None #initialized in init for readability. Will be assigned in build_background_thread
     	self._s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #set up socket to open only once
-        self._s.bind(("192.168.0.17", port)) 
-        self._test_route = [] #configure hop route here
+        self._s.bind(("192.168.0.17", 10000)) 
+        self._test_route = ["192.168.0.17"] #configure hop route here REPLACE 
     	self._serv_addr = (host, port) #reception from any host allows transmission. Set up host when configuring header?
         self.build_background_thread()
 
@@ -73,7 +74,7 @@ class GeocronEventSink(EventSink):
     """
     Whenever an event is recorded, create a header to be sent
     """
-    def create_geocron_header(self):
+    def create_geocron_header(self, flag):
         #geocron information currently hardcoded
     	header = geocron_header_pb2.GeocronHeader()
         header.m_forward = True #to forward to another client?
@@ -81,7 +82,10 @@ class GeocronEventSink(EventSink):
         header.m_seq = 1 #what's m_seq for?
         header.m_origin = struct.unpack("!I", socket.inet_aton(host))[0]
         header.m_dest = struct.unpack("!I", socket.inet_aton("192.168.0.17"))[0]
-        header.m_ips.extend(self._test_route) #extend hops list here
+        if flag:
+            header.m_ips.extend(self._test_route)
+        else:
+            header.m_ips.extend("192.168.0.17") #extend hops list here
         return header.SerializeToString()
 
     """
@@ -94,10 +98,19 @@ class GeocronEventSink(EventSink):
         print "sent message to client at port 11000"
 
     """
+    Sends a SensedEvent object out on this sink.
+    """
+    def send_event(self, event):
+        direct_msg = self.encode_event(event, False)
+        overlay_msg = self.encode_event(event, True)
+        self.send(direct_msg) #send normal message.
+        self.send(overlay_msg) #send overlay message.
+
+    """
     Tags header onto json object before encoding the event
     """
-    def encode_event(self, event):
+    def encode_event(self, event, flag):
         #create header and add it into the SensedEvent's data attribute
-        header = self.create_geocron_header()
+        header = self.create_geocron_header(flag)
         event.data['header'] = base64.b64encode(header)
     	return json.dumps(event.to_map())
