@@ -21,9 +21,12 @@ class MQTTEventSink(EventSink):
                 keepalive=60):
         EventSink.__init__(self, broker)
         self._client = Paho()
-        self._client.on_connect = self._on_connect
-        self._client.on_disconnect = self._on_disconnect
-        self._client.on_publish = self._on_publish
+        self._client.on_connect = \
+                lambda mosq, obj, rc: self._on_connect(mosq, obj, rc)
+        self._client.on_disconnect = \
+                lambda mosq, obj, rc: self._on_disconnect(mosq, obj, rc)
+        self._client.on_publish = \
+                lambda mosq, obj, mid: self._on_publish(mosq, obj, mid)
         self._topic_format = topic
         self._topic = self._topic_format % (0, "%s")
 
