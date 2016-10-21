@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-import mosquitto, sys
+import paho.mqtt.client, sys
 
-BROKER_ADDRESS = "dime.smartamerica.io"
+BROKER_ADDRESS = "iqueue.ics.uci.edu"
+#BROKER_ADDRESS = "dime.smartamerica.io"
 #BROKER_ADDRESS = "m2m.eclipse.org"
 
 # Copyright (c) 2010,2011 Roger Light <roger@atchoo.org>
@@ -54,7 +55,7 @@ def on_log(mosq, obj, level, string):
 # mqttc = mosquitto.Mosquitto("client-id")
 # but note that the client id must be unique on the broker. Leaving the client
 # id parameter empty will generate a random id for you.
-mqttc = mosquitto.Mosquitto()
+mqttc = paho.mqtt.client.Client()
 mqttc.on_message = on_message
 mqttc.on_connect = on_connect
 mqttc.on_publish = on_publish

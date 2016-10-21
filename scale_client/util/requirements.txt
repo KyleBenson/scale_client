@@ -1,2 +1,2 @@
-mosquitto==1.2.3
+paho-mqtt
 pyserial

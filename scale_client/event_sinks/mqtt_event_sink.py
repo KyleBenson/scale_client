@@ -1,8 +1,8 @@
 import socket
 import json
 
-import mosquitto
-from mosquitto import Mosquitto
+import paho.mqtt.client
+from paho.mqtt.client import Client as Paho
 
 import logging
 log = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class MQTTEventSink(EventSink):
                 password=None,
                 keepalive=60):
         EventSink.__init__(self, broker)
-        self._client = Mosquitto()
+        self._client = Paho()
         self._client.on_connect = self._on_connect
         self._client.on_disconnect = self._on_disconnect
         self._client.on_publish = self._on_publish
@@ -80,9 +80,9 @@ class MQTTEventSink(EventSink):
 
         # Publish message
         res, mid = self._client.publish(topic, encoded_event)
-        if res == mosquitto.MOSQ_ERR_SUCCESS:
+        if res == paho.mqtt.clinet.MQTT_ERR_SUCCESS:
             log.info("MQTT message published to " + topic)
-        elif res == mosquitto.MOSQ_ERR_NO_CONN:
+        elif res == paho.mqtt.client.MQTT_ERR_NO_CONN:
             log.error("MQTT publisher failure: No connection")
             return False
         else:
