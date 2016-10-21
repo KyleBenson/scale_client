@@ -80,7 +80,7 @@ class MQTTEventSink(EventSink):
 
         # Publish message
         res, mid = self._client.publish(topic, encoded_event)
-        if res == paho.mqtt.clinet.MQTT_ERR_SUCCESS:
+        if res == paho.mqtt.client.MQTT_ERR_SUCCESS:
             log.info("MQTT message published to " + topic)
         elif res == paho.mqtt.client.MQTT_ERR_NO_CONN:
             log.error("MQTT publisher failure: No connection")
