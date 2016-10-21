@@ -14,7 +14,7 @@
 PYTHON="`which python`"
 
 # Change the next 3 lines to suit where you install your script and what you want to call it
-DIR=/usr/local/scale/scale_client/core
+#DIR=/usr/local/scale/scale_client/core
 # scale-client has been successfully installed
 
 DAEMON="$PYTHON"

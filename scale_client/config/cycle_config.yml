@@ -8,7 +8,8 @@ EventSinks:
     #    class: "log_event_sink.LogEventSink"
     - MQTTPublisher:
         class: "mqtt_event_sink.MQTTEventSink"
-        hostname: "dime.smartamerica.io"
+        hostname: "iqueue.ics.uci.edu"
+        #hostname: "dime.smartamerica.io"
         #hostname: "m2m.eclipse.org"
         hostport: 1883
         username: null

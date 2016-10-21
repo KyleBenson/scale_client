@@ -4,7 +4,8 @@
 EventSinks:
     - MQTTEventSink:
         class: "mqtt_event_sink.MQTTEventSink"
-        hostname: "mqtt2.m2m4connectedlife.com"
+        hostname: "iqueue.ics.uci.edu"
+        #hostname: "mqtt2.m2m4connectedlife.com"
         #hostname: "m2m.eclipse.org"
         hostport: 1883
         username: null
