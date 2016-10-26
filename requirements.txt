@@ -1,12 +1,9 @@
 circuits
-mosquitto
+#mosquitto
+paho-mqtt
 PyYAML
-#TODO: replace mosquitto with paho?
 #TODO: spidev? how to only download on pi?
 pyserial
-
-# Required for GPS virtual sensor
-#XXX: come with Debian package gpsd
 
 # Required for iwlist virtual sensor
 #XXX: depend on Debian package libiw-dev

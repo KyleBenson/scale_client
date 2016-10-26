@@ -63,14 +63,14 @@ sudo vim /etc/wpa_supplicant/wpa_supplicant.conf
 4. Reboot the system and see if Pi get the wireless connection.
 
 #### Configure SCALE Client
-The config file of SCALE clinet is located in _/etc/scale/client/config.yml_. Modify or Overwrite it to fit for your application. If there is no actual sensors and you just want to have a dummy SCALE client. Please run the following commands to use a dummy config file:
+The config file of SCALE client is located in _/etc/scale/client/config.yml_. Modify or Overwrite it to fit for your application. If there is no actual sensors and you just want to have a dummy SCALE client. Please run the following commands to use a dummy config file:
 
 ```
 cd ~
 sudo cp -f SmartAmericaSensors/scale_client/config/dummy_config.yml /etc/scale/client/config.yml
 ```
 
-Restart the SCALE clinet program:
+Restart the SCALE client program:
 ```
 sudo service scale_daemon restart
 ```
