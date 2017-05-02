@@ -7,42 +7,22 @@ EventSinks:
 
 Applications:
     - Thread:
+        # Good to verify that threaded applications will run properly.
         class: "dummy_threaded_application.DummyThreadedApplication"
-    - LocationManager:
-        class: "location_manager.LocationManager"
 
 Sensors:
     - HBSensor:
         class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
         dev_name: "hb0"
-        interval: 60
-    - DummyPIRSensor:
-        class: "dummy_sensors.dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
-        dev_name: "pir0"
-    - DummyLightSensor:
-        class: "dummy_sensors.dummy_light_virtual_sensor.DummyLightVirtualSensor"
-        dev_name: "light0"
+        interval: 5
     - DummyGasSensor:
         class: "dummy_sensors.dummy_gas_virtual_sensor.DummyGasVirtualSensor"
         dev_name: "gas0"
+        interval: 3
     - DummyTempSensor:
         class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
         dev_name: "cel0"
-    - DummySeismicSensor:
-        class: "dummy_sensors.dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
-        dev_name: "accel0"
-    - GeoIPSensor:
-        class: "location_sensors.geo_ip_virtual_sensor.GeoIPVirtualSensor"
-        dev_name: "geoip0"
+    # Disable this one if you don't have internet access and it causes issues
     - InternetAccessSensor:
         class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
         dev_name: "net0"
-    - PIRNoMotionSensor:
-        class: "pir_no_motion_virtual_sensor.PIRNoMotionVirtualSensor"
-        dev_name: "nomot0"
-    - LightFlashSensor:
-        class: "light_flash_virtual_sensor.LightFlashVirtualSensor"
-        dev_name: "flash0"
-    - TempHighSensor:
-        class: "temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
-        dev_name: "heat0"
