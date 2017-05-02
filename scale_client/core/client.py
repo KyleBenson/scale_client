@@ -221,17 +221,5 @@ def main():
     client = ScaleClient(args.config)
     client.run()
 
-# this can be used to wait for a network connection to become available.  something like this will need to live in the network manager...
-"""
-hasNetwork = False
-while(hasNetwork != True):
-	try:
-		response = urllib2.urlopen('http://www.google.com', timeout = 2)
-		hasNetwork = True
-	except urllib2.URLError:
-		time.sleep(5)
-		continue
-"""
-
 if __name__ == '__main__':
     main()
