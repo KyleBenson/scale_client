@@ -33,6 +33,10 @@ class EventReporter(Application):
         """
         self.__sinks.append(sink)
 
+    def get_sinks(self):
+        """Returns a tuple of current event_sinks."""
+        return tuple(self.__sinks)
+
     #TODO: remove_sink?
 
     def on_event(self, event, topic):

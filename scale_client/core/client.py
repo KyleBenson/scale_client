@@ -185,10 +185,19 @@ class ScaleClient(object):
             client.setup_reporter({})
 
         # These components are all handled almost identically.
+
         # EventSinks
         configs = __join_configs_with_args(cfg.get('eventsinks', []), args.event_sinks \
             if args is not None and args.event_sinks is not None else [])
         client.setup_components(configs, 'scale_client.event_sinks', 'event sinks', __make_event_sink, client.__reporter)
+
+        # Set defaults if none were made
+        if len(client.__reporter.get_sinks()) == 0:
+            log.info("No event_sinks loaded: adding default LogEventSink")
+            from ..event_sinks.log_event_sink import LogEventSink
+            default_sink = LogEventSink(client.__broker)
+            client.__reporter.add_sink(default_sink)
+
         # Sensors
         configs = __join_configs_with_args(cfg.get('sensors', []), args.sensors \
             if args is not None and args.sensors is not None else [])
@@ -201,6 +210,8 @@ class ScaleClient(object):
         configs = __join_configs_with_args(cfg.get('applications', []), args.applications \
             if args is not None and args.applications is not None else [])
         client.setup_components(configs, 'scale_client.applications', 'applications')
+
+        # TODO: set some defaults if no applications, sensors, or networking components are enabled (heartbeat?)
 
         return client
 
