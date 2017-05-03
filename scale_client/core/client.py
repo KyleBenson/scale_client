@@ -8,14 +8,19 @@ import os
 
 from device_descriptor import DeviceDescriptor
 from event_reporter import EventReporter
+from application import Application
 from broker import Broker
+
 
 class ScaleClient(object):
     """This class parses a configuration file and subsequently creates, configures, and manages each component of the
     overall Scale Client software.
     """
-    def __init__(self):
+    def __init__(self, quit_time=None):
         super(ScaleClient, self).__init__()
+
+        self._quit_time = quit_time
+
         self.__broker = None
         self.__reporter = None
         self.__sensors = []
@@ -28,7 +33,7 @@ class ScaleClient(object):
 
         self.__reporter = EventReporter(self.__broker)
 
-    def setup_broker(self, cfg):
+    def setup_broker(self, cfg=None):
         """
         Currently only creates a dummy Broker object for registering Applications to.
 
@@ -40,9 +45,21 @@ class ScaleClient(object):
     def run(self):
         """Currently just loop forever to allow the other threads to do their work."""
 
+        # HACK: create a dummy app that just calls Broker.stop() at the requested quit_time.
+        # We need to do it in an app like this to get the self variables bound in correctly.
+        # This is circuits-specific!
+        if self._quit_time is not None:
+            class QuitApp(Application):
+                def _quitter(self):
+                    log.info("Stopping client...")
+                    self._broker.stop()
+
+            quit_app = QuitApp(self.__broker)
+            quit_app.timed_call(self._quit_time, QuitApp._quitter)
+
         self.__broker.run()
 
-    def setup_components(self, configs, package_name, human_readable, helper_fun=None):
+    def setup_components(self, configs, package_name, human_readable, helper_fun=None, *args):
         """
         Iterate over each component configuration in configs, import the specified class
         (possibly using package_name as the root for the import statement), and then call
@@ -52,13 +69,14 @@ class ScaleClient(object):
         :param configs:
         :param package_name:
         :param human_readable: plain text short name of what component type this is e.g. network, sensor, etc.
-        :param helper_fun:
+        :param helper_fun: responsible for creating the component in question and doing any bookkeeping
+        :param args: these args will be passed to helper_fun
         :return: list of constructed classes
         """
 
         if helper_fun is None:
             def helper_fun(_class, broker, **kwargs):
-                return _class(broker, **kwargs)
+                return _class(broker, *args, **kwargs)
 
         results = []
 
@@ -77,7 +95,7 @@ class ScaleClient(object):
                 new_config = cfg.copy()
                 new_config.pop('class')
 
-                res = helper_fun(cls, self.__broker, **new_config)
+                res = helper_fun(cls, self.__broker, *args, **new_config)
                 results.append(res)
                 log.info("%s created from config: %s" % (human_readable, cfg))
 
@@ -103,7 +121,6 @@ class ScaleClient(object):
         :return:
         """
 
-        client = cls()
         # XXX: in case the user forgets to specify a device name,
         # this will help auto-generate unique ones in a sequence.
         global __scale_client_n_sensors_added__
@@ -135,9 +152,9 @@ class ScaleClient(object):
             __scale_client_n_sensors_added__ += 1
             return _class(broker, device=DeviceDescriptor(dev_name), **config)
 
-        def __make_event_sink(_class, broker, **kwargs):
-            res = _class(broker, **kwargs)
-            client.__reporter.add_sink(res)
+        def __make_event_sink(_class, broker, event_reporter, **config):
+            res = _class(broker, **config)
+            event_reporter.add_sink(res)
             return res
 
         def __join_configs_with_args(configs, relevant_args):
@@ -154,8 +171,11 @@ class ScaleClient(object):
             return configs
 
         ### BEGIN ACTUAL CONFIG FILE USAGE
+        # We call appropriate handlers for each section in the appropriate order,
+        # starting by getting any relevant command line parameters to create the client.
 
-        # call appropriate handlers for each section in the appropriate order
+        client = cls(quit_time=args.quit_time)
+
         # TODO: include command line arguments when some are added
         if 'main' in cfg:
             client.setup_broker(cfg['main'])
@@ -168,7 +188,7 @@ class ScaleClient(object):
         # EventSinks
         configs = __join_configs_with_args(cfg.get('eventsinks', []), args.event_sinks \
             if args is not None and args.event_sinks is not None else [])
-        client.setup_components(configs, 'scale_client.event_sinks', 'event sinks', __make_event_sink)
+        client.setup_components(configs, 'scale_client.event_sinks', 'event sinks', __make_event_sink, client.__reporter)
         # Sensors
         configs = __join_configs_with_args(cfg.get('sensors', []), args.sensors \
             if args is not None and args.sensors is not None else [])
@@ -251,6 +271,9 @@ class ScaleClient(object):
         # Misc config params
         parser.add_argument('--log-level', type=str, default='WARNING', dest='log_level',
                             help='''one of debug, info, error, warning''')
+        parser.add_argument('--quit-time', '-q', type=int, default=None, dest='quit_time',
+                            help='''quit the client after specified number of seconds
+                             (default is to never quit)''')
 
         parsed_args = parser.parse_args(args)
 
