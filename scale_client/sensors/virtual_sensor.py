@@ -93,9 +93,9 @@ class VirtualSensor(Application):
         """
         This function actually reads sensor data and then publishes it if it passes the policy_check()
         """
-        log.debug("%s reading sensor data..." % self.get_type())
 
         event = self.read()
+        log.debug("%s read sensor data. raw value: %s" % (self.get_type(), event.get_raw_data()))
         if event is None:
             log.error("SensedEvent is None! Default policy is to not report.")
             return
