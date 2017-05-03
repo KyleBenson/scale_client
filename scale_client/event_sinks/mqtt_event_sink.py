@@ -7,7 +7,7 @@ from paho.mqtt.client import Client as Paho
 import logging
 log = logging.getLogger(__name__)
 
-from scale_client.event_sinks.event_sink import EventSink
+from event_sink import EventSink
 from uuid import getnode as get_mac
 
 
@@ -36,14 +36,16 @@ class MQTTEventSink(EventSink):
         self._password = password
         self._keepalive = keepalive
 
-        self._loopflag = False
-        self._neta = None
+        self._is_connected = False
 
     def _on_connect(self, mosq, obj, rc):
-    	self._topic = self._topic_format % (get_mac(), "%s")
+        self._topic = self._topic_format % (get_mac(), "%s")
         log.debug("MQTT publisher connected: " + str(rc))
+        self._is_connected = True
 
     def _on_disconnect(self, mosq, obj, rc):
+        # sink will try reconnecting once EventReporter queries if it's available.
+        self._is_connected = False
         log.debug("MQTT publisher disconnected: " + str(rc))
 
     def _on_publish(self, mosq, obj, mid):
@@ -58,7 +60,6 @@ class MQTTEventSink(EventSink):
         except socket.gaierror:
             return False
         self._client.loop_start()
-        self._loopflag = True
         return True
 
     def on_start(self):
@@ -66,7 +67,6 @@ class MQTTEventSink(EventSink):
 
     def send(self, encoded_event):
         # Fill in the blank "%s" left in self._topic
-        import json
 
         # extract the actual topic string
         event = json.loads(encoded_event)
@@ -94,21 +94,9 @@ class MQTTEventSink(EventSink):
         return True
 
     def check_available(self, event):
-        if self._neta is not None and not self._neta:
-            return False
-        if not self._loopflag:
+        # If we aren't currently running, try connecting.
+        if not self._is_connected:
             if not self._try_connect():
                 log.error("MQTT publisher failure: Cannot connect")
                 return False
-        return True
-
-    def on_event(self, event, topic):
-        et = event.get_type()
-        ed = event.get_raw_data()
-
-        if et == "internet_access":
-            self._neta = ed
-
-    def encode_event(self, event):
-        # return event.to_json()
-        return json.dumps({"d": event.to_map()})
+        return self._is_connected

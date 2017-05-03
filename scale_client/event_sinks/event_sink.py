@@ -1,4 +1,4 @@
-from scale_client.core.application import Application
+from ..core.application import Application
 
 
 class EventSink(Application):
@@ -21,7 +21,7 @@ class EventSink(Application):
         """
         This function is the heart of every EventSink.  Use it to actually send raw data representing a SensedEvent
         over some connection.
-        :param event: raw encoding of a SensedEvent
+        :param encoded_event: raw encoding of a SensedEvent
         :raises IOError: when there is an issue sending the event
         """
         raise NotImplementedError()
@@ -40,4 +40,5 @@ class EventSink(Application):
         :param event: SensedEvent to encode
         :return: event encoded in a format ready to be immediately pushed to send(event)
         """
-        raise NotImplementedError()
+
+        return event.to_json()
