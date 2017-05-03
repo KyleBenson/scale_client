@@ -4,6 +4,7 @@ import logging
 log = logging.getLogger(__name__)
 
 #NOTE: THIS ISN'T NEEDED CURRENTLY SINCE CIRCUITS HANDLES ALL THE BROKERING!
+# Hence, at end of file we overwrite this class definition... Will support others in future.
 
 #TODO: abstract base class?  same with App?
 class Broker(Thread):
@@ -54,3 +55,5 @@ class Broker(Thread):
         while True:
             data = self.read_raw()
             self.report_event(self.policy_check(data))
+
+from circuits.core.manager import Manager as Broker

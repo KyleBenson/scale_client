@@ -1,2 +1,2 @@
-import scale_client.core.client as client
+import core.client as client
 client.main()

@@ -1,58 +1,25 @@
 #!/usr/bin/python
+import sys
+import yaml
+import yaml.parser
+import logging
+import argparse
+import os
 
-import yaml, logging, argparse, os.path
-log = None
-
-from scale_client.core.device_descriptor import DeviceDescriptor
-#import scale_client.event_sinks as event_sinks, scale_client.sensors as sensors
-
+from device_descriptor import DeviceDescriptor
 from event_reporter import EventReporter
-# TODO: obfuscate this within a Broker class
-from circuits.core.manager import Manager as Broker
+from broker import Broker
 
-
-class ScaleClient:
+class ScaleClient(object):
     """This class parses a configuration file and subsequently creates, configures, and manages each component of the
     overall Scale Client software.
     """
-    def __init__(self, config_filename):
+    def __init__(self):
+        super(ScaleClient, self).__init__()
         self.__broker = None
         self.__reporter = None
         self.__sensors = []
         self.__applications = None
-        try:
-            log.info("Reading config file: %s" % config_filename)
-            with open(config_filename) as cfile:
-                cfg = yaml.load(cfile)
-                # lower-case all top-level headings to tolerate different capitalizations
-                cfg = {k.lower(): v for k, v in cfg.items()}
-
-                # verify required entries present
-                # required_entries = ('main',)
-                # for ent in required_entries:
-                #     if ent not in cfg:
-                #         raise Exception("Required entry %s not present in config file." % ent)
-
-                # call appropriate handlers for each section in the appropriate order
-
-                if 'main' in cfg:
-                    self.setup_broker(cfg['main'])
-                    self.setup_reporter(cfg['main'])
-                else:
-                    self.setup_broker({})
-                    self.setup_reporter({})
-                if 'eventsinks' in cfg:
-                    self.setup_event_sinks(cfg['eventsinks'])
-                if 'sensors' in cfg:
-                    self.setup_sensors(cfg['sensors'])
-                if 'networks' in cfg:
-                    self.setup_network(cfg['networks'])
-                if 'applications' in cfg:
-                    self.setup_applications(cfg['applications'])
-
-        except IOError as e:
-            log.error("Error reading config file: %s" % e)
-            exit(1)
 
     def setup_reporter(self, cfg):
 
@@ -70,156 +37,266 @@ class ScaleClient:
         """
         self.__broker = Broker()
 
-    def setup_event_sinks(self, sink_configurations):
-        for sink_config in (sink.values()[0] for sink in sink_configurations):
-            # need to get class definition to call constructor
-            if 'class' not in sink_config:
-                log.warn("Skipping EventSink with no class definition: %s" % sink_config)
-                continue
-            try:
-                # this line lets us tolerate just e.g. mqtt_event_sink.MQTTEventSink as a relative pathname
-                cls_name = sink_config['class'] if 'scale_client.event_sinks' in sink_config['class']\
-                    else 'scale_client.event_sinks.' + sink_config['class']
-                cls = self._get_class_by_name(cls_name)
-
-                # make a copy of config so we can tweak it to expose only correct kwargs
-                new_sink_config = sink_config.copy()
-                new_sink_config.pop('class')
-
-                sink = cls(self.__broker, **new_sink_config)
-
-                self.__reporter.add_sink(sink)
-                log.info("EventSink created from config: %s" % sink_config)
-            except Exception as e:
-                log.error("Unexpected error while creating EventSink: %s" % e)
-
-    def setup_applications(self, application_configurations):
-        n_applications = 0
-        for application_config in (c.values()[0] for c in application_configurations):
-            # need to get class definition to call constructor
-            if 'class' not in application_config:
-                log.warn("Skipping virtual application with no class definition: %s" % application_config)
-                continue
-
-            try:
-                cls_name = application_config['class'] if 'scale_client.applications' in application_config['class']\
-                    else 'scale_client.applications.' + application_config['class']
-                cls = self._get_class_by_name(cls_name)
-
-                # copy config s so we can tweak it as necessary to expose only correct kwargs
-                new_application_config = application_config.copy()
-                new_application_config.pop('class')
-
-                cls(self.__broker, **new_application_config)
-                n_applications += 1
-                log.info("Application created from config: %s" % application_config)
-
-            except Exception as e:
-                log.error("Unexpected error (%s) while creating application: %s" % (e, application_config))
-                continue
-
-    def setup_sensors(self, sensor_configurations):
-        n_sensors = 0
-        for sensor_config in (c.values()[0] for c in sensor_configurations):
-            # need to get class definition to call constructor
-            if 'class' not in sensor_config:
-                log.warn("Skipping virtual sensor with no class definition: %s" % sensor_config)
-                continue
-
-            try:
-                cls_name = sensor_config['class'] if 'scale_client.sensors' in sensor_config['class']\
-                    else 'scale_client.sensors.' + sensor_config['class']
-                cls = self._get_class_by_name(cls_name)
-
-                # copy config so we can tweak it as necessary to expose only correct kwargs
-                new_sensor_config = sensor_config.copy()
-                new_sensor_config.pop('class')
-                dev_name = new_sensor_config.get("dev_name", "vs%i" % n_sensors)
-                new_sensor_config.pop('dev_name', dev_name)
-
-                cls(self.__broker, device=DeviceDescriptor(dev_name),
-                    **new_sensor_config)
-                n_sensors += 1
-                log.info("Virtual sensor created from config: %s" % sensor_config)
-
-            except Exception as e:
-                log.error("Unexpected error (%s) while creating virtual sensor: %s" % (e, sensor_config))
-                continue
-
-    def setup_network(self, network_configurations):
-        for network_config in (c.values()[0] for c in network_configurations):
-            # need to get class definition to call constructor
-            if 'class' not in network_config:
-                log.warn("Skipping network config with no class definition: %s" % network_config)
-                continue
-
-            try:
-                cls_name = network_config['class'] if 'scale_client.network' in network_config['class']\
-                    else 'scale_client.network.' + network_config['class']
-                cls = self._get_class_by_name(cls_name)
-
-                # copy config s so we can tweak it as necessary to expose only correct kwargs
-                new_network_config = network_config.copy()
-                new_network_config.pop('class')
-
-                cls(self.__broker, **new_network_config)
-                log.info("Virtual sensor created from config: %s" % network_config)
-
-            except Exception as e:
-                log.error("Unexpected error (%s) while setting network class: %s" % (e, network_config))
-
     def run(self):
         """Currently just loop forever to allow the other threads to do their work."""
-        # TODO: handle this with less overhead?
-        
+
         self.__broker.run()
 
-    def _get_class_by_name(self,kls):
-        """Imports and returns a class reference for the full module name specified in regular Python import format"""
-        # TODO: download definition from some repository if necessary
+    def setup_components(self, configs, package_name, human_readable, helper_fun=None):
+        """
+        Iterate over each component configuration in configs, import the specified class
+        (possibly using package_name as the root for the import statement), and then call
+        helper_fun with the class and requested configuration to finish its setup.  If
+        helper_fun isn't specified, the default simply calls the class's constructor
+        with the given arguments parsed from the configuration.
+        :param configs:
+        :param package_name:
+        :param human_readable: plain text short name of what component type this is e.g. network, sensor, etc.
+        :param helper_fun:
+        :return: list of constructed classes
+        """
 
-        # The following code taken from http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname
-        parts = kls.split('.')
-        module = ".".join(parts[:-1])
-        m = __import__(module)
-        for comp in parts[1:]:
-            m = getattr(m, comp)
-        return m
+        if helper_fun is None:
+            def helper_fun(_class, broker, **kwargs):
+                return _class(broker, **kwargs)
+
+        results = []
+
+        for cfg in configs:
+            # need to get class definition to call constructor
+            if 'class' not in cfg:
+                log.warn("Skipping %s config with no class definition: %s" % (human_readable, cfg))
+                continue
+
+            try:
+                cls_name = cfg['class'] if package_name in cfg['class']\
+                    else '.'.join([package_name, cfg['class']])
+                cls = _get_class_by_name(cls_name)
+
+                # copy config s so we can tweak it as necessary to expose only correct kwargs
+                new_config = cfg.copy()
+                new_config.pop('class')
+
+                res = helper_fun(cls, self.__broker, **new_config)
+                results.append(res)
+                log.info("%s created from config: %s" % (human_readable, cfg))
+
+            except ImportError as e:
+                log.error("ImportError (%s) while creating %s class: %s\n"
+                          "Did you remember to put the repository in your PYTHONPATH???" % (e, human_readable, cfg))
+            except Exception as e:
+                log.error("Unexpected error (%s) while creating %s class: %s" % (e, human_readable, cfg))
+
+        return results
 
 
-def parse_args():
-    """
-# ArgumentParser.add_argument(name or flags...[, action][, nargs][, const][, default][, type][, choices][, required][, help][, metavar][, dest])
-# action is one of: store[_const,_true,_false], append[_const], count
-# nargs is one of: N, ?(defaults to const when no args), *, +, argparse.REMAINDER
-# help supports %(var)s: help='default value is %(default)s'
-    """
+    @classmethod
+    def build_from_configuration_parameters(cls, config_filename, args=None):
+        """
+        Builds an instance using the (optionally) specified configuration file.  If any args are specified
+        (e.g. from parse_args()), they may overwrite the configurations in the file.  However,
+        such args that create sensors, apps, etc. will just be interpreted as additional
+        components being configured: IT'S UP TO YOU to ensure there aren't conflicts!
+        If config_filename is None, we just build using the specified args.
+        :param config_filename:
+        :param args:
+        :return:
+        """
 
-    parser = argparse.ArgumentParser(description="Scale Client main process")
+        client = cls()
+        # XXX: in case the user forgets to specify a device name,
+        # this will help auto-generate unique ones in a sequence.
+        global __scale_client_n_sensors_added__
+        __scale_client_n_sensors_added__ = 0
 
-    parser.add_argument('--config', type=str,
-                        # config files are located in a different directory
-                        default=os.path.join(os.path.dirname(__file__), '..', 'config', 'default_config.yml'),
-                        help='''file from which to read configuration''')
-    parser.add_argument('--log-level', type=str, default='WARNING', dest='log_level',
-                        help='''one of debug, info, error, warning''')
+        if config_filename is None and args is None:
+            raise ValueError("can't build from configuration parameters when both filename and args are None!")
 
-    return parser.parse_args()
+        # Dummy config dict in case no config file
+        cfg = {'eventsinks': [], 'sensors': [], 'applications': [], 'networks': []}
+
+        if config_filename is not None:
+            try:
+                log.info("Reading config file: %s" % config_filename)
+                with open(config_filename) as cfile:
+                    cfg = yaml.load(cfile)
+                    # lower-case all top-level headings to tolerate different capitalizations
+                    cfg = {k.lower(): v for k, v in cfg.items()}
+
+            except IOError as e:
+                log.error("Error reading config file: %s" % e)
+                exit(1)
+
+        # Helper functions for actual config file parsing and handling below.
+        def __make_sensor(_class, broker, **config):
+            global __scale_client_n_sensors_added__
+            dev_name = config.get("dev_name", "vs%i" % __scale_client_n_sensors_added__)
+            config.pop('dev_name', dev_name)
+            __scale_client_n_sensors_added__ += 1
+            return _class(broker, device=DeviceDescriptor(dev_name), **config)
+
+        def __make_event_sink(_class, broker, **kwargs):
+            res = _class(broker, **kwargs)
+            client.__reporter.add_sink(res)
+            return res
+
+        def __join_configs_with_args(configs, relevant_args):
+            try:
+                configs = [c.values()[0] for c in configs]
+            except Exception as e:
+                raise ValueError("problem (error=%s) extracting configurations from configs: %s" % (e, configs))
+
+            try:
+                configs.extend([yaml.load(a) for a in relevant_args])
+            except yaml.parser.ParserError as e:
+                raise ValueError("error parsing manual configuration: %s\nError:%s" % (relevant_args, e))
+
+            return configs
+
+        ### BEGIN ACTUAL CONFIG FILE USAGE
+
+        # call appropriate handlers for each section in the appropriate order
+        # TODO: include command line arguments when some are added
+        if 'main' in cfg:
+            client.setup_broker(cfg['main'])
+            client.setup_reporter(cfg['main'])
+        else:  # use defaults
+            client.setup_broker({})
+            client.setup_reporter({})
+
+        # These components are all handled almost identically.
+        # EventSinks
+        configs = __join_configs_with_args(cfg.get('eventsinks', []), args.event_sinks \
+            if args is not None and args.event_sinks is not None else [])
+        client.setup_components(configs, 'scale_client.event_sinks', 'event sinks', __make_event_sink)
+        # Sensors
+        configs = __join_configs_with_args(cfg.get('sensors', []), args.sensors \
+            if args is not None and args.sensors is not None else [])
+        client.setup_components(configs, 'scale_client.sensors', 'sensors', __make_sensor)
+        # Networks
+        configs = cfg.get('networks', [])
+        # TODO: how to add arguments for this?
+        client.setup_components(configs, 'scale_client.network', 'network')
+        # Applications
+        configs = __join_configs_with_args(cfg.get('applications', []), args.applications \
+            if args is not None and args.applications is not None else [])
+        client.setup_components(configs, 'scale_client.applications', 'applications')
+
+        return client
+
+    @classmethod
+    def _build_config_file_path(cls, filename):
+        """Returns the complete path to the given config filename,
+        assuming it's been placed in the proper 'config' directory
+        or the filename is an absolute path."""
+        if os.path.exists(filename):
+            return filename
+        res = os.path.join(os.path.dirname(__file__), '..', 'config', filename)
+        if not os.path.exists(res):
+            raise ValueError("requested config file %s does not exist!" % filename)
+        return res
+
+    @classmethod
+    def parse_args(cls, args=None):
+        """
+        Parses the given arguments (formatted like sys.argv) or returns default configuration if None specified.
+        :param args:
+        :return:
+        """
+        # ArgumentParser.add_argument(name or flags...[, action][, nargs][, const][, default][, type][, choices][, required][, help][, metavar][, dest])
+        # action is one of: store[_const,_true,_false], append[_const], count
+        # nargs is one of: N, ?(defaults to const when no args), *, +, argparse.REMAINDER
+        # help supports %(var)s: help='default value is %(default)s'
+
+        test_config_filename = 'test_config.yml'
+        default_config_filename = cls._build_config_file_path('default_config.yml')
+
+        parser = argparse.ArgumentParser(description='''Scale Client main process.  You can specify a configuration
+        file for generating the client's components that will run and/or manually configure them using command
+        line arguments (NOTE: these may overwrite parameters in the configuration file if there are conflicts,
+        but things like sensors, apps, etc. will be interpreted as additional components).''')
+
+        # Configure what components run
+        config_group = parser.add_mutually_exclusive_group()
+        config_group.add_argument('--config-file', '-f', type=str, dest='config_filename',
+                            default=None,
+                            help='''file from which to read configuration (NOTE: if you don't
+                            specify an absolute path, SCALE assumes you're referring to a relative
+                            path within the 'config' directory).  Default is %s when no
+                            manual configurations specified.  If manual configurations are in use,
+                            no configuration file is used unless you explicitly set one.''' % default_config_filename)
+        config_group.add_argument('--test', '-t', action='store_true',
+                            help='''run client with simple test configuration found in file %s
+                            (publishes dummy sensor data to simple logging sink)''' % test_config_filename)
+
+        # Manually configure components
+        parser.add_argument('--sensors', '-s', type=str, nargs='+', default=None,
+                            help='''manually specify sensors (and their configurations) to run.
+                            Arguments should be in YAML format e.g. can specify two sensors using
+                            JSON: --sensors '{class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor",
+                            dev_name: "hb0", interval: 5}' '{class:
+                             "dummy_sensors.dummy_gas_virtual_sensor.DummyGasVirtualSensor",
+                             dev_name: "gas0", interval: 3}'
+                            ''')
+        parser.add_argument('--applications', '-a', type=str, nargs='+', default=None,
+                            help='''manually specify applications (and their configurations) to run.
+                            See --sensors help description for example.''')
+        parser.add_argument('--event-sinks', '-e', type=str, nargs='+', default=None, dest='event_sinks',
+                            help='''manually specify event sinks (and their configurations) to run.
+                            See --sensors help description for example.''')
+        parser.add_argument('--network', '-n', type=str, nargs='+', default=None,
+                            help='''manually specify network components (and their configurations) to run.
+                            See --sensors help description for example.''')
+
+        # Misc config params
+        parser.add_argument('--log-level', type=str, default='WARNING', dest='log_level',
+                            help='''one of debug, info, error, warning''')
+
+        parsed_args = parser.parse_args(args)
+
+
+        # Correct configuration filename
+        if parsed_args.test:
+            parsed_args.config_filename = cls._build_config_file_path(test_config_filename)
+        elif parsed_args.config_filename is not None:
+            parsed_args.config_filename = cls._build_config_file_path(parsed_args.config_filename)
+        # Set default config file if no files or manual configurations are specified
+        elif parsed_args.config_filename is None and not any((parsed_args.sensors, parsed_args.applications,
+                                                             parsed_args.event_sinks, parsed_args.network)):
+            parsed_args.config_filename = default_config_filename
+
+        # Sanity check that we support requested options fully
+        if parsed_args.network is not None:
+            raise NotImplementedError("--network option not yet fully supported!")
+
+        return parsed_args
+
+
+def _get_class_by_name(kls):
+    """Imports and returns a class reference for the full module name specified in regular Python import format"""
+
+    # The following code taken from http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname
+    parts = kls.split('.')
+    module = ".".join(parts[:-1])
+    m = __import__(module)
+    for comp in parts[1:]:
+        m = getattr(m, comp)
+    return m
 
 
 def main():
-    args = parse_args()
+    args = ScaleClient.parse_args(sys.argv[1:])
 
     # Seem to have to do this here rather than using logging.setLevel as the latter appears to not work,
     # likely due to the fact that calling it here only affects this module.  Really we want to call this from the root
     # logger (scale_client.?) to affect the whole hierarchy right?
-    # TODO: call this in scale_client.__main__.py?
     logging.basicConfig(level=getattr(logging, args.log_level.upper()))
     global log
     log = logging.getLogger(__name__)
 
-    client = ScaleClient(args.config)
+    client = ScaleClient.build_from_configuration_parameters(args.config_filename, args)
     client.run()
+
 
 if __name__ == '__main__':
     main()
