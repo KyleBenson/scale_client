@@ -85,7 +85,7 @@ class ScaleClient(object):
                 log.error("ImportError (%s) while creating %s class: %s\n"
                           "Did you remember to put the repository in your PYTHONPATH???" % (e, human_readable, cfg))
             except Exception as e:
-                log.error("Unexpected error (%s) while creating %s class: %s" % (e, human_readable, cfg))
+                log.error("Unexpected error while creating %s class: %s\nError: %s" % (human_readable, cfg, e))
 
         return results
 
