@@ -38,15 +38,13 @@ class Application(BaseComponent):
     both between those on local and remote machines.
     """
 
-    def __init__(self, broker=None):
+    def __init__(self, broker):
         # NOTE: this circuits-specific hack helps deliver events only to the right channels, that is ReadSensorData
         # events will only fire to the object that initiated the timer that fires them.  Also note that it MUTS come
         # before the super() call!
         BaseComponent.__init__(self, channel=self._get_channel_name())
         super(Application, self).__init__()
 
-        if broker is None:
-            raise NotImplementedError
         self._register_broker(broker)
 
     # TODO: get_name()?
