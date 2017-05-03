@@ -239,6 +239,7 @@ class ScaleClient(object):
         # nargs is one of: N, ?(defaults to const when no args), *, +, argparse.REMAINDER
         # help supports %(var)s: help='default value is %(default)s'
 
+        test_default_quit_time = 20
         test_config_filename = 'test_config.yml'
         default_config_filename = cls._build_config_file_path('default_config.yml')
 
@@ -258,7 +259,9 @@ class ScaleClient(object):
                             no configuration file is used unless you explicitly set one.''' % default_config_filename)
         config_group.add_argument('--test', '-t', action='store_true',
                             help='''run client with simple test configuration found in file %s
-                            (publishes dummy sensor data to simple logging sink)''' % test_config_filename)
+                            (publishes dummy sensor data to simple logging sink).
+                            It also quits after %d seconds if you don't specify --quit-time'''
+                                 % (test_config_filename, test_default_quit_time))
 
         # Manually configure components
         parser.add_argument('--sensors', '-s', type=str, nargs='+', default=None,
@@ -302,6 +305,10 @@ class ScaleClient(object):
         # Sanity check that we support requested options fully
         if parsed_args.network is not None:
             raise NotImplementedError("--network option not yet fully supported!")
+
+        # Testing configuration quits after a time
+        if parsed_args.test and parsed_args.quit_time is None:
+            parsed_args.quit_time = test_default_quit_time
 
         return parsed_args
 
