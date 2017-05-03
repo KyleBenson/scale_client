@@ -51,3 +51,6 @@ scale_client/.idea/workspace.xml
 
 # peewee
 peewee.db
+
+# rope (VIM tool)
+*.ropeproject
