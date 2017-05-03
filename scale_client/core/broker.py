@@ -1,13 +1,7 @@
-from threading import Thread
-
 import logging
 log = logging.getLogger(__name__)
 
-#NOTE: THIS ISN'T NEEDED CURRENTLY SINCE CIRCUITS HANDLES ALL THE BROKERING!
-# Hence, at end of file we overwrite this class definition... Will support others in future.
-
-#TODO: abstract base class?  same with App?
-class Broker(Thread):
+class AbstractBroker(object):
     """
     This purely abstract (TODO!!!!) base class represents the API for the local publish-subscribe broker than handles routing and
     delivery of generic Events in the whole system.  It works as a singleton object that, when instantiated, will fire
@@ -20,18 +14,17 @@ class Broker(Thread):
     """
 
     def __init__(self):
-        super(Broker, self).__init__(self)
+        super(AbstractBroker, self).__init__()
 
     def publish(self, event, topic):
         """
         Publishes the given SensedEvent to the given Topic
         :param event: Event to publish
+        :type event: sensed_event.SensedEvent
         :param topic: Topic to publish to
         :return: a True-ish object if successful
         """
         raise NotImplementedError()
-        self.on_publish(event, topic)
-        return True
 
     def subscribe(self, topic, callback):
         """
@@ -52,8 +45,20 @@ class Broker(Thread):
         """
         raise NotImplementedError()
 
-        while True:
-            data = self.read_raw()
-            self.report_event(self.policy_check(data))
+# Now we make the actual implementation via circuits
+from circuits.core.manager import Manager
 
-from circuits.core.manager import Manager as Broker
+class Broker(Manager, AbstractBroker):
+
+    def __init__(self):
+        Manager.__init__(self)
+        AbstractBroker.__init__(self)
+
+    def publish(self, event, topic):
+        self.fireEvent(event, topic)
+
+    def subscribe(self, topic, callback):
+        raise NotImplementedError("Currently don't have support for subscribing with the circuits library...")
+    # TODO: subscribe is going to be near-impossible with circuits alone since they've adopted the convention of
+    # subscribing by class type.  This doesn't allow hierarchies like "subscribe to all network-related events",
+    # let alone the advanced content-based subscriptions that we're going to want eventually... maybe channels?

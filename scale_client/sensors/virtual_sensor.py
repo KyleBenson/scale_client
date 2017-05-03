@@ -19,7 +19,6 @@ class VirtualSensor(Application):
       1) How to handle sampling rates, modifying priorities, and turning sensors on/off remotely?
     """
     
-    # It works!
     DEFAULT_PRIORITY = 5
 
     def __init__(self, broker, device=None, interval=1):
@@ -68,20 +67,18 @@ class VirtualSensor(Application):
                             structured_data, priority)
         return event
 
-    def set_wait_period(self, period):
+    def set_wait_period(self, period=1):
         """
         Accepts a datetime object, or number of seconds, representing how long the VirtualSensor should wait before
-        reading data each time.  The default is 1 second.
+        reading data each time.  The default is 1 second.  The timer will be immediately reset by this call.
         :return:
         """
         self._wait_period = period
         try:
+            # WARNING: circuits-specific!
             self._timer.reset(self._wait_period)
         except AttributeError:
             pass
-        # TODO: be able to reset the timer to update this time once it's
-        # started, which will require keeping a handle to the underlying timer
-        # object...
 
     def policy_check(self, event):
         """

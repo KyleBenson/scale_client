@@ -92,8 +92,8 @@ class AbstractApplication(object):
         return ret
 
     def _publish(self, event, topic):
-        """Actual implementation of publishing"""
-        raise NotImplementedError
+        """Actual implementation of publishing, which may be different depending on the broker."""
+        return self._broker.publish(event, topic)
 
     def subscribe(self, topic):
         """
@@ -107,8 +107,8 @@ class AbstractApplication(object):
         return ret
 
     def _subscribe(self, topic):
-        """Actual implementation of subscribing"""
-        raise NotImplementedError
+        """Actual implementation of subscribing, which may be different depending on the broker."""
+        return self._broker.subscribe(topic)
 
     def timed_call(self, time, function, repeat=False, *args, **kwargs):
         """
@@ -187,28 +187,6 @@ class CircuitsApplication(BaseComponent, AbstractApplication):
         to free any resources, close network connections, save state, etc.
         """
         self.on_stop()
-
-    def _publish(self, event, topic):
-        """
-        Publishes the given Event to the given Topic
-        :param event: Event to publish
-        :param topic: Topic to publish to
-        :return: a True-ish object if successful
-        """
-        return self.fireEvent(event, topic)
-
-    def _subscribe(self, topic):
-        """
-        Subscribes to the given Topic so that any Events being published to that Topic will be routed to this
-        Application via the on_event() callback.
-        :param topic: the Topic to subscribe to
-        :return: a True-ish object if successful
-        """
-        # TODO: this is going to be near-impossible with circuits alone since they've adopted the convention of
-        # subscribing by class type.  This doesn't allow hierarchies like "subscribe to all network-related events",
-        # let alone the advanced content-based subscriptions that we're going to want eventually... maybe channels?
-        raise NotImplementedError()
-        self.addHandler(f)
 
     def timed_call(self, time, function, repeat=False, *args, **kwargs):
         """

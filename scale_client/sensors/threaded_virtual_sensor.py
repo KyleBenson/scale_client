@@ -1,23 +1,18 @@
 from time import sleep
-from circuits.core.workers import task
-from scale_client.sensors.virtual_sensor import VirtualSensor
-from scale_client.core.threaded_application import Worker
+from virtual_sensor import VirtualSensor
+from ..core.threaded_application import ThreadedApplication
 
 import logging
 log = logging.getLogger(__name__)
 
-class ThreadedVirtualSensor(VirtualSensor):
+class ThreadedVirtualSensor(VirtualSensor, ThreadedApplication):
+	"""
+	Does its sensor reading in a background loop instead of using
+	the repeat feature of Application.timed_call()
+	"""
 	def __init__(self, broker, device=None, interval=1, process=False, n_threads=1):
-		super(ThreadedVirtualSensor, self).__init__(broker, device=device, interval=interval)
-		self._worker = Worker(
-			process=process,
-			workers=n_threads,
-			channel=self._get_channel_name()
-		)
-		self._worker.register(self)
-
-	def run_in_background(self, f, *args, **kwargs):
-		self.fire(task(f, *args, **kwargs), self._get_channel_name())
+		VirtualSensor.__init__(self, broker, device=device, interval=interval)
+		ThreadedApplication.__init__(self, broker, process=process, n_threads=n_threads)
 
 	def sensor_loop(self, interval):
 		while True:
