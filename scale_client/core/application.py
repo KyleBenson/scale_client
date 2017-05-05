@@ -22,7 +22,11 @@ class AbstractApplication(object):
     functionality should at least indirectly subclass Application.
     """
 
-    def __init__(self, broker):
+    def __init__(self, broker, **kwargs):
+        """
+        :param broker: the broker used for the internal pub-sub feature core to the scale_client
+        :param kwargs: used for passing args to other constructors when doing multiple inheritance
+        """
         super(AbstractApplication, self).__init__()
 
         self._register_broker(broker)
@@ -143,18 +147,20 @@ class timer_expired_event(Event):
     """Used in circuits implementation to periodically tell an Application to call some function."""
 
 
-class CircuitsApplication(BaseComponent, AbstractApplication):
+class CircuitsApplication(AbstractApplication, BaseComponent):
     """This class implements the Application using the circuits library"""
 
-    def __init__(self, broker):
-        # NOTE: this circuits-specific hack helps deliver events only to the right channels, that is ReadSensorData
-        # events will only fire to the object that initiated the timer that fires them.  Also note that it MUTS come
-        # before the super() call!
-        BaseComponent.__init__(self, channel=self._get_channel_name())
-        AbstractApplication.__init__(self, broker)
+    def __init__(self, broker, **kwargs):
+        """
+        :param broker: the broker used for the internal pub-sub feature core to the scale_client
+        :param kwargs: used for passing args to other constructors when doing multiple inheritance
+        """
+        # NOTE: the circuits channel must be set to THIS instance so that the events fired
+        # only affect it and not other Application instances.
+        super(CircuitsApplication, self).__init__(broker=broker, channel=self._get_channel_name(), **kwargs)
 
     def _register_broker(self, broker):
-        super(CircuitsApplication, self)._register_broker(broker)
+        AbstractApplication._register_broker(self, broker)
         self.register(broker)
 
     #######################

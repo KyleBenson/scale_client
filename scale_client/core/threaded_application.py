@@ -31,13 +31,14 @@ class ThreadedApplication(Application):
     Just don't forget about thread safety!!
     """
 
-    def __init__(self, broker, process=False, n_threads=1):
+    def __init__(self, broker, process=False, n_threads=1, **kwargs):
         """
+        :param broker: the broker used for the internal pub-sub feature core to the scale_client
         :param process: True to use processes rather than Threads
         :param n_threads: Number of threads to start (default=1)
+        :param kwargs: used for passing args to other constructors when doing multiple inheritance
         """
-
-        super(ThreadedApplication, self).__init__(broker)
+        super(ThreadedApplication, self).__init__(broker, **kwargs)
         self._worker = Worker(process=process, workers=n_threads,
                               # need to ensure only this worker receives
                               # tasks we fire
