@@ -16,10 +16,11 @@ class ScaleClient(object):
     """This class parses a configuration file and subsequently creates, configures, and manages each component of the
     overall Scale Client software.
     """
-    def __init__(self, quit_time=None):
+    def __init__(self, quit_time=None, raise_errors=False):
         super(ScaleClient, self).__init__()
 
         self._quit_time = quit_time
+        self._raise_errors = raise_errors
 
         self.__broker = None
         self.__reporter = None
@@ -103,6 +104,8 @@ class ScaleClient(object):
                 log.error("ImportError (%s) while creating %s class: %s\n"
                           "Did you remember to put the repository in your PYTHONPATH???" % (e, human_readable, cfg))
             except Exception as e:
+                if self._raise_errors:
+                    raise
                 log.error("Unexpected error while creating %s class: %s\nError: %s" % (human_readable, cfg, e))
 
         return results
@@ -174,7 +177,7 @@ class ScaleClient(object):
         # We call appropriate handlers for each section in the appropriate order,
         # starting by getting any relevant command line parameters to create the client.
 
-        client = cls(quit_time=args.quit_time)
+        client = cls(quit_time=args.quit_time, raise_errors=args.raise_errors)
 
         # TODO: include command line arguments when some are added
         if 'main' in cfg:
@@ -194,7 +197,16 @@ class ScaleClient(object):
         # Set defaults if none were made
         if len(client.__reporter.get_sinks()) == 0:
             log.info("No event_sinks loaded: adding default LogEventSink")
-            from ..event_sinks.log_event_sink import LogEventSink
+            LogEventSink = None
+            try:
+                from ..event_sinks.log_event_sink import LogEventSink
+            except ValueError:
+                # relative import error when this script called directly (isn't a package)
+                try:
+                    from scale_client.event_sinks.log_event_sink import LogEventSink
+                except ImportError as e:
+                    log.error("can't import LogEventSink! Error: %s" % e)
+                    exit(1)
             default_sink = LogEventSink(client.__broker)
             client.__reporter.add_sink(default_sink)
 
@@ -288,6 +300,9 @@ class ScaleClient(object):
         parser.add_argument('--quit-time', '-q', type=int, default=None, dest='quit_time',
                             help='''quit the client after specified number of seconds
                              (default is to never quit)''')
+        parser.add_argument('--raise-errors', action='store_true', dest='raise_errors',
+                            help='''when constructing a component, raise the (non-import) errors to allow printing
+                            a stack trace rather than trying to gracefully skip it and logging the error''')
 
         parsed_args = parser.parse_args(args)
 
@@ -331,7 +346,9 @@ def main():
     # Seem to have to do this here rather than using logging.setLevel as the latter appears to not work,
     # likely due to the fact that calling it here only affects this module.  Really we want to call this from the root
     # logger (scale_client.?) to affect the whole hierarchy right?
-    logging.basicConfig(level=getattr(logging, args.log_level.upper()))
+    from scale_client.util.defaults import _log_format
+    logging.basicConfig(level=getattr(logging, args.log_level.upper()),
+                        format=_log_format)
     global log
     log = logging.getLogger(__name__)
 
