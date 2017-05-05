@@ -1,4 +1,5 @@
 from ..core.application import Application
+from scale_client.core.threaded_application import ThreadedApplication
 
 
 class EventSink(Application):
@@ -15,9 +16,9 @@ class EventSink(Application):
         :param event: SensedEvent
         :return:
         """
-        return self.send(self.encode_event(event))
+        return self.send_raw(self.encode_event(event))
 
-    def send(self, encoded_event):
+    def send_raw(self, encoded_event):
         """
         This function is the heart of every EventSink.  Use it to actually send raw data representing a SensedEvent
         over some connection.
@@ -42,3 +43,10 @@ class EventSink(Application):
         """
 
         return event.to_json()
+
+class ThreadedEventSink(EventSink, ThreadedApplication):
+    """
+    Use this class if you expect the EventSink to block for a long period of
+    time when sinking events, connecting to a remote server, etc.
+    """
+    pass

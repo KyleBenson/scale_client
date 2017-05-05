@@ -86,7 +86,7 @@ class SigfoxEventSink(EventSink):
     def on_start(self):
         self._try_connect()
 
-    def send(self, encoded_event):
+    def send_raw(self, encoded_event):
         #TODO: should define false code to indicate different fault reason
         if encoded_event is False:
             return False

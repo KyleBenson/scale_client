@@ -101,7 +101,7 @@ class MySQLEventSink(EventSink):
 		#log.debug("available")
 		return True
 
-	def send(self, encoded_event):
+	def send_raw(self, encoded_event):
 		try:
 			if isinstance(encoded_event, self.EventRecord):
 				encoded_event.save()

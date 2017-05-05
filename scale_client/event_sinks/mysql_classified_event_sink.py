@@ -77,7 +77,7 @@ class MySQLClassifiedEventSink(MySQLEventSink):
 			)
 		return encoded_event
 	
-	def send(self, encoded_event):
+	def send_raw(self, encoded_event):
 		if encoded_event is None:
 			return False
 

@@ -11,6 +11,6 @@ class LogEventSink(EventSink):
     This EventSink simply prints all sunk SensedEvents to log.info
     """
 
-    def send(self, encoded_event):
+    def send_raw(self, encoded_event):
         msg = "event sunk: %s" % encoded_event
         log.info(msg)

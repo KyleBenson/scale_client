@@ -106,7 +106,7 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
             else:
                 return False
 
-    def send(self, encoded_event):
+    def send_raw(self, encoded_event):
         '''
         Instead of publishing sensed events to MQTT server like MqttEventSink,
         RelayEventSink checks current node's neighbors and forwards the events

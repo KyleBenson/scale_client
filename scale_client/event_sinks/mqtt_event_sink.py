@@ -65,12 +65,10 @@ class MQTTEventSink(EventSink):
     def on_start(self):
         return self._try_connect()
 
-    def send(self, encoded_event):
+    def send_event(self, event):
+        encoded_event = self.encode_event(event)
         # Fill in the blank "%s" left in self._topic
-
-        # extract the actual topic string
-        event = json.loads(encoded_event)
-        topic_event_type = event["d"]["event"]
+        topic_event_type = event.get_type()
         topic = self._topic % topic_event_type
 
         # Check to see if event is from neighbors 
