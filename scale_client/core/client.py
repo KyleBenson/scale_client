@@ -343,12 +343,9 @@ def _get_class_by_name(kls):
 def main():
     args = ScaleClient.parse_args(sys.argv[1:])
 
-    # Seem to have to do this here rather than using logging.setLevel as the latter appears to not work,
-    # likely due to the fact that calling it here only affects this module.  Really we want to call this from the root
-    # logger (scale_client.?) to affect the whole hierarchy right?
-    from scale_client.util.defaults import _log_format
-    logging.basicConfig(level=getattr(logging, args.log_level.upper()),
-                        format=_log_format)
+    # Set logging based on requested level
+    from scale_client.util.defaults import set_logging_config
+    set_logging_config(level=getattr(logging, args.log_level.upper()))
     global log
     log = logging.getLogger(__name__)
 
