@@ -7,8 +7,8 @@ class EventSink(Application):
     create a new one, make use of the Application on_start() function to setup any connections or other resources
     needed."""
 
-    def __init__(self, broker=None):
-        super(EventSink, self).__init__(broker)
+    def __init__(self, broker=None, **kwargs):
+        super(EventSink, self).__init__(broker, **kwargs)
 
     def send_event(self, event):
         """
