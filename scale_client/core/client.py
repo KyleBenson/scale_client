@@ -67,8 +67,9 @@ class ScaleClient(object):
         helper_fun with the class and requested configuration to finish its setup.  If
         helper_fun isn't specified, the default simply calls the class's constructor
         with the given arguments parsed from the configuration.
-        :param configs:
-        :param package_name:
+        :param configs: should at least include 'class' for importing the class using python's import
+        :param package_name: root package_name for the class paths specified
+         (these will be classes in the scale_client package e.g. sensors, event_sinks)
         :param human_readable: plain text short name of what component type this is e.g. network, sensor, etc.
         :param helper_fun: responsible for creating the component in question and doing any bookkeeping
         :param args: these args will be passed to helper_fun
@@ -87,11 +88,22 @@ class ScaleClient(object):
                 log.warn("Skipping %s config with no class definition: %s" % (human_readable, cfg))
                 continue
 
+            # try importing the specified class extended by package_name first, then just 'class' if error
+            cls_name = '.'.join([package_name, cfg['class']])
+            other_cls_name = cfg['class']
             try:
-                cls_name = cfg['class'] if package_name in cfg['class']\
-                    else '.'.join([package_name, cfg['class']])
                 cls = _get_class_by_name(cls_name)
 
+            except ImportError as e:
+                try:
+                    cls = _get_class_by_name(other_cls_name)
+                except ImportError as e2:
+                    log.error("ImportErrors while creating %s class: %s\n"
+                              "Did you remember to put the repository in your PYTHONPATH???"
+                              "skipping import..." % (human_readable, cfg))
+                    log.debug("Errors were: %s\n%s" % (e, e2))
+                    continue
+            try: # building the class
                 # copy config s so we can tweak it as necessary to expose only correct kwargs
                 new_config = cfg.copy()
                 new_config.pop('class')
@@ -100,9 +112,6 @@ class ScaleClient(object):
                 results.append(res)
                 log.info("%s created from config: %s" % (human_readable, cfg))
 
-            except ImportError as e:
-                log.error("ImportError (%s) while creating %s class: %s\n"
-                          "Did you remember to put the repository in your PYTHONPATH???" % (e, human_readable, cfg))
             except Exception as e:
                 if self._raise_errors:
                     raise
