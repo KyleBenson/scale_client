@@ -19,7 +19,7 @@ class MQTTEventSink(EventSink):
                 username=None,
                 password=None,
                 keepalive=60):
-        EventSink.__init__(self, broker)
+        super(MQTTEventSink, self).__init__(broker=broker)
         self._client = Paho()
         self._client.on_connect = \
                 lambda mosq, obj, rc: self._on_connect(mosq, obj, rc)

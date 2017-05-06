@@ -5,8 +5,8 @@ log = logging.getLogger(__name__)
 
 
 class TemperatureHighVirtualSensor(VirtualSensor):
-    def __init__(self, broker, device=None, threshold=28.0):
-        super(TemperatureHighVirtualSensor, self).__init__(broker=broker, device=device, interval=None)
+    def __init__(self, broker, device=None, threshold=28.0, **kwargs):
+        super(TemperatureHighVirtualSensor, self).__init__(broker=broker, device=device, interval=None, **kwargs)
         self._threshold = threshold
 
     DEFAULT_PRIORITY = 4

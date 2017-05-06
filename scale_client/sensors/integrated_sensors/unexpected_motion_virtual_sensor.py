@@ -8,8 +8,8 @@ log = logging.getLogger(__name__)
 
 
 class UnexpectedMotionVirtualSensor(VirtualSensor):
-	def __init__(self, broker, device=None, inact_threshold=600, darktime=60):
-		super(UnexpectedMotionVirtualSensor, self).__init__(broker=broker, device=device, interval=None)
+	def __init__(self, broker, device=None, inact_threshold=600, darktime=60, **kwargs):
+		super(UnexpectedMotionVirtualSensor, self).__init__(broker=broker, device=device, interval=None, **kwargs)
 		self._light = LightVirtualSensor.DARK
 		self._dark_timer = get_time()
 		self._dark_timeout = darktime

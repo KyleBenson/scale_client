@@ -5,8 +5,8 @@ from scale_client.core.sensed_event import SensedEvent
 
 
 class RawAnalogVirtualSensor(AnalogVirtualSensor):
-    def __init__(self, broker, device=None, interval=1, analog_port=None):
-        super(RawAnalogVirtualSensor, self).__init__(broker, device=device, interval=interval, analog_port=analog_port)
+    def __init__(self, broker, device=None, interval=1, analog_port=None, **kwargs):
+        super(RawAnalogVirtualSensor, self).__init__(broker, device=device, interval=interval, analog_port=analog_port, **kwargs)
 
     DEFAULT_PRIORITY = 9
 

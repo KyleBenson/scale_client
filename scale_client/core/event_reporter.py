@@ -14,8 +14,8 @@ class EventReporter(Application):
     Rather, it decides which SensedEvents to report when and then chooses from the
     available Publishers the ideal one to report the data via.
     """
-    def __init__(self, broker):
-        super(EventReporter, self).__init__(broker)
+    def __init__(self, broker, **kwargs):
+        super(EventReporter, self).__init__(broker, **kwargs)
         self.__sinks = []
         self._lman = None
         self._neta = None

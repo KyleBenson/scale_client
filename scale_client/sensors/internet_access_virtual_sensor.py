@@ -15,7 +15,7 @@ class InternetAccessVirtualSensor(ThreadedVirtualSensor):
 
     def __init__(self, broker, device=None, interval=10, report_every=60,
                  # Taken directly from net.util.ping_interet():
-                 host="8.8.8.8", port=53, timeout=3):
+                 host="8.8.8.8", port=53, timeout=3, **kwargs):
         """
         :param broker:
         :param device:
@@ -26,7 +26,7 @@ class InternetAccessVirtualSensor(ThreadedVirtualSensor):
         :param timeout: timeout for 'ping'
         """
 
-        super(InternetAccessVirtualSensor, self).__init__(broker, device=device, interval=interval)
+        super(InternetAccessVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
         self._last_value = None
         self._last_report_time = None
         self._report_every = report_every

@@ -8,8 +8,8 @@ import logging
 log = logging.getLogger(__name__)
 
 class IWListVirtualSensor(ThreadedVirtualSensor):
-	def __init__(self, broker, device=None, interval=4, if_name=None):
-		super(IWListVirtualSensor, self).__init__(broker, device=device, interval=interval)
+	def __init__(self, broker, device=None, interval=4, if_name=None, **kwargs):
+		super(IWListVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
 		self._interval = interval
 		self._if_name = if_name # Interface device name, for example: wlan0
 

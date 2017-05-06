@@ -5,8 +5,8 @@ from scale_client.core.sensed_event import SensedEvent
 
 
 class PIRVirtualSensor(GPIOVirtualSensor):
-    def __init__(self, broker, device=None, interval=1, gpio_pin=None):
-        super(PIRVirtualSensor, self).__init__(broker, device, interval, gpio_pin)
+    def __init__(self, broker, device=None, interval=1, gpio_pin=None, **kwargs):
+        super(PIRVirtualSensor, self).__init__(broker, device, interval, gpio_pin, **kwargs)
         self._state = PIRVirtualSensor.IDLE
 
     DEFAULT_PRIORITY = 7

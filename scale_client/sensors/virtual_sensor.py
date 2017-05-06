@@ -22,7 +22,7 @@ class VirtualSensor(Application):
     DEFAULT_PRIORITY = 5
 
     def __init__(self, broker, device=None, interval=1, **kwargs):
-        super(VirtualSensor, self).__init__(broker)
+        super(VirtualSensor, self).__init__(broker, **kwargs)
 
         # TODO: anonymous device descriptor?
         self.device = device

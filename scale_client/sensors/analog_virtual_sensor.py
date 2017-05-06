@@ -9,8 +9,8 @@ class AnalogVirtualSensor(VirtualSensor):
     This class is specifically designed to support Analog sensors attached to a ADC board on a Raspberry Pi.
     """
 
-    def __init__(self, broker, device=None, interval=1, analog_port=None):
-        super(AnalogVirtualSensor, self).__init__(broker, device, interval)
+    def __init__(self, broker, device=None, interval=1, analog_port=None, **kwargs):
+        super(AnalogVirtualSensor, self).__init__(broker, device, interval, **kwargs)
         self._port = analog_port
         self._spi = None
 

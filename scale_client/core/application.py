@@ -28,6 +28,10 @@ class AbstractApplication(object):
         :param kwargs: used for passing args to other constructors when doing multiple inheritance
         """
         super(AbstractApplication, self).__init__()
+        # HACK: circuits-specific: it never actually 'pops' the channel kwargs in its __init__
+        kwargs.pop('channel')
+        assert len(kwargs) == 0, "kwargs should be empty by this point since" \
+                                 " AbstractApplication is just an object! It has: %s" % kwargs
 
         self._register_broker(broker)
 

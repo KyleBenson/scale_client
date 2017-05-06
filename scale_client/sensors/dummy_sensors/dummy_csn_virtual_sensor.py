@@ -9,8 +9,8 @@ log = logging.getLogger(__name__)
 
 
 class DummyCSNVirtualSensor(CSNVirtualSensor):
-    def __init__(self, broker, device=None):
-        CSNVirtualSensor.__init__(self, broker, device=device)
+    def __init__(self, broker, device=None, **kwargs):
+        CSNVirtualSensor.__init__(self, broker, device=device, **kwargs)
         self._rand = Random()
         self._rand.seed()
         self._whatflag = True

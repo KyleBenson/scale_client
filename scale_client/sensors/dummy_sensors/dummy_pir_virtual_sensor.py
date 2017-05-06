@@ -5,8 +5,8 @@ from scale_client.sensors.gpio_virtual_sensor import GPIOVirtualSensor
 
 
 class DummyPIRVirtualSensor(PIRVirtualSensor):
-    def __init__(self, broker, device=None, interval=1):
-        super(DummyPIRVirtualSensor, self).__init__(broker, device, interval=interval)
+    def __init__(self, broker, device=None, interval=1, **kwargs):
+        super(DummyPIRVirtualSensor, self).__init__(broker, device, interval=interval, **kwargs)
         self._rand = Random()
         self._rand.seed()
         self._darkflag = True

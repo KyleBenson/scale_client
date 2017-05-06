@@ -6,8 +6,8 @@ import logging
 log = logging.getLogger(__name__)
 
 class FakeLocationVirtualSensor(VirtualSensor):
-	def __init__(self, broker, device=None, interval=60, exp=600, lat=0.0, lon=0.0, alt=None):
-		super(FakeLocationVirtualSensor, self).__init__(broker, device=device, interval=interval)
+	def __init__(self, broker, device=None, interval=60, exp=600, lat=0.0, lon=0.0, alt=None, **kwargs):
+		super(FakeLocationVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
 		self._exp = exp
 		self._tag = {}
 		if type(lat) != type(0.0) or type(lon) != type(0.0):
