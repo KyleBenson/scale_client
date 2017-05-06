@@ -26,3 +26,10 @@ Sensors:
     - InternetAccessSensor:
         class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
         dev_name: "net0"
+
+# To test your PYTHONPATH is set up properly for importing external modules, execute:
+# cp scale_client/sensors/dummy_sensors/dummy_temperature_virtual_sensor.py ~/scratch/scale_client/external_scale_client/
+# and then put ~scratch/scale_client on your PYTHONPATH and uncomment the dummy sensor below:
+# NOTE: this simple copy test only works because this class does "from scale_client.sensors..."
+#     - ExternalDummySensor:
+#         class: "external_scale_client.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
