@@ -1,0 +1,36 @@
+# This configuration spins up a client with dummy sensors
+# It exposes a CoAP server as an event_sink and as a sensor
+# so you can do GET/PUT/OBSERVE etc.
+
+# TODO: possible test scenario:
+# Run one client with the CoapEventSink configured local-only to
+# store one of the dummy sensors' data.  Run a second client
+# configured with the CoapSensor so it will 'observe' the first
+# client's data.  Then you can run the first with its 'remote'
+# option enabled and the second with a CoapEventSink as well.
+# This will cause the first client to directly upload its
+# SensedEvents
+
+EventSinks:
+    - CoapEventSink:
+        class: "coap_event_sink.CoapEventSink"
+        # TODO: remote: "localhost:9999"
+
+Sensors:
+    - DummyThreadedSensor:
+        class: "dummy_sensors.dummy_threaded_virtual_sensor.DummyThreadedVirtualSensor"
+        dev_name: "dum0"
+        interval: 2
+    - DummyTempSensor:
+        class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
+        dev_name: "temp0"
+    # TODO:
+    # This VS observes the given topics and internally publishes them as SensedEvents.
+    # You probably don't want to have both the CoapEventSink and CoapVirtualSensor
+    # running simultaneously with the latter configured for remote publishing or you'll
+    # just create a loop.
+#    - CoapSensor:
+#        class: "coap_sensor.CoapVirtualSensor"
+#        remote: "localhost:9999"
+#        topics: ["dummy_thread", "temperature"]
+
