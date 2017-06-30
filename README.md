@@ -1,12 +1,13 @@
 SCALE Client
 =============
 
-The Safe Community Awareness and Alerting Network (SCALE) was originally envisioned as a demonstration of using the Internet of Things (IoT) for public and personal in-home safety applications as a response to the SmartAmerica Challenge in 2014.  It has evolved into a generic Python package designed for monitoring sensor devices, performing local processing on this data, and publishing results to a (possibly cloud-based) data exchange for further use. Use this package as a quick method to efficiently and flexibly set up a sensing platform (usually on a Raspberry Pi).
+The [Safe Community Awareness and Alerting Network (SCALE)](http://smartamerica.org/teams/scale-safe-community-alert-network-a-k-a-public-safety-for-smart-communities/) was originally envisioned as a demonstration of using the Internet of Things (IoT) for public and personal in-home safety applications as a response to the [SmartAmerica Challenge](http://smartamerica.org/) in 2014.
+It has evolved into a generic Python package designed for monitoring sensor devices, performing local processing on this data, and publishing results to a (possibly cloud-based) data exchange for further use. Use this package as a quick method to efficiently and flexibly set up a sensing platform (usually on a Raspberry Pi) that incorporates multiple sensors, actuators, networking technologies, and/or protocols.
 
 Quickstart
 ----------
 
-Clone the Git repo and run: `pip install -r requirements.txt; python -m scale_client` from inside the main repo directory
+Clone the Git repo, ensure the current directory is in your `PYTHONPATH`, install dependencies using `pip install -r requirements.txt`, and run the client from inside the main repo directory using `python -m scale_client`
 
 Installation
 ------------
