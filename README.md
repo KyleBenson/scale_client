@@ -18,6 +18,8 @@ python -m scale_client --config ~/scale_client/scale_client/core/dummy_config.ym
 --log-level info
 ```
 
+If you wish to run SCALE on a Raspberry Pi device, you can follow the [quickstart instructions](quickstart_raspi_scale_box.md) or [more detailed directions](#building-a-scale-box).
+
 Installation
 ------------
 
