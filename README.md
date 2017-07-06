@@ -88,62 +88,10 @@ The [ScaleSaltConfig repo](https://github.com/KyleBenson/ScaleSaltConfig) contai
 For directions on how to build your own SCALE devices (including hardware purchase list, assembly, and running SCALE on a Raspberry Pi with Raspbian), see our [evolving Google document](https://docs.google.com/document/d/1ItlumBB18bXcpRVaTrf4ghyYh6sCyd7HAMygooi9z8k/edit?usp=sharing).
 
 
-
-Configuring
+Advanced Usage
 -----------
 
-SCALE is designed to be highly flexible and easily configurable.
-
-### Main Command line arguments
-```
---config FILENAME
-
---log-level [debug|info|warning|error]
-```
-Note that you can run the client with `-h` to view all available options, which include the ability to manually configure sensors, applications, and event_sinks as if they were written in the configuration file as described below.
-
-
-### Configuration file
-Configuration files are written in the *YAML* language.  See examples in the `scale_client/config` directory. There are currently 4 different sections to the configuration file:
-
-* `Main` - Configures aspects of the SCALE core, including the pub-sub broker, device or platform-specific information, networking, and event reporting policies.
-* `EventSinks` - Enable and configure `EventSink`s, which provide methods for handling the reporting of `SensedEvent`s to a data exchange or other entity.
-* `Sensors` - The real heart of SCALE, each class here represents a connection to some physical or virtual sensor and the configuration parameters that drive this connection and how it creates `SensedEvent`s.
-* `Applications` - Applications represent entities that subscribe to certain sensor data feeds and may publish new events as a result.  The only real difference from `Sensors` is that they don't automatically perform a `read()` periodically.
-
-Note that each section (other than `Main`) lists the configurations for a number of Python classes.  The core system will try to create an instance of each listed class and run it within the SCALE environment on startup.  Of particular importance are the class names, which are resolved either relative to the topmost directory or to the corresponding directory within `scale_client` (e.g. `scale_client/sensors` for `Sensors`).  The remaining arguments for each class are passed directly to the class's constructor as `**kwargs`, so ensure you include all necessary ones, spell them properly, and verify that the value is legitimate or it may create an error during runtime.  SCALE tries to fail gracefully by logging these errors and not starting up the class in question when one occurs, and so it is your responsibility to enable logging during testing and verify that the classes are configured and run properly.
-
-### Location for machine-specific configuration file
-
-The SCALE daemon as a system service will always try to load `/etc/scale/client/config.yml` on start-up for a machine-specific configuration file. If it fails, it will try to load one of the default configuration files that comes with the package.
-
-The setup script `setup.py` will create the directory `/etc/scale/client` recursively and put an example configuration file `example-config.yml` inside. Your machine-specific configuration file will NOT be overwritten during setup.
-
-Extending and modifying
------------------------
-
-SCALE is designed to be modified or extended by anyone with minimal Python programming abilities.
-
-### Adding new classes
-
-See the base classes for the following SCALE components in order to extend the system by deriving these classes to add new functionalities:
-
-* Application
-* VirtualSensor
-* EventSink
-
-You can also extend existing derive classes to modify their functionality slightly or leverage some of the existing code infrastructure.  For example, see the `GPIOVirtualSensor` or `AnalogVirtualSensor` classes and how their derived classes leverage common functionality.
-
-NOTE: SCALE expects all classes instantiated and run by the core to accept `**kwargs` (keyword arguments) in their constructor (e.g. `__init__(arg1, arg2=3, ..., **kwargs)`).  Make sure to specify these and document them in your classes so that they can be properly passed in from the confugartion file.
-
-NOTE: As SCALE is designed in a highly object-oriented manner, ensure that you properly defer to `super` when necessary wherever you override a method in order to properly handle inheritance.  In particular, you will need to do this with `__init__` (i.e. pass `**kwargs`) as well as methods such as `on_start()`.
-
-### Architectural overview
-TODO: expand and include diagram
-
-SCALE is built around the concept of loosely-coupled components interacting via a pub-sub broker that handles exchanging `SensedEvent`s and other messages between the source that creates them and the interested entities that subscribe to them.
-
-`SensedEvent`s represent the core data object, containing the raw data and associated metadata representing a sensor reading.
+SCALE is designed to be highly flexible, easily configurable, modular, and extensible.  For a quick example configuration file that you can modify and use right away look at [scale_client/core/example_config.yml](scale_client/core/example_config.yml).  For more information about configuring the SCALE Client, including using the command line options and more details about the configuration files, see the [Configuration documentation](docs/CONFIGURING.md).  For details about the SCALE client architecture and our general design methodology for it, see the [Architecture documentation](docs/ARCHITECTURE.md).  If you wish to modify SCALE to incorporate new features in the core or simply extend it by adding a new module, see the [Modifying SCALE documentation](docs/MODIFYING.md).
 
 
 Contributing
