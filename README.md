@@ -39,7 +39,10 @@ Documentation
 
 To aid others in leveraging the SCALE project for their own IoT deployments, we documented the SCALE codebase, devices, and deployment methodology.
 
-included instructions for building your own SCALE devices (e.g. Raspberry Pi-based multi-sensor multi-network boxes).
+## Advanced Usage Documentation
+
+SCALE is designed to be highly flexible, easily configurable, modular, and extensible.  For a quick example configuration file that you can modify and use right away look at [scale_client/core/example_config.yml](scale_client/core/example_config.yml).  For more information about configuring the SCALE Client, including using the command line options and more details about the configuration files, see the [Configuration documentation](docs/CONFIGURING.md).  For details about the SCALE client architecture and our general design methodology for it, see the [Architecture documentation](docs/ARCHITECTURE.md).  If you wish to modify SCALE to incorporate new features in the core or simply extend it by adding a new module, see the [Modifying SCALE documentation](docs/MODIFYING.md).
+
 
 ## Source Code
 
@@ -86,12 +89,6 @@ The [ScaleSaltConfig repo](https://github.com/KyleBenson/ScaleSaltConfig) contai
 ## Building a SCALE Box
 
 For directions on how to build your own SCALE devices (including hardware purchase list, assembly, and running SCALE on a Raspberry Pi with Raspbian), see our [evolving Google document](https://docs.google.com/document/d/1ItlumBB18bXcpRVaTrf4ghyYh6sCyd7HAMygooi9z8k/edit?usp=sharing).
-
-
-Advanced Usage
------------
-
-SCALE is designed to be highly flexible, easily configurable, modular, and extensible.  For a quick example configuration file that you can modify and use right away look at [scale_client/core/example_config.yml](scale_client/core/example_config.yml).  For more information about configuring the SCALE Client, including using the command line options and more details about the configuration files, see the [Configuration documentation](docs/CONFIGURING.md).  For details about the SCALE client architecture and our general design methodology for it, see the [Architecture documentation](docs/ARCHITECTURE.md).  If you wish to modify SCALE to incorporate new features in the core or simply extend it by adding a new module, see the [Modifying SCALE documentation](docs/MODIFYING.md).
 
 
 Contributing
