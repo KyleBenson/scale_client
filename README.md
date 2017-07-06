@@ -7,21 +7,31 @@ It has evolved into a generic Python package designed for monitoring sensor devi
 Quickstart
 ----------
 
-Clone the Git repo, ensure the current directory is in your `PYTHONPATH`, install dependencies using `pip install -r requirements.txt`, and run the client from inside the main repo directory using `python -m scale_client`
+Clone the Git repo, ensure the current directory (`./`) is in your `PYTHONPATH`, install dependencies, and run the client from inside the main repo top-level directory.  This will run the default client configuration, which should print logging info to the console related to the dummy `VirtualSensor`s enabled by the default configuration file (see [Configuring](#configuring) for details).
+
+For ease of reference, run all the following:
+
+```bash
+cd ~
+git clone https://github.com/KyleBenson/scale_client.git
+pip install -r requirements.txt
+python -m scale_client --config ~/scale_client/scale_client/core/dummy_config.yml \
+--log-level info
+```
 
 Installation
 ------------
 
 For easy installation, simply run `sudo python setup.py install` from inside the main directory. Assuming you have `setuptools` installed via `pip`, this should handle installing all of the dependencies. Note that the codebase should run fine on any machine supporting Python 2.7+, but that it is tested on a Raspberry Pi running Raspbian and on Linux/Mac OSX machines (note that the latter won't support most physical sensor devices!). You don't **need** to run with `sudo`; doing so will install the daemon file.
 
-If you don't wish to install the package and instead run it straight from the repository, you can do so as long as the directory containing `scale_client` is in your `PYTHONPATH` or in the current directory.
+If you don't wish to install the package and instead run it straight from the repository (as shown above in the Quickstart section), you can do so as long as the directory containing `scale_client` is in your `PYTHONPATH` or in the current directory.
 
 The `scripts` directory contains some useful scripts for e.g. setting up the devices, running a daemon, etc.
 
 Running
 -------
 
-You can run the code with `python -m scale_client` or `scale_client/core/client.py` as long as you set it up properly.
+You can run the code with `python -m scale_client` or `scale_client/core/client.py` as long as you set it up properly (i.e. your PYTHONPATH is set correctly and/or the Python package has been installed).
 
 Configuring
 -----------
