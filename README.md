@@ -63,6 +63,9 @@ This repository contains all of the SCALE client Python code that drives the ind
 |   +-- event_sinks: implementations for the various EventSinks
 |   +-- network: all modular networking-related functionality resides here
 |   +-- test: simplistic test files to verify the client is working
+|   +-- util: various utility scripts for setting up the client, patching libraries, etc.
+|       +-- mqtt_subscriber.py: simple debugging script for subscribing to an MQTT topic and printing out the incoming publications
+|       +-- defaults.py: various default values (especially for logging) used in the client
 +-- docs: additional documentation about SCALE client architecture, configuring, extending, etc.
 +-- scripts: various installation scripts for different platforms
 |   +-- scale_daemon: daemon script for running as a service
