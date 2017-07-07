@@ -89,6 +89,14 @@ The [original SCALE server repo](https://github.com/KyleBenson/SmartAmericaServe
 The [ScaleSaltConfig repo](https://github.com/KyleBenson/ScaleSaltConfig) contains configuration files and dependencies used to remotely manage and provision SCALE devices automatically.  Note that it may be out of date from our latest iterations as we found it easier to simply clone Raspbian images with all the configuration already done when making several SCALE boxes of the same configuration.
 
 
+## Platform-specific Files
+
+One may note that throughout the codebase there exist a few different versions of files (e.g. pi, sheeva, and mesh).
+These were used to configure different versions of the SCALE boxes on other platforms such as the Sheevaplug or
+for our BATMAN-based experimental mesh networking setup.
+We left these files intact in case anyone might find them useful, but they are not necessarilly supported (i.e. tested) platforms any longer.
+
+
 ## Building a SCALE Box
 
 For directions on how to build your own SCALE devices (including hardware purchase list, assembly, and running SCALE on a Raspberry Pi with Raspbian), see our [evolving Google document](https://docs.google.com/document/d/1ItlumBB18bXcpRVaTrf4ghyYh6sCyd7HAMygooi9z8k/edit?usp=sharing).
