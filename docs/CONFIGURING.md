@@ -1,12 +1,14 @@
-
 # Configuring the SCALE Client
 
+This section assumes that you have already somewhat familiarised yourself with the [SCALE Client Architecture](ARCHITECTURE.md).  You may wish to do so first in order to understand the options available for you to configure.
+
 ## Main Command line arguments
-``
+```
 --config FILENAME
 
 --log-level [debug|info|warning|error]
-``
+```
+
 Note that you can run the client with `-h` to view all available options, which include the ability to manually configure sensors, applications, and event_sinks as if they were written in the configuration file as described below.
 
 
