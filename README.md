@@ -14,7 +14,7 @@ For ease of reference, run all the following:
 cd ~
 git clone https://github.com/KyleBenson/scale_client.git
 pip install -r requirements.txt
-python -m scale_client --config ~/scale_client/scale_client/core/dummy_config.yml \
+python -m scale_client --config ~/scale_client/scale_client/core/test_config.yml \
 --log-level info
 ```
 
