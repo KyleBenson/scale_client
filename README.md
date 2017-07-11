@@ -6,7 +6,7 @@ The Safe Community Awareness and Alerting Network (SCALE) project leverages the 
 Quickstart
 ----------
 
-Clone the Git repo, ensure the current directory (`./`) is in your `PYTHONPATH`, install dependencies, and run the client from inside the main repo top-level directory.  This will run the default client configuration, which should print logging info to the console related to the dummy `VirtualSensor`s enabled by the default configuration file (see [Configuring](#configuring) for details).
+Clone the Git repo, ensure the current directory (`./`) is in your `PYTHONPATH`, install dependencies, and run the client from inside the main repo top-level directory.  This will run the default client configuration, which should print logging info to the console related to the dummy `VirtualSensor`s enabled by the default configuration file (see [Configuring](docs/CONFIGURING.md) for details).
 
 For ease of reference, run all the following:
 
@@ -14,7 +14,7 @@ For ease of reference, run all the following:
 cd ~
 git clone https://github.com/KyleBenson/scale_client.git
 pip install -r requirements.txt
-python -m scale_client --config ~/scale_client/scale_client/core/dummy_config.yml \
+python -m scale_client --config ~/scale_client/scale_client/core/test_config.yml \
 --log-level info
 ```
 
