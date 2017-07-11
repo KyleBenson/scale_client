@@ -9,7 +9,7 @@
 import subprocess
 
 # remove charles's user info
-#subprocess.call('userdel charles; rm -rf /home/charles; rm -rf /home/SmartAmericaSensors', shell=True)
+#subprocess.call('userdel charles; rm -rf /home/charles; rm -rf /home/scale_client', shell=True)
 
 SALT_CONFIG_FILE = "/etc/salt/minion"
 SALT_MASTER = "iqueue.ics.uci.edu" #"128.195.52.93"
