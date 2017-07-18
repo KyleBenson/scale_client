@@ -4,6 +4,8 @@ import copy
 from circuits import Event
 import pprint
 
+DEFAULT_PRIORITY = 5
+
 class SensedEvent(Event):
     """
     A SensedEvent is the basic piece of data in the whole system.  Various sensors create SensedEvents
@@ -11,7 +13,7 @@ class SensedEvent(Event):
     representing the real-world event, an identifier for what Sensor it came from, and a priority and
     timestamp value.
     """
-    def __init__(self, sensor, data, priority, timestamp=None):
+    def __init__(self, sensor, data, priority=DEFAULT_PRIORITY, timestamp=None):
         super(SensedEvent, self).__init__()
 
         # TODO: polymorphic lazy version of this object?
@@ -77,3 +79,31 @@ class SensedEvent(Event):
 
     def to_json(self):
         return json.dumps({"d": self.to_map()})
+
+    @classmethod
+    def from_json(cls, json_data):
+        """
+        Creates a SensedEvent from a raw JSON-encoded string
+        :param json_data:
+        :return:
+        """
+
+        ev_map = json.loads(json_data)
+        try:  # removing the 'd' from the outside if it's there
+            ev_map = ev_map['d']
+        except KeyError:
+            pass
+        return cls.from_map(ev_map)
+
+    @classmethod
+    def from_map(cls, map_data):
+        """
+        Creates a SensedEvent from a simple map of that events' attributes as per the SCALE event schema.
+        :param map_data:
+        :type map_data: dict
+        :return:
+        """
+        sensor = map_data.pop('device', 'unknown_device')
+        priority = map_data.pop('prio_value', DEFAULT_PRIORITY)
+        timestamp = map_data.pop('timestamp', None)
+        return cls(sensor, map_data, priority, timestamp)
