@@ -24,10 +24,18 @@ class SensedEvent(Event):
         self.priority = priority        # Smaller integer for higher priority
 
         # we must ensure that the SensedEvent's data follows a convention of being a dict-like object
+        # and that it contains the necessary fields
+        # TODO: we should do away with this and figure out how to support different schemas
         try:
-            data['value']
+            str(data['value'])
+            str(data['event'])
         except TypeError:
             data = {"event": "unknown_event_type", "value": data}
+        except KeyError:
+            old_data = data
+            data["old_data"] = old_data
+            data['value'] = data.get('value', "MISSING VALUE")
+            data['event'] = data.get('event', "unknown_event_type")
         self.data = data                # Some abstract data that describes the event
 
         # timestamp defaults to right now
@@ -50,6 +58,12 @@ class SensedEvent(Event):
         except KeyError:
             return data
 
+    def set_raw_data(self, raw_value):
+        try:
+            self.data['value'] = raw_value
+        except ValueError:
+            self.data = raw_value
+
     def get_type(self):
         """
         This function tries to intelligently extract the type of SensedEvent as a string.
@@ -57,9 +71,16 @@ class SensedEvent(Event):
         """
         return self.data['event']
 
+    def set_type(self, new_type):
+        """
+        This function tries to intelligently mutate the type of SensedEvent to the given string.
+        :return: event type
+        """
+        self.data['event'] = new_type
+
     def __repr__(self):
         s = "SensedEvent (%s) with value %s" % (self.get_type(), str(self.get_raw_data()))
-        s += pprint.pformat(self.data, width=1)
+        s += '\n' + pprint.pformat(self.data, width=1)
         return s
 
     def to_map(self):
