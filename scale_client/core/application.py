@@ -205,7 +205,7 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
 
         :param time: time (in seconds or as a datetime object) until
         the timer expires and calls the function
-        :param function: function to call
+        :param function: function to call (WARNING: use self.__class__.fun not self.fun)
         :param repeat: whether or not the timer should reset and periodically repeat the function
         """
 
