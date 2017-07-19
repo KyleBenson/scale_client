@@ -2,7 +2,7 @@
 # It exposes a CoAP server as an event_sink and as a sensor
 # so you can do GET/PUT/OBSERVE etc.
 
-# TODO: possible test scenario:
+# Example test scenarios:
 # Run one client with the CoapEventSink configured local-only to
 # store one of the dummy sensors' data.  Run a second client
 # configured with the CoapSensor so it will 'observe' the first
@@ -13,24 +13,30 @@
 
 EventSinks:
     - CoapEventSink:
-        class: "coap_event_sink.CoapEventSink"
-        # TODO: remote: "localhost:9999"
+#        class: "local_coap_event_sink.LocalCoapEventSink"
+        class: "remote_coap_event_sink.RemoteCoapEventSink"
+#         This topic used by CoAPthon's server by default
+        topic: "storage/%s"
 
 Sensors:
-    - DummyThreadedSensor:
-        class: "dummy_sensors.dummy_threaded_virtual_sensor.DummyThreadedVirtualSensor"
-        dev_name: "dum0"
-        interval: 2
+#    - DummyThreadedSensor:
+#        class: "dummy_sensors.dummy_threaded_virtual_sensor.DummyThreadedVirtualSensor"
+#        dev_name: "dum0"
+#        interval: 1
     - DummyTempSensor:
         class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
         dev_name: "temp0"
-    # TODO:
+        interval: 2
     # This VS observes the given topics and internally publishes them as SensedEvents.
-    # You probably don't want to have both the CoapEventSink and CoapVirtualSensor
-    # running simultaneously with the latter configured for remote publishing or you'll
-    # just create a loop.
-#    - CoapSensor:
-#        class: "coap_sensor.CoapVirtualSensor"
-#        remote: "localhost:9999"
-#        topics: ["dummy_thread", "temperature"]
-
+    # NOTE: Careful having both a RemoteCoapEventSink and CoapVirtualSensor
+    # running simultaneously and pointing to the same server-resource.  We have a hack
+    # in place, but if it changes you could create a loop!
+    - CoapSensor:
+        class: "coap_virtual_sensor.CoapVirtualSensor"
+        topics: ["storage/temperature",]
+        # For testing, we set a shorter timeout since that's used for
+        # re-trying an observe if the resource doesn't exist initially.
+        timeout: 10
+        # Enables polling at the regular VirtualSensor interval rather than 'observe' feature.
+        # NOTE: one topic polled per interval in a round-robin fashion
+#        use_polling: True

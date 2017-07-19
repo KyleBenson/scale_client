@@ -35,14 +35,14 @@ class SensedEventCoapResource(CoapResource):
         return self
 
 
-class CoapEventSink(ThreadedEventSink):
+class LocalCoapEventSink(ThreadedEventSink):
     """
     This EventSink stores events in a CoAP server so that external nodes
-    can GET them as CoAP resources.  The ability to PUT/POST resources
-    is handled by the CoapVirtualSensor class.
+    (e.g. those running a CoapVirtualSensor) can GET them as CoAP resources.
     """
     def __init__(self, broker,
                  # TODO: verify all these
+                 # TODO: document what they do, especially topic
                  topic="events/%s",
                  hostname="0.0.0.0",
                  port=DEFAULT_COAP_PORT,
@@ -51,7 +51,7 @@ class CoapEventSink(ThreadedEventSink):
                  keepalive=60,
                  multicast=False,
                  **kwargs):
-        super(CoapEventSink, self).__init__(broker=broker, **kwargs)
+        super(LocalCoapEventSink, self).__init__(broker=broker, **kwargs)
 
         log.debug("starting CoAP server at IP:port %s:%d" % (hostname, port))
 
@@ -87,6 +87,7 @@ class CoapEventSink(ThreadedEventSink):
 
     def on_stop(self):
         self._server.close()
+        self._server_running = False
 
     def on_start(self):
         self.run_in_background(self.__run_server)

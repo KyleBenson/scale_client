@@ -41,3 +41,10 @@ def ping_internet(host="8.8.8.8", port=53, timeout=3):
     except Exception as ex:
         print ex.message
         return False
+
+from coapthon.defines import Codes as CoapCodes
+def coap_response_success(resp):
+    return resp.code < CoapCodes.ERROR_LOWER_BOUND
+
+def coap_code_to_name(code):
+    return CoapCodes.LIST[code].name
