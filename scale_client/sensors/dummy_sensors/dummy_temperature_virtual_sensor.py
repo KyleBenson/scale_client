@@ -4,8 +4,8 @@ from scale_client.sensors.temperature_virtual_sensor import TemperatureVirtualSe
 
 
 class DummyTemperatureVirtualSensor(TemperatureVirtualSensor):
-    def __init__(self, broker, device=None, threshold=24.0):
-        TemperatureVirtualSensor.__init__(self, broker, device=device, threshold=threshold)
+    def __init__(self, broker, threshold=24.0, **kwargs):
+        super(DummyTemperatureVirtualSensor, self).__init__(broker, threshold=threshold, **kwargs)
         self._rand = Random()
         self._rand.seed()
         self.CEL_MEAN = threshold
