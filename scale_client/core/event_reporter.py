@@ -56,6 +56,11 @@ class EventReporter(Application):
         elif et == "publisher_state":
             return
 
+        # XXX: Don't forward events that were from some remote device.
+        # TODO: figure out a better policy to selectively forward some of these.
+        elif event.data.get('remote_origin', None) is not None:
+            return
+
         # Ignorance <--- what does this mean???
         if self._lman is not None:
             if et in self._lman.SOURCE_SUPPORT:
