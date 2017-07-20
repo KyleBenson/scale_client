@@ -41,16 +41,20 @@ class LocalCoapEventSink(ThreadedEventSink):
     (e.g. those running a CoapVirtualSensor) can GET them as CoAP resources.
     """
     def __init__(self, broker,
-                 # TODO: verify all these
-                 # TODO: document what they do, especially topic
                  topic="events/%s",
                  hostname="0.0.0.0",
                  port=DEFAULT_COAP_PORT,
-                 username=None,
-                 password=None,
-                 keepalive=60,
                  multicast=False,
                  **kwargs):
+        """
+        Simple constructor.  When on_start is called, the server will actually be run.
+        :param broker: internal scale_client broker
+        :param topic: topic string that will be filled in (using "%s") with the event topic when it's stored
+        :param hostname: hostname/IP address to bind server to
+        :param port: port to run server on
+        :param multicast: optionally enable handling multicast requests
+        :param kwargs:
+        """
         super(LocalCoapEventSink, self).__init__(broker=broker, **kwargs)
 
         log.debug("starting CoAP server at IP:port %s:%d" % (hostname, port))
@@ -60,9 +64,6 @@ class LocalCoapEventSink(ThreadedEventSink):
 
         self._hostname = hostname
         self._port = port
-        self._username = username
-        self._password = password
-        self._keepalive = keepalive
         self._multicast = multicast
 
         self._server_running = False
@@ -81,8 +82,6 @@ class LocalCoapEventSink(ThreadedEventSink):
         self.send_event(event)
 
         # Listen for remote connections GETting data, etc.
-        # TODO: set timeout?  says it's used for checking if server should stop
-        # TODO: make this configurable?  an event_sink may just be a client that PUTs data in a remote server instead
         self._server.listen()
 
     def on_stop(self):
