@@ -26,6 +26,11 @@ Sensors:
     - DummyTempSensor:
         class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
         dev_name: "cel0"
+    - DummySeismicSensor:
+        # This is useful for testing that VirtualSensor.set_wait_period functions properly.
+        class: "dummy_sensors.dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
+        dev_name: "seismic0"
+        interval: 2
     # Disable this one if you don't have internet access and it causes issues
     - InternetAccessSensor:
         class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
