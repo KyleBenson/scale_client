@@ -27,6 +27,7 @@ class VirtualSensor(Application):
         # TODO: anonymous device descriptor?
         self.device = device
         self._wait_period = interval
+        self._sensor_timer = None
 
     def get_type(self):
         """
@@ -76,7 +77,7 @@ class VirtualSensor(Application):
         self._wait_period = period
         try:
             # WARNING: circuits-specific!
-            self._timer.reset(self._wait_period)
+            self._sensor_timer.reset(self._wait_period)
         except AttributeError:
             pass
 
@@ -114,4 +115,5 @@ class VirtualSensor(Application):
             return
         self._do_sensor_read()
         # We make an effort to get the child class's _do_sensor_read method in case they override it.
-        self.timed_call(self._wait_period, self.__class__._do_sensor_read, repeat=True)
+        t = self.timed_call(self._wait_period, self.__class__._do_sensor_read, repeat=True)
+        self._sensor_timer = t

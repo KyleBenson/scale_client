@@ -6,6 +6,10 @@ EventSinks:
         class: "log_event_sink.LogEventSink"
 
 Applications:
+    - Test:
+        # This test app tries to increment the temperature reading by 1 and adds a '1' to the end of the heartbeat.
+        class: "test_application.TestApplication"
+        subscriptions: ["temperature", "heartbeat"]
     - Thread:
         # Good to verify that threaded applications will run properly.
         class: "dummy_threaded_application.DummyThreadedApplication"

@@ -19,26 +19,30 @@ class TestApplication(Application):
         super(TestApplication, self).__init__(broker, **kwargs)
         self.increment = increment
 
-    def on_event(self, event, topic):
+    def on_event(self, event, topic=None):
         """
         This callback is where you should handle the Application's logic for responding to events to which it has
         subscribed.
         :param event: the Event just published
         :param topic: the Topic the Event was published to
         """
+        if topic is None:
+            topic = event.get_type()
 
-        log.debug("TestApp received event (topic %s): %s" % (topic, event))
+        if not event.data.has_key('touched_by_test_app'):
+            log.debug("TestApp received event (topic %s): %s" % (topic, event))
 
+        raw_data = event.get_raw_data()
         try:
-            event.set_raw_data(event.get_raw_data() + self.increment)
-        except ValueError:
+            event.set_raw_data(raw_data + self.increment)
+        except (ValueError, TypeError):
             # maybe not be a numeric value?
             try:
-                event.set_raw_data(float(event.get_raw_data()) + self.increment)
+                event.set_raw_data(float(raw_data) + self.increment)
             except ValueError:
                 # can't even parse a numeric, so hopefully a string?
-                if isinstance(event.get_raw_data(), str):
-                    event.set_raw_data(str(self.increment))
+                if isinstance(raw_data, str):
+                    event.set_raw_data(raw_data + str(self.increment))
                 else:
                     event.set_raw_data(self.increment)
                     event.set_type("TEST_EVENT")
@@ -48,12 +52,3 @@ class TestApplication(Application):
         if not event.data.has_key('touched_by_test_app'):
             event.data['touched_by_test_app'] = True
             self.publish(event, topic)
-
-    def on_start(self):
-        """
-        This callback is fired as soon as the Application is started.  Use it to handle any setup such as network
-        connections, constructing classes, or subscribing to event Topics.
-        """
-        # TODO: get subscribing to a specific event type working instead of this default of subscribing to everything
-        pass
-

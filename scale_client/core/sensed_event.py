@@ -14,7 +14,11 @@ class SensedEvent(Event):
     timestamp value.
     """
     def __init__(self, sensor, data, priority=DEFAULT_PRIORITY, timestamp=None):
-        super(SensedEvent, self).__init__()
+        # CIRCUITS-SPECIFIC: in order for callbacks registered via Application.subscribe to work,
+        # their parameters must match those used to create the Event being fired.  Hence, we need
+        # to pass the SensedEvent itself into Event's constructor in order to get the SensedEvent
+        # passed into those callbacks.
+        super(SensedEvent, self).__init__(self)
 
         # TODO: polymorphic lazy version of this object?
         self.sensor = sensor            # Sensor identifier

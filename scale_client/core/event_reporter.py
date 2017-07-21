@@ -15,7 +15,8 @@ class EventReporter(Application):
     available Publishers the ideal one to report the data via.
     """
     def __init__(self, broker):
-        super(EventReporter, self).__init__(broker)
+        # We subscribe to all SensedEvents in order to determine how to route them.
+        super(EventReporter, self).__init__(broker, subscriptions=['*'])
         self.__sinks = []
         self._lman = None
         self._neta = None
