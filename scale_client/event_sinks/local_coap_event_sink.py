@@ -2,9 +2,9 @@ import logging
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
+import coapthon.defines
 from coapthon.server.coap import CoAP as CoapServer
 from coapthon.resources.resource import Resource as CoapResource
-from coapthon import defines
 
 # HACK: the version of CoAPthon that we're using has a bug where it overwrites our
 # logging configuration, so we just reformat it.
@@ -29,7 +29,7 @@ class SensedEventCoapResource(CoapResource):
         super(SensedEventCoapResource, self).__init__(name)
         self.event = event
         self.payload = self.event.to_json()
-        self.content_type = defines.Content_types["application/json"]
+        self.content_type = coapthon.defines.Content_types["application/json"]
 
     def render_GET(self, request):
         return self
@@ -65,6 +65,8 @@ class LocalCoapEventSink(ThreadedEventSink):
         self._hostname = hostname
         self._port = port
         self._multicast = multicast
+        if multicast and hostname != coapthon.defines.ALL_COAP_NODES:
+            log.warning("underlying CoAPthon library currently only supports the ALL_COAP_NODES multicast address of %s" % coapthon.defines.ALL_COAP_NODES)
 
         self._server_running = False
         self._is_connected = False
