@@ -46,6 +46,8 @@ class ScaleClient(object):
     def run(self):
         """Currently just loop forever to allow the other threads to do their work."""
 
+        ####    SCHEDULE QUIT TIME FIRST
+
         # HACK: create a dummy app that just calls Broker.stop() at the requested quit_time.
         # We need to do it in an app like this to get the self variables bound in correctly.
         # This is circuits-specific!
@@ -58,6 +60,9 @@ class ScaleClient(object):
             quit_app = QuitApp(self.__broker)
             quit_app.timed_call(self._quit_time, QuitApp._quitter)
 
+        ####    RUN THE BROKER AND SCALE CLIENT
+
+        # Run the broker until it, and thus the whole scale client, have a stop event fully propagated
         self.__broker.run()
 
     def setup_components(self, configs, package_name, human_readable, helper_fun=None, *args):
@@ -215,9 +220,9 @@ class ScaleClient(object):
             if args is not None and args.sensors is not None else [])
         client.setup_components(configs, 'scale_client.sensors', 'sensors', __make_sensor)
         # Networks
-        configs = cfg.get('networks', [])
-        # TODO: how to add arguments for this?
-        client.setup_components(configs, 'scale_client.network', 'network')
+        configs = __join_configs_with_args(cfg.get('networks', []), args.networks \
+            if args is not None and args.networks is not None else [])
+        client.setup_components(configs, 'scale_client.networks', 'networks')
         # Applications
         configs = __join_configs_with_args(cfg.get('applications', []), args.applications \
             if args is not None and args.applications is not None else [])
@@ -290,7 +295,7 @@ class ScaleClient(object):
         parser.add_argument('--event-sinks', '-e', type=str, nargs='+', default=None, dest='event_sinks',
                             help='''manually specify event sinks (and their configurations) to run.
                             See --sensors help description for example.''')
-        parser.add_argument('--network', '-n', type=str, nargs='+', default=None,
+        parser.add_argument('--networks', '-n', type=str, nargs='+', default=None,
                             help='''manually specify network components (and their configurations) to run.
                             See --sensors help description for example.''')
 
@@ -316,10 +321,6 @@ class ScaleClient(object):
         elif parsed_args.config_filename is None and not any((parsed_args.sensors, parsed_args.applications,
                                                              parsed_args.event_sinks, parsed_args.network)):
             parsed_args.config_filename = default_config_filename
-
-        # Sanity check that we support requested options fully
-        if parsed_args.network is not None:
-            raise NotImplementedError("--network option not yet fully supported!")
 
         # Testing configuration quits after a time
         if parsed_args.test and parsed_args.quit_time is None:

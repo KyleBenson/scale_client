@@ -1,6 +1,6 @@
 import socket
 import time
-from scale_client.network.scale_network_manager import ScaleNetworkManager
+from scale_client.networks.scale_network_manager import ScaleNetworkManager
 
 import logging
 import json

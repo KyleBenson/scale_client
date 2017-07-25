@@ -1,38 +1,12 @@
 import logging
+
+from scale_client.core.sensed_event import SensedEvent
+
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
-import coapthon.defines
-from coapthon.server.coap import CoAP as CoapServer
-from coapthon.resources.resource import Resource as CoapResource
-
-# HACK: the version of CoAPthon that we're using has a bug where it overwrites our
-# logging configuration, so we just reformat it.
-from scale_client.util.defaults import set_logging_config, DEFAULT_COAP_PORT
-set_logging_config()
-
 from event_sink import ThreadedEventSink
-from scale_client.core.sensed_event import SensedEvent
-
-
-class SensedEventCoapResource(CoapResource):
-    """
-    Represents a SensedEvent stored as a CoAP Resource
-    """
-    def __init__(self, event, name="SensedEvent"):
-        """
-        :param event:
-        :type event: scale_client.core.sensed_event.SensedEvent
-        :param name:
-        :return:
-        """
-        super(SensedEventCoapResource, self).__init__(name)
-        self.event = event
-        self.payload = self.event.to_json()
-        self.content_type = coapthon.defines.Content_types["application/json"]
-
-    def render_GET(self, request):
-        return self
+from scale_client.networks.coap_server import get_coap_server
 
 
 class LocalCoapEventSink(ThreadedEventSink):
@@ -41,57 +15,33 @@ class LocalCoapEventSink(ThreadedEventSink):
     (e.g. those running a CoapVirtualSensor) can GET them as CoAP resources.
     """
     def __init__(self, broker,
-                 topic="events/%s",
-                 hostname="0.0.0.0",
-                 port=DEFAULT_COAP_PORT,
-                 multicast=False,
+                 topic="scale/events/%s",
+                 server_name=None,
                  **kwargs):
         """
-        Simple constructor.  When on_start is called, the server will actually be run.
+        Simple constructor that looks up the server instance (make sure you configured it!) it will use.
         :param broker: internal scale_client broker
         :param topic: topic string that will be filled in (using "%s") with the event topic when it's stored
-        :param hostname: hostname/IP address to bind server to
-        :param port: port to run server on
-        :param multicast: optionally enable handling multicast requests
+        :param server_name: the user-defined CoapServer name (optional parameter, unspecified returns default server)
         :param kwargs:
         """
         super(LocalCoapEventSink, self).__init__(broker=broker, **kwargs)
 
-        log.debug("starting CoAP server at IP:port %s:%d" % (hostname, port))
-
         self._topic = topic
-        self._server = None  # Type: coapthon.server.coap.CoAP
-
-        self._hostname = hostname
-        self._port = port
-        self._multicast = multicast
-        if multicast and hostname != coapthon.defines.ALL_COAP_NODES:
-            log.warning("underlying CoAPthon library currently only supports the ALL_COAP_NODES multicast address of %s" % coapthon.defines.ALL_COAP_NODES)
-
-        self._server_running = False
-        self._is_connected = False
-
-    def __run_server(self):
-        try:
-            self._server = CoapServer(self._hostname, self._port, self._multicast)
-        except TypeError:
-            # coapthon 4.0.2 has a different constructor API
-            self._server = CoapServer((self._hostname, self._port), self._multicast)
-        self._server_running = True
-
-        # We first need to create the root resource for all the other events.
-        event = SensedEvent('events', priority=1, data='root of events resources')
-        self.send_event(event)
-
-        # Listen for remote connections GETting data, etc.
-        self._server.listen()
-
-    def on_stop(self):
-        self._server.close()
-        self._server_running = False
+        self._server = None
+        self._server_name = server_name
+        # We'll need to create a root resource before we can add any others,
+        # but we need to do it only after the server has actually started.
+        self._root_created = False
 
     def on_start(self):
-        self.run_in_background(self.__run_server)
+        """
+        Once we've started, the CoapServer instance should be available so this is where we look it up.
+        """
+        if self._server_name is None:
+            self._server = get_coap_server()
+        else:
+            self._server = get_coap_server(self._server_name)
 
     def get_topic(self, event):
         """
@@ -114,10 +64,27 @@ class LocalCoapEventSink(ThreadedEventSink):
         """
 
         topic = self.get_topic(event)
-        assert isinstance(self._server, CoapServer)  # for type annotation
-        new_resource = SensedEventCoapResource(event)
-        res = self._server.add_resource(topic, new_resource)
-        log.debug("%s added resource to path: %s" % ('successfully' if res else 'unsuccessfully', topic))
+        log.debug('%s(name=%s) sending event with topic: %s' % (self.__class__.__name__, self._server_name, topic))
+
+        # We first need to create the root resource for all the other events, but only
+        # after we know the CoapServer started.  Hence we wait for the first time we
+        # call this function as we know it won't happen unless the server is available.
+        if not self._root_created:
+            path = self._topic % ''
+            root_event = SensedEvent(path, priority=1, data='root of SCALE events resources')
+            try:
+                self._server.store_event(root_event, path)
+                self._root_created = True
+            except IOError as e:
+                log.error("Failed to store root resource for event sink: %s" % e)
+                return False
+
+        try:
+            self._server.store_event(event, topic)
+            return True
+        except IOError as e:
+            log.error("Error storing event in CoapServer: %s" % e)
+            return False
 
     def check_available(self, event):
-        return self._server_running
+        return self._server is not None and self._server.is_running()

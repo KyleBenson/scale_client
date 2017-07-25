@@ -13,16 +13,25 @@
 
 EventSinks:
     - CoapEventSink:
-#        class: "local_coap_event_sink.LocalCoapEventSink"
-        class: "remote_coap_event_sink.RemoteCoapEventSink"
+        class: "local_coap_event_sink.LocalCoapEventSink"
+#        class: "remote_coap_event_sink.RemoteCoapEventSink"
 #         This topic used by CoAPthon's server by default
-        topic: "storage/%s"
+        # NOTE: we currently don't support longer hierarchical paths such as 'scale/events/temp'
+        # We'll probably need to add each layer one at a time to do that...
+        topic: "/events/%s"
+#        server_name: "default"
+
+Networks:
+    - CoapServer:
+        class: "coap_server.CoapServer"
+        # Change this name if you want to run more than one CoapServer
+#        server_name: "default"
 
 Sensors:
-#    - DummyThreadedSensor:
-#        class: "dummy_sensors.dummy_threaded_virtual_sensor.DummyThreadedVirtualSensor"
-#        dev_name: "dum0"
-#        interval: 1
+    - DummyThreadedSensor:
+        class: "dummy_sensors.dummy_threaded_virtual_sensor.DummyThreadedVirtualSensor"
+        dev_name: "dum0"
+        interval: 1
     - DummyTempSensor:
         class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
         dev_name: "temp0"
@@ -33,10 +42,10 @@ Sensors:
     # in place, but if it changes you could create a loop!
     - CoapSensor:
         class: "coap_virtual_sensor.CoapVirtualSensor"
-        topics: ["storage/temperature",]
+        topic: "/events/temperature"
         # For testing, we set a shorter timeout since that's used for
         # re-trying an observe if the resource doesn't exist initially.
-        timeout: 10
+        timeout: 4
         # Enables polling at the regular VirtualSensor interval rather than 'observe' feature.
         # NOTE: one topic polled per interval in a round-robin fashion
 #        use_polling: True

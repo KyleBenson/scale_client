@@ -4,7 +4,7 @@ log = logging.getLogger(__name__)
 
 from coapthon.client.helperclient import HelperClient as CoapClient
 from coapthon.defines import Codes as CoapCodes
-from scale_client.network.util import coap_response_success, coap_code_to_name
+from scale_client.networks.util import coap_response_success, coap_code_to_name
 from scale_client.util.defaults import DEFAULT_COAP_PORT
 
 from event_sink import ThreadedEventSink
