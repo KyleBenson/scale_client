@@ -122,3 +122,6 @@ class VirtualSensor(Application):
         # We make an effort to get the child class's _do_sensor_read method in case they override it.
         t = self.timed_call(self._wait_period, self.__class__._do_sensor_read, repeat=True)
         self._sensor_timer = t
+
+    def on_stop(self):
+        super(VirtualSensor, self).on_stop()
