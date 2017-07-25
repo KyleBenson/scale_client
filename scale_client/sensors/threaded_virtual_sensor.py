@@ -52,3 +52,4 @@ class ThreadedVirtualSensor(VirtualSensor, ThreadedApplication):
 
     def on_stop(self):
         self._vs_thread_running = False
+        super(ThreadedVirtualSensor, self).on_stop()
