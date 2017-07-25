@@ -15,17 +15,27 @@ EventSinks:
     - CoapEventSink:
         class: "local_coap_event_sink.LocalCoapEventSink"
 #        class: "remote_coap_event_sink.RemoteCoapEventSink"
-#         This topic used by CoAPthon's server by default
         # NOTE: we currently don't support longer hierarchical paths such as 'scale/events/temp'
         # We'll probably need to add each layer one at a time to do that...
         topic: "/events/%s"
 #        server_name: "default"
+        # Use defaults for the REMOTE event sink testing if you run the server locally
+        # e.g. by running the coapthon coapservery.py in which case use the following topic:
+        # topic: "/storage/%s"
+        # hostname: "127.0.0.1"
+        # port: DEFAULT_COAP_PORT
+        # username: None
+        # password: None
+        # timeout: 60
 
 Networks:
     - CoapServer:
         class: "coap_server.CoapServer"
         # Change this name if you want to run more than one CoapServer
 #        server_name: "default"
+        # hostname: "127.0.0.1"
+        # port: DEFAULT_COAP_PORT
+        # multicast: True
 
 Sensors:
     - DummyThreadedSensor:
@@ -49,3 +59,9 @@ Sensors:
         # Enables polling at the regular VirtualSensor interval rather than 'observe' feature.
         # NOTE: one topic polled per interval in a round-robin fashion
 #        use_polling: True
+        # Use defaults for testing since we're running the server locally:
+        # hostname: "127.0.0.1"
+        # port: DEFAULT_COAP_PORT
+        # username: None
+        # password: None
+        # timeout: 300
