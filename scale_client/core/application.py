@@ -206,14 +206,12 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
         once the timer expires.  You can have the timer reset so the
         function will runrepeatedly by using the repeat argument.
         NOTE: the function must be an instancemethod of the calling class!
-        NOTE: there is currently no way to cancel the call so if you need
-        that feature, add it yourself!
 
         :param time: time (in seconds or as a datetime object) until
         the timer expires and calls the function
         :param function: function to call (WARNING: use self.__class__.fun not self.fun)
         :param repeat: whether or not the timer should reset and periodically repeat the function
-        :returns: the Timer object used to manage this timed_call
+        :returns: the Timer object used to manage this timed_call (cancel with Timer.stop())
         """
 
         # First build a handler for the event that will be fired by the timer
