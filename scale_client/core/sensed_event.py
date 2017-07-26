@@ -110,6 +110,7 @@ class SensedEvent(Event):
         """
         Creates a SensedEvent from a raw JSON-encoded string
         :param json_data:
+        :raises ValueError: if unable to properly parse either JSON or the map data
         :return:
         """
 
@@ -126,7 +127,8 @@ class SensedEvent(Event):
         Creates a SensedEvent from a simple map of that events' attributes as per the SCALE event schema.
         :param map_data:
         :type map_data: dict
-        :return:
+        :raises ValueError: if unable to properly parse the map data
+        :rtype: SensedEvent
         """
         sensor = map_data.pop('device', 'unknown_device')
         priority = map_data.pop('prio_value', DEFAULT_PRIORITY)

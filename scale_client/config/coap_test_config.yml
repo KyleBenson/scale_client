@@ -31,6 +31,10 @@ EventSinks:
 Networks:
     - CoapServer:
         class: "coap_server.CoapServer"
+        # By specifying this option, the server will create a root resource at this URI path
+        # such that other external nodes can POST/PUT resources under this path e.g. /events/temperature
+        # They will be published internally so that other apps may make use of them.
+        events_root: "/events/"
         # Change this name if you want to run more than one CoapServer
 #        server_name: "default"
         # hostname: "127.0.0.1"

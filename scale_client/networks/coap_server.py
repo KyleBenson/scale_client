@@ -40,6 +40,7 @@ class CoapServer(ThreadedApplication):
     defining custom CoapResources that can handle application-specific logic.
     """
     def __init__(self, broker,
+                 events_root=None,
                  server_name=_DEFAULT_COAP_SERVER_NAME,
                  hostname="0.0.0.0",
                  port=DEFAULT_COAP_PORT,
@@ -58,6 +59,7 @@ class CoapServer(ThreadedApplication):
         super(CoapServer, self).__init__(broker=broker, **kwargs)
 
         self._server = None  # Type: coapthon.server.coap.CoAP
+        self._events_root = events_root
 
         self._hostname = hostname
         self._port = port
@@ -84,6 +86,10 @@ class CoapServer(ThreadedApplication):
             self._server = CoapthonServer((self._hostname, self._port), self._multicast)
         self._server_running = True
 
+        if self._events_root is not None:
+            root_event = SensedEvent(self._events_root, priority=1, data='root of SCALE events resources')
+            self.store_event(root_event, self._events_root)
+
         # Listen for remote connections GETting data, etc.
         self._server.listen()
 
@@ -95,62 +101,227 @@ class CoapServer(ThreadedApplication):
     def on_start(self):
         self.run_in_background(self.__run_server)
 
-    def store_event(self, event, path=None):
+    def store_event(self, event, path=None, disable_post=False, disable_put=False, disable_delete=False):
         """
         Stores the event as a resource at the given path in the CoAP server.
+        A SensedEventCoapResource stored this way will be exposed externally at the given CoAP
+        path so that GET, PUT, etc. can be called on it unless you disable them through
+        the parameters.
+
         :param event:
         :type event: scale_client.core.sensed_event.SensedEvent
         :param path: the path at which the event should be stored (default=event.get_type())
+        :param disable_post:
+        :param disable_put:
+        :param disable_delete:
         :return:
         """
 
         if path is None:
             path = event.get_type()
+        # XXX: Ensure path is formatted properly for CoAP's internals
+        if not path.startswith('/'):
+            path = '/' + path
+        if path.endswith('/'):
+            path = path[:-1]
 
         assert isinstance(self._server, CoapthonServer)  # for type annotation
 
         # Update the resource if it exists and notify possible observers (unfortunately,
         # CoAPthon doesn't have a clean way to do exactly this since most of the lower APIs
         # assume request/response/transaction objects).
+        # Furthermore, we don't want the render_PUT API to fire as we have it currently
+        # since that would publish the event internally again.
         try:
-            # XXX: Ensure path is formatted properly for CoAP's internals
-            if not path.startswith('/'):
-                path = '/' + path
-            if path.endswith('/'):
-                path = path[:-1]
-
             res = self._server.root[path]
             assert isinstance(res, SensedEventCoapResource)
-            # TODO: maybe we should go through the proper API channels (e.g. render_PUT) instead so that user-defined
-            # Resources will run all the proper code paths?
             res.event = event
             self._server.notify(res)
             log.debug("updated resource at path: %s" % path)
+
         # Create the resource since it didn't exist.
+        # We add callbacks so modifications to the resource are published internally.
         except KeyError:
-            new_resource = SensedEventCoapResource(event)
-            res = self._server.add_resource(path, new_resource)
-            log.debug("%s added resource to path: %s" % ('successfully' if res else 'unsuccessfully', path))
+            post_cb = None if disable_post else lambda req, res: self.publish(res.event)
+            put_cb = None if disable_put else lambda req, res: self.publish(res.event)
+            new_resource = SensedEventCoapResource(event, name=event.get_type(),
+                                                   get_callback=lambda x, y: y,  # always enabled
+                                                   post_callback=post_cb, put_callback=put_cb,
+                                                   delete_callback=None if disable_delete else lambda x, y: True)
+            self.store_resource(path, resource=new_resource)
+
+    def store_resource(self, path, resource):
+        """
+        Stores a CoapResource in the server at the given path.
+        :param path:
+        :param resource:
+        :return:
+        """
+
+        res = self._server.add_resource(path, resource)
+        log.debug("%s added resource to path: %s" % ('successfully' if res else 'unsuccessfully', path))
 
     def is_running(self):
         return self._server_running
 
-class SensedEventCoapResource(CoapResource):
+    def register_api(self, path, name, get_callback=None, put_callback=None,
+                     post_callback=None, delete_callback=None, error_callback=None,
+                     observable=False, allow_children=False, visible=True):
+        """
+        Registers the specified callbacks at the given path to create a custom API.  This will create a Resource
+        at that path with the given properties so that a CoAP client can GET/PUT/POST/DELETE it and have the
+        corresponding callback fired in response.  If no callback is specified for that method, it returns a
+        METHOD_NOT_ALLOWED response.  If an exception is encountered, error_callback is called if specified
+        where the default is to simply log the error.
+
+        CALLBACK DEFINITIONS:
+        The callbacks should accept the CoAP Request object and the relevant resource as parameters.  The
+        error_callback should additionally accept the exception encountered as its third parameter.  If you
+        can recover from the error, simply return the resource from the callback after doing so.  Otherwise,
+        raise an exception noting that raising NotImplementedError will return a METHOD_NOT_ALLOWED response.
+        Thus the callbacks have the following form:
+
+        callback(coapthon.messages.request.Request, ScaleCoapResource, [Exception]) -> ScaleCoapResource
+
+        :param path: full pathname e.g. /sensors/temp0/interval
+        :param name: name of the API endpoint (useful when a client does a DISCOVER request)
+        :param get_callback:
+        :param put_callback:
+        :param post_callback:
+        :param delete_callback:
+        :param error_callback:
+        :param observable:
+        :param allow_children:
+        :param visible:
+        :return: the newly added resource
+        """
+        # TODO: maybe we should use the advanced interface, optionally the separate one, in order to modify response?
+
+        if error_callback is None:
+            error_callback = lambda req, res, err: log.error("coap api error with resource %s while answering request %s:\n %s" % (res, req, err))
+        res = ScaleCoapResource(name, get_callback=get_callback, put_callback=put_callback,
+                                post_callback=post_callback, delete_callback=delete_callback,
+                                error_callback=error_callback,
+                                coap_server=self._server, visible=visible,
+                                observable=observable, allow_children=allow_children)
+        self.store_resource(path, res)
+        return res
+
+
+# Just for type annotations
+from coapthon.messages.request import Request
+
+
+class ScaleCoapResource(CoapResource):
+    """
+    Exposes an API through a CoAP Resource with configurable callbacks for the GET/POST/etc. methods.
+    """
+
+    def __init__(self, name, get_callback=None, put_callback=None, post_callback=None,
+                 delete_callback=None, error_callback=None, *args, **kwargs):
+        super(ScaleCoapResource, self).__init__(name, *args, **kwargs)
+        self._get_cb = get_callback
+        self._put_cb = put_callback
+        self._post_cb = post_callback
+        self._del_cb = delete_callback
+        self._err_cb = error_callback
+
+        # TODO: accept configurable content types?
+        self.content_type = coapthon.defines.Content_types["application/json"]
+
+
+    def render_GET(self, request):
+        """
+        :param request:
+        :type request: Request
+        :return:
+        """
+        if self._get_cb is None:
+            raise NotImplementedError
+        try:
+            self._get_cb(request, self)
+        except Exception as e:
+            self._err_cb(request, self, e)
+        return self
+
+    # TODO: how to do access control for these???
+    def render_PUT(self, request):
+        """
+        :param request:
+        :type request: Request
+        :return:
+        """
+        self.edit_resource(request)
+        if self._put_cb is None:
+            raise NotImplementedError
+        try:
+            self.edit_resource(request)
+            self._put_cb(request, self)
+        except Exception as e:
+            self._err_cb(request, self, e)
+        return self
+
+    def render_POST(self, request):
+        """
+        :param request:
+        :type request: Request
+        :return:
+        """
+        if self._post_cb is None:
+            raise NotImplementedError
+        try:
+            import copy
+            res = copy.deepcopy(self)
+            res = self.init_resource(request, res)
+            self._post_cb(request, res)
+            return res
+        except Exception as e:
+            self._err_cb(request, self, e)
+
+    def render_DELETE(self, request):
+        """
+        :param request:
+        :type request: Request
+        :return: a boolean
+        """
+        if self._del_cb is None:
+            raise NotImplementedError
+        try:
+            self._del_cb(request, self)
+        except Exception as e:
+            self._err_cb(request, self, e)
+        return True
+
+
+class SensedEventCoapResource(ScaleCoapResource):
     """
     Represents a SensedEvent stored as a CoAP Resource
     """
 
-    def __init__(self, event, name="SensedEvent"):
+    def __init__(self, event, name, *args, **kwargs):
         """
         :param event:
         :type event: scale_client.core.sensed_event.SensedEvent
-        :param name:
-        :return:
+        :param name: name of the Resource (default=event.__class__.__name__)
         """
-        super(SensedEventCoapResource, self).__init__(name, observable=True, allow_children=True, visible=True)
-        self._event = self.payload = None
+        if name is None:
+            name = event.__class__.__name__
+
+        super(SensedEventCoapResource, self).__init__(name, *args, **kwargs)
+        self._event = self.payload = None  # just for warnings
         self.event = event
-        self.content_type = coapthon.defines.Content_types["application/json"]
+
+    @staticmethod
+    def extract_event(request):
+        """
+        Extracts a SensedEvent from the payload of the request.
+        :param request:
+        :type request: Request
+        :return: the SensedEvent
+        :rtype: SensedEvent
+        """
+        event = SensedEvent.from_json(request.payload)
+        return event
 
     @property
     def event(self):
@@ -161,21 +332,24 @@ class SensedEventCoapResource(CoapResource):
         """
         Updates this resource to reflect this new event.
         :param ev:
-        :return:
+        :type ev: SensedEvent
         """
         self._event = ev
         self.payload = self.event.to_json()
 
-    def render_GET(self, request):
-        return self
+    def edit_resource(self, request):
+        super(SensedEventCoapResource, self).edit_resource(request)
+        # TODO: error handling / testing?
+        # try:
+        self.event = self.extract_event(request)
+        #     return event
+        # except ValueError:
+        #     log.error("Failed to decode SensedEvent from payload: %s" % request.payload)
 
-    def render_PUT(self, request):
-        return self
-
-    def render_POST(self, request):
-        return self
-
-    def render_DELETE(self, request):
-        return self
-
-    # TODO: render_POST/PUT but how to do access control?
+    def init_resource(self, request, res):
+        super(SensedEventCoapResource, self).init_resource(request, res)
+        # ensure the payload is properly set to the SensedEvent
+        res.edit_resource(request)
+        # not sure why this path isn't set elsewhere in coapthon...
+        res.path = request.uri_path
+        return res

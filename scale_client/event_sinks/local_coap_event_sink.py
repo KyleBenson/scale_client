@@ -30,9 +30,6 @@ class LocalCoapEventSink(ThreadedEventSink):
         self._topic = topic
         self._server = None
         self._server_name = server_name
-        # We'll need to create a root resource before we can add any others,
-        # but we need to do it only after the server has actually started.
-        self._root_created = False
 
     def on_start(self):
         """
@@ -65,19 +62,6 @@ class LocalCoapEventSink(ThreadedEventSink):
 
         topic = self.get_topic(event)
         log.debug('%s(name=%s) sending event with topic: %s' % (self.__class__.__name__, self._server_name, topic))
-
-        # We first need to create the root resource for all the other events, but only
-        # after we know the CoapServer started.  Hence we wait for the first time we
-        # call this function as we know it won't happen unless the server is available.
-        if not self._root_created:
-            path = self._topic % ''
-            root_event = SensedEvent(path, priority=1, data='root of SCALE events resources')
-            try:
-                self._server.store_event(root_event, path)
-                self._root_created = True
-            except IOError as e:
-                log.error("Failed to store root resource for event sink: %s" % e)
-                return False
 
         try:
             self._server.store_event(event, topic)
