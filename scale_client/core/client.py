@@ -319,7 +319,7 @@ class ScaleClient(object):
             parsed_args.config_filename = cls._build_config_file_path(parsed_args.config_filename)
         # Set default config file if no files or manual configurations are specified
         elif parsed_args.config_filename is None and not any((parsed_args.sensors, parsed_args.applications,
-                                                             parsed_args.event_sinks, parsed_args.network)):
+                                                             parsed_args.event_sinks, parsed_args.networks)):
             parsed_args.config_filename = default_config_filename
 
         # Testing configuration quits after a time
