@@ -15,7 +15,8 @@ class EventReporter(Application):
     available Publishers the ideal one to report the data via.
     """
     def __init__(self, broker, **kwargs):
-        super(EventReporter, self).__init__(broker, **kwargs)
+        # We subscribe to all SensedEvents in order to determine how to route them.
+        super(EventReporter, self).__init__(broker, subscriptions=['*'], **kwargs)
         self.__sinks = []
         self._lman = None
         self._neta = None
@@ -54,6 +55,12 @@ class EventReporter(Application):
             return
 
         elif et == "publisher_state":
+            return
+
+        # XXX: Don't forward events that were from some remote device.
+        # TODO: figure out a better policy to selectively forward some of these.
+        elif event.data.get('remote_origin', None) is not None:
+            log.debug("not sinking remote SensedEvent: %s" % event)
             return
 
         # Ignorance <--- what does this mean???

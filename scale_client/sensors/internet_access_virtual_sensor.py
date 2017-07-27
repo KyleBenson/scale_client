@@ -1,5 +1,5 @@
 from threaded_virtual_sensor import ThreadedVirtualSensor
-from ..network.util import ping_internet
+from ..networks.util import ping_internet
 
 from time import time as get_time
 import logging

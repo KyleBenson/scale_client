@@ -36,6 +36,10 @@ class AbstractBroker(object):
         """
         raise NotImplementedError()
 
+    # TODO: unsubscribe
+    # NOTE: we're going to need to pass a reference to the caller of these functions so we know WHO is (un)subscribing right?
+    # OR we could just pass the callback and use that as the unique subscriber key...
+
     def run(self):
         """
         This should always be called to start the Application.  You should expect, but not rely on, implementations of
@@ -58,7 +62,4 @@ class Broker(Manager, AbstractBroker):
         self.fireEvent(event, topic)
 
     def subscribe(self, topic, callback):
-        raise NotImplementedError("Currently don't have support for subscribing with the circuits library...")
-    # TODO: subscribe is going to be near-impossible with circuits alone since they've adopted the convention of
-    # subscribing by class type.  This doesn't allow hierarchies like "subscribe to all network-related events",
-    # let alone the advanced content-based subscriptions that we're going to want eventually... maybe channels?
+        raise NotImplementedError("Don't call CircuitsBroker.subscribe; instead directly call CircuitsApplication.subscribe!")

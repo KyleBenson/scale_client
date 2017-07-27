@@ -19,7 +19,6 @@ class Worker(CircuitsWorker):
             return
         self.pool.terminate()
 
-
 class ThreadedApplication(Application):
     """
     Classic Applications are meant to run quick operations periodically
@@ -51,4 +50,15 @@ class ThreadedApplication(Application):
         Add args and kwargs to pass them to the function.
         """
 
-        self.fire(task(f, *args, **kwargs), self._get_channel_name())
+        self._worker.fire(task(f, *args, **kwargs), self._get_channel_name())
+
+    # def on_stop(self):
+    #     """
+    #     Clean up the threads/background processes we used.  Make sure you call this function in a derived class
+    #     using super!
+    #     :return:
+    #     """
+    #     # NOTE: this is already handled in the Worker wrapper class above!
+    #     self._worker.pool.terminate()
+    #     log.debug("threaded app STOPPED WORKER!")
+    #     super(ThreadedApplication, self).on_stop()

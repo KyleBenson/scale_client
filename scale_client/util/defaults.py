@@ -52,3 +52,8 @@ def set_logging_config(level=None,
         }
     }
     logging.config.dictConfig(logging_config)
+
+
+### Networking-related configuration defaults
+
+DEFAULT_COAP_PORT = 5683
