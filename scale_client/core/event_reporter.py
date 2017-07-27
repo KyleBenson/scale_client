@@ -60,6 +60,7 @@ class EventReporter(Application):
         # XXX: Don't forward events that were from some remote device.
         # TODO: figure out a better policy to selectively forward some of these.
         elif event.data.get('remote_origin', None) is not None:
+            log.debug("not sinking remote SensedEvent: %s" % event)
             return
 
         # Ignorance <--- what does this mean???
