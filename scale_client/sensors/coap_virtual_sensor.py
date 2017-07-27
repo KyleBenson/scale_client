@@ -1,14 +1,10 @@
-import coapthon.defines
-
 from scale_client.sensors.threaded_virtual_sensor import ThreadedVirtualSensor
 from scale_client.core.sensed_event import SensedEvent
 
 from scale_client.networks.util import coap_response_success, coap_code_to_name
 from scale_client.util.defaults import DEFAULT_COAP_PORT
-
-from coapthon.client.helperclient import HelperClient as CoapClient
-import coapthon.messages.response
-from Queue import Empty
+# this is basically replaceable by the coapthon HelperClient, but this version has a bugfix (see below)
+from scale_client.networks.coap_client import CoapClient
 
 import logging
 log = logging.getLogger(__name__)
@@ -51,6 +47,8 @@ class CoapVirtualSensor(ThreadedVirtualSensor):
 
         self._hostname = hostname
         self._port = port
+        if username is not None or password is not None:
+            log.warning("SECURITY authentication using username & password not yet supported!")
         self._username = username
         self._password = password
         self.use_polling = use_polling
@@ -109,27 +107,11 @@ class CoapVirtualSensor(ThreadedVirtualSensor):
         if self._client_running:
             log.debug("observing CoAP resource at topic %s" % self._topic)
 
-            # BUGFIX: see coapthon #88 : basically, observe forces us to send a callback
-            # to helperclient.send_request, which starts a thread that will hang around
-            # forever waiting for responses.  Instead, we enforce that we'll only start
-            # a single thread for observing by doing that the first time and hacking our
-            # way around the API to send a blocking request with timeout=0 for all later
-            # occurrences, which will allow the old thread to pick up the response.
-            # NOTE: you cannot specify multiple different callbacks because of this!
+            # WARNING: you cannot mix the blocking and callback-based method calls!  We could probably fix the
+            # blocking one too, but we've had to extend the coapthon HelperClient to fix some threading problems
+            # that don't allow it to handle more than one callback-based call in a client's lifetime.
 
-            if not self._observe_started:
-                self._client.observe(self._topic, __bound_observe_callback, self._timeout)
-                self._observe_started = True
-            else:
-                request = self._client.mk_request(coapthon.defines.Codes.GET, self._topic)
-                request.observe = 0
-                try:
-                    response = self._client.send_request(request, timeout=0)
-                    # We shouldn't ever get the response back, but in case we do let's give it back
-                    # to the thread that we want to process it...
-                    self._client.queue.put(response)
-                except Empty:
-                    pass
+            self._client.observe(self._topic, __bound_observe_callback, self._timeout)
         else:
             log.debug("Skipping observe_topics as client isn't running... maybe we're quitting?")
 

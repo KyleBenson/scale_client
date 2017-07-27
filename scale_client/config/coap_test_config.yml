@@ -11,6 +11,17 @@
 # This will cause the first client to directly upload its
 # SensedEvents
 
+# Second test scenario:
+# Client 1: CoapServer only
+# Client 2: dummy sensors and RemoteCoapEventSink pointed at Client 1
+# Client 3: CoapVirtualSensor pointed at Client 1
+# With a proper configuration (you may need to do --log-level debug,
+# you should see the events originating from Client 2 show up on Client 3.
+
+# WARNING: if you enable the local coap sink, server, dummy sensors, and coap VS
+# all at the same time, there seems to still be a bug where some threads will hang
+# when the program exits...
+
 EventSinks:
     - CoapEventSink:
         class: "local_coap_event_sink.LocalCoapEventSink"

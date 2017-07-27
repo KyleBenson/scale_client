@@ -2,9 +2,10 @@ import logging
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
-from coapthon.client.helperclient import HelperClient as CoapClient
 from coapthon.defines import Codes as CoapCodes
 from scale_client.networks.util import coap_response_success, coap_code_to_name
+# this is basically replaceable by the coapthon HelperClient, but this version has a bugfix (see below)
+from scale_client.networks.coap_client import CoapClient
 from scale_client.util.defaults import DEFAULT_COAP_PORT
 
 from event_sink import ThreadedEventSink
@@ -17,15 +18,24 @@ class RemoteCoapEventSink(ThreadedEventSink):
     can GET them (possibly with 'observe' enabled) as CoAP resources.
     """
     def __init__(self, broker,
-                 # TODO: verify all these
-                 # TODO: document what they do, especially topic
-                 topic="events/%s",
+                 topic="/events/%s",
                  hostname="127.0.0.1",
                  port=DEFAULT_COAP_PORT,
                  username=None,
                  password=None,
                  timeout=60,
                  **kwargs):
+        """
+        :param broker:
+        :param topic: used as the URI path of the remote CoAP server where the events will be sunk.  Note that you
+          should include a '%s' in it to be filled with the event topic!
+        :param hostname:
+        :param port:
+        :param username:
+        :param password:
+        :param timeout:
+        :param kwargs:
+        """
         super(RemoteCoapEventSink, self).__init__(broker=broker, **kwargs)
 
         log.debug("connecting to CoAP server at IP:port %s:%d" % (hostname, port))
@@ -35,6 +45,8 @@ class RemoteCoapEventSink(ThreadedEventSink):
 
         self._hostname = hostname
         self._port = port
+        if username is not None or password is not None:
+            log.warning("SECURITY authentication using username & password not yet supported!")
         self._username = username
         self._password = password
         self._timeout = timeout
@@ -83,19 +95,30 @@ class RemoteCoapEventSink(ThreadedEventSink):
             return
         elif coap_response_success(response):
             log.debug("successfully added resource to remote path!")
-            return True
         # Seems as though we haven't created this resource yet and the server doesn't want to
         # do it for us given just a PUT request.
         elif response.code == CoapCodes.NOT_FOUND.number:
             topic = self.get_topic(event)
             log.debug("Server rejected PUT request for uncreated object: trying POST to topic %s" % topic)
-            response = self._client.post(topic, event.to_json(), timeout=self._timeout)
-            if coap_response_success(response):
-                log.debug("successfully created resource at %s with POST method" % topic)
-                return True
 
-        log.error("failed to add resource to remote path! Code: %s" % coap_code_to_name(response.code))
-        return False
+            def __bound_post_callback(post_response):
+                if response is None:
+                    # must've quit while handling this....
+                    return
+                elif coap_response_success(post_response):
+                    log.debug("successfully created resource at %s with POST method" % topic)
+                    return True
+                else:
+                    log.error("failed to add resource %s to remote path! Code: %s" % (topic, coap_code_to_name(post_response.code)))
+                    return False
+
+            # WARNING: you cannot mix the blocking and callback-based method calls!  We could probably fix the
+            # blocking one too, but we've had to extend the coapthon HelperClient to fix some threading problems
+            # that don't allow it to handle more than one callback-based call in a client's lifetime.
+
+            self._client.post(topic, event.to_json(), callback=__bound_post_callback, timeout=self._timeout)
+        else:
+            log.error("server rejected PUT request: %s" % response)
 
     def send_event(self, event):
         """
@@ -108,6 +131,9 @@ class RemoteCoapEventSink(ThreadedEventSink):
         topic = self.get_topic(event)
         log.debug("Forwarding event as CoAP remote resource: %s:%d/%s" % (self._hostname, self._port, topic))
 
+        # WARNING: you cannot mix the blocking and callback-based method calls!  We could probably fix the
+        # blocking one too, but we've had to extend the coapthon HelperClient to fix some threading problems
+        # that don't allow it to handle more than one callback-based call in a client's lifetime.
         def __bound_put_callback(response):
             return self.__put_event_callback(event, response)
         self._client.put(topic, event.to_json(), callback=__bound_put_callback, timeout=self._timeout)
