@@ -34,6 +34,7 @@ class AbstractApplication(object):
         """
         super(AbstractApplication, self).__init__()
 
+        self._broker = None  # for auto completion
         self._register_broker(broker)
 
         # store all timer objects used for self.timed_call() so we can cancel them on_stop()
@@ -191,6 +192,18 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
         connections, constructing classes, or subscribing to event Topics.
         """
         self.on_start()
+
+    @handler("signal")
+    def _on_signal(self, signo, frame):
+        """
+        This callback is fired when an interrupt signal is sent through the system (e.g. SIGINT).
+        Since it doesn't seem to always issue the "stopped" event correctly, this is basically
+        a hack to make sure that it stops everything.
+        :param signo:
+        :param frame:
+        :return:
+        """
+        self._broker.stop()
 
     @handler("stopped")
     def _on_stop(self, component):
