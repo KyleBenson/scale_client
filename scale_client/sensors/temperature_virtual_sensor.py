@@ -8,8 +8,8 @@ class TemperatureVirtualSensor(VirtualSensor):
     """
     Temperature sensor that only reports data when it's above some threshold.
     """
-    def __init__(self, broker, device=None, interval=1, threshold=24.0):
-        super(TemperatureVirtualSensor, self).__init__(broker, device, interval=interval)
+    def __init__(self, broker, device=None, interval=1, threshold=24.0, **kwargs):
+        super(TemperatureVirtualSensor, self).__init__(broker, device, interval=interval, **kwargs)
         self._threshold = threshold
 
     DEFAULT_PRIORITY = 5

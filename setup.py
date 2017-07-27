@@ -9,7 +9,7 @@ VERSION = "0.2"
 DESC = "Safe Community Awareness and Alerting Network (SCALE) client"
 AUTHOR = "Kyle Benson"
 AUTHOR_EMAIL = "kebenson@uci.edu"
-URL = "https://github.com/KyleBenson/SmartAmericaSensors"
+URL = "https://github.com/KyleBenson/scale_client"
 
 # Specific information about package contents
 # PACKAGES = ["scale_client", "scale_client.core",

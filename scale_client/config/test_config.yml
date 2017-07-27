@@ -6,6 +6,10 @@ EventSinks:
         class: "log_event_sink.LogEventSink"
 
 Applications:
+    - Test:
+        # This test app tries to increment the temperature reading by 1 and adds a '1' to the end of the heartbeat.
+        class: "test_application.TestApplication"
+        subscriptions: ["temperature", "heartbeat"]
     - Thread:
         # Good to verify that threaded applications will run properly.
         class: "dummy_threaded_application.DummyThreadedApplication"
@@ -22,7 +26,19 @@ Sensors:
     - DummyTempSensor:
         class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
         dev_name: "cel0"
+    - DummySeismicSensor:
+        # This is useful for testing that VirtualSensor.set_wait_period functions properly.
+        class: "dummy_sensors.dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
+        dev_name: "seismic0"
+        interval: 2
     # Disable this one if you don't have internet access and it causes issues
     - InternetAccessSensor:
         class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
         dev_name: "net0"
+
+# To test your PYTHONPATH is set up properly for importing external modules, execute:
+# cp scale_client/sensors/dummy_sensors/dummy_temperature_virtual_sensor.py ~/scratch/scale_client/external_scale_client/
+# and then put ~scratch/scale_client on your PYTHONPATH and uncomment the dummy sensor below:
+# NOTE: this simple copy test only works because this class does "from scale_client.sensors..."
+#     - ExternalDummySensor:
+#         class: "external_scale_client.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"

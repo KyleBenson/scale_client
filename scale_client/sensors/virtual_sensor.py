@@ -22,11 +22,12 @@ class VirtualSensor(Application):
     DEFAULT_PRIORITY = 5
 
     def __init__(self, broker, device=None, interval=1, **kwargs):
-        super(VirtualSensor, self).__init__(broker)
+        super(VirtualSensor, self).__init__(broker, **kwargs)
 
         # TODO: anonymous device descriptor?
         self.device = device
         self._wait_period = interval
+        self._sensor_timer = None
 
     def get_type(self):
         """
@@ -76,7 +77,7 @@ class VirtualSensor(Application):
         self._wait_period = period
         try:
             # WARNING: circuits-specific!
-            self._timer.reset(self._wait_period)
+            self._sensor_timer.reset(self._wait_period)
         except AttributeError:
             pass
 
@@ -94,7 +95,12 @@ class VirtualSensor(Application):
         This function actually reads sensor data and then publishes it if it passes the policy_check()
         """
 
-        event = self.read()
+        try:
+            event = self.read()
+        except IOError as e:
+            log.debug("%s failed read sensor data! reason: %s" % (self.get_type(), e))
+            return
+
         log.debug("%s read sensor data. raw value: %s" % (self.get_type(), event.get_raw_data()))
         if event is None:
             log.error("SensedEvent is None! Default policy is to not report.")
@@ -114,4 +120,8 @@ class VirtualSensor(Application):
             return
         self._do_sensor_read()
         # We make an effort to get the child class's _do_sensor_read method in case they override it.
-        self.timed_call(self._wait_period, self.__class__._do_sensor_read, repeat=True)
+        t = self.timed_call(self._wait_period, self.__class__._do_sensor_read, repeat=True)
+        self._sensor_timer = t
+
+    def on_stop(self):
+        super(VirtualSensor, self).on_stop()

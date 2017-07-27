@@ -19,7 +19,7 @@ class MQTTEventSink(EventSink):
                 username=None,
                 password=None,
                 keepalive=60):
-        EventSink.__init__(self, broker)
+        super(MQTTEventSink, self).__init__(broker=broker)
         self._client = Paho()
         self._client.on_connect = \
                 lambda mosq, obj, rc: self._on_connect(mosq, obj, rc)
@@ -71,13 +71,18 @@ class MQTTEventSink(EventSink):
         topic_event_type = event.get_type()
         topic = self._topic % topic_event_type
 
+        # HACK: for mesh networking feature,
         # Check to see if event is from neighbors 
         # and need to be published to Mqtt server
-        if "published" in event["d"]:
-            if event["d"]["published"] == 1:
-                return True
-            else:
-                del event["d"]["published"]
+        # TODO: move this logic to event_reporter.  Maybe we run a different mesh_event_reporter?
+        try:
+            if "published" in event.data:
+                if event.data["published"] == 1:
+                    return True
+                else:
+                    del event.data["published"]
+        except KeyError as e:
+            log.error("event encoding not as expected for original scale client mesh networking!\n%s" % e.message)
 
         # Publish message
         res, mid = self._client.publish(topic, encoded_event)

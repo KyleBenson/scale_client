@@ -10,8 +10,8 @@ log = logging.getLogger(__name__)
 
 
 class CSNVirtualSensor(ThreadedVirtualSensor):
-    def __init__(self, broker, device=None):
-        super(CSNVirtualSensor, self).__init__(broker, device)
+    def __init__(self, broker, device=None, **kwargs):
+        super(CSNVirtualSensor, self).__init__(broker, device, **kwargs)
         self._reading_regexp = re.compile(r'.*readings: ([\-\+]?[0-9]*(\.[0-9]+)?)')
         self._magic_ln_regexp = re.compile(self.SCALE_VS_MAGIC_LN)
 

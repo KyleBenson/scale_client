@@ -7,8 +7,8 @@ log = logging.getLogger(__name__)
 
 
 class PIRNoMotionVirtualSensor(VirtualSensor):
-    def __init__(self, broker, device=None, interval=1, inact_threshold=600):
-        super(PIRNoMotionVirtualSensor, self).__init__(broker=broker, device=device, interval=interval)
+    def __init__(self, broker, device=None, interval=1, inact_threshold=600, **kwargs):
+        super(PIRNoMotionVirtualSensor, self).__init__(broker=broker, device=device, interval=interval, **kwargs)
         self._inact_timer = get_time()
         self._inact_threshold = inact_threshold
 
@@ -18,15 +18,15 @@ class PIRNoMotionVirtualSensor(VirtualSensor):
         return "no_motion"
 
     def read_raw(self):
-    	return PIRVirtualSensor.IDLE
+        return PIRVirtualSensor.IDLE
 
     def read(self):
-    	event = super(PIRNoMotionVirtualSensor, self).read()
-    	event.data["condition"] = self.__get_condition()
+        event = super(PIRNoMotionVirtualSensor, self).read()
+        event.data["condition"] = self.__get_condition()
         return event
 
     def __get_condition(self):
-    	return{"inactive_time": {
+        return{"inactive_time": {
                     "operator": ">",
                     "value": self._inact_threshold
                 }
@@ -45,8 +45,8 @@ class PIRNoMotionVirtualSensor(VirtualSensor):
             self._inact_timer = None
 
     def policy_check(self, event):
-    	if self._inact_timer is not None:
-    		if self._inact_timer + self._inact_threshold < get_time():
-    			self._inact_timer = get_time()
-    			return True
+        if self._inact_timer is not None:
+            if self._inact_timer + self._inact_threshold < get_time():
+                self._inact_timer = get_time()
+                return True
         return False

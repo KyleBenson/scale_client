@@ -7,8 +7,8 @@ import logging
 log = logging.getLogger(__name__)
 
 class GPSVirtualSensor(VirtualSensor):
-	def __init__(self, broker, device=None, interval=1, exp=10):
-		super(GPSVirtualSensor, self).__init__(broker, device=device, interval=interval)
+	def __init__(self, broker, device=None, interval=1, exp=10, **kwargs):
+		super(GPSVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
 		self._exp = exp
 		self._gps_poller = None
 

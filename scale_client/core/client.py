@@ -46,6 +46,8 @@ class ScaleClient(object):
     def run(self):
         """Currently just loop forever to allow the other threads to do their work."""
 
+        ####    SCHEDULE QUIT TIME FIRST
+
         # HACK: create a dummy app that just calls Broker.stop() at the requested quit_time.
         # We need to do it in an app like this to get the self variables bound in correctly.
         # This is circuits-specific!
@@ -58,6 +60,9 @@ class ScaleClient(object):
             quit_app = QuitApp(self.__broker)
             quit_app.timed_call(self._quit_time, QuitApp._quitter)
 
+        ####    RUN THE BROKER AND SCALE CLIENT
+
+        # Run the broker until it, and thus the whole scale client, have a stop event fully propagated
         self.__broker.run()
 
     def setup_components(self, configs, package_name, human_readable, helper_fun=None, *args):
@@ -67,8 +72,9 @@ class ScaleClient(object):
         helper_fun with the class and requested configuration to finish its setup.  If
         helper_fun isn't specified, the default simply calls the class's constructor
         with the given arguments parsed from the configuration.
-        :param configs:
-        :param package_name:
+        :param configs: should at least include 'class' for importing the class using python's import
+        :param package_name: root package_name for the class paths specified
+         (these will be classes in the scale_client package e.g. sensors, event_sinks)
         :param human_readable: plain text short name of what component type this is e.g. network, sensor, etc.
         :param helper_fun: responsible for creating the component in question and doing any bookkeeping
         :param args: these args will be passed to helper_fun
@@ -87,11 +93,22 @@ class ScaleClient(object):
                 log.warn("Skipping %s config with no class definition: %s" % (human_readable, cfg))
                 continue
 
+            # try importing the specified class extended by package_name first, then just 'class' if error
+            cls_name = '.'.join([package_name, cfg['class']])
+            other_cls_name = cfg['class']
             try:
-                cls_name = cfg['class'] if package_name in cfg['class']\
-                    else '.'.join([package_name, cfg['class']])
                 cls = _get_class_by_name(cls_name)
 
+            except ImportError as e:
+                try:
+                    cls = _get_class_by_name(other_cls_name)
+                except ImportError as e2:
+                    log.error("ImportErrors while creating %s class: %s\n"
+                              "Did you remember to put the repository in your PYTHONPATH???"
+                              "skipping import..." % (human_readable, cfg))
+                    log.debug("Errors were: %s\n%s" % (e, e2))
+                    continue
+            try: # building the class
                 # copy config s so we can tweak it as necessary to expose only correct kwargs
                 new_config = cfg.copy()
                 new_config.pop('class')
@@ -100,9 +117,6 @@ class ScaleClient(object):
                 results.append(res)
                 log.info("%s created from config: %s" % (human_readable, cfg))
 
-            except ImportError as e:
-                log.error("ImportError (%s) while creating %s class: %s\n"
-                          "Did you remember to put the repository in your PYTHONPATH???" % (e, human_readable, cfg))
             except Exception as e:
                 if self._raise_errors:
                     raise
@@ -215,9 +229,9 @@ class ScaleClient(object):
             if args is not None and args.sensors is not None else [])
         client.setup_components(configs, 'scale_client.sensors', 'sensors', __make_sensor)
         # Networks
-        configs = cfg.get('networks', [])
-        # TODO: how to add arguments for this?
-        client.setup_components(configs, 'scale_client.network', 'network')
+        configs = __join_configs_with_args(cfg.get('networks', []), args.networks \
+            if args is not None and args.networks is not None else [])
+        client.setup_components(configs, 'scale_client.networks', 'networks')
         # Applications
         configs = __join_configs_with_args(cfg.get('applications', []), args.applications \
             if args is not None and args.applications is not None else [])
@@ -290,7 +304,7 @@ class ScaleClient(object):
         parser.add_argument('--event-sinks', '-e', type=str, nargs='+', default=None, dest='event_sinks',
                             help='''manually specify event sinks (and their configurations) to run.
                             See --sensors help description for example.''')
-        parser.add_argument('--network', '-n', type=str, nargs='+', default=None,
+        parser.add_argument('--networks', '-n', type=str, nargs='+', default=None,
                             help='''manually specify network components (and their configurations) to run.
                             See --sensors help description for example.''')
 
@@ -314,12 +328,8 @@ class ScaleClient(object):
             parsed_args.config_filename = cls._build_config_file_path(parsed_args.config_filename)
         # Set default config file if no files or manual configurations are specified
         elif parsed_args.config_filename is None and not any((parsed_args.sensors, parsed_args.applications,
-                                                             parsed_args.event_sinks, parsed_args.network)):
+                                                             parsed_args.event_sinks, parsed_args.networks)):
             parsed_args.config_filename = default_config_filename
-
-        # Sanity check that we support requested options fully
-        if parsed_args.network is not None:
-            raise NotImplementedError("--network option not yet fully supported!")
 
         # Testing configuration quits after a time
         if parsed_args.test and parsed_args.quit_time is None:

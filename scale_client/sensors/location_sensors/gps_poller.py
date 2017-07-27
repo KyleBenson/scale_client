@@ -11,6 +11,9 @@ import subprocess
 import _strptime
 
 class GPSPoller(Thread):
+	"""
+	Periodically polls for GPS location using the gpsd linux daemon (make sure this is running!).
+	"""
 	def __init__(self, retry = 2.0):
 		Thread.__init__(self)
 		self._state = GPSPoller._State.S_INIT

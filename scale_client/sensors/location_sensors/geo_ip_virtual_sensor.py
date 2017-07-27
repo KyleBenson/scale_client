@@ -16,8 +16,8 @@ class GeoIPVirtualSensor(ThreadedVirtualSensor):
 	"""
 	GEO_IP_LOOKUP_URL = "http://ip-api.com/json"
 
-	def __init__(self, broker, device=None, interval=60, exp=600, mock_ip=None):
-		super(GeoIPVirtualSensor, self).__init__(broker, device=device, interval=interval)
+	def __init__(self, broker, device=None, interval=60, exp=600, mock_ip=None, **kwargs):
+		super(GeoIPVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
 		self._exp = exp
 		self._lookup_url = GeoIPVirtualSensor.GEO_IP_LOOKUP_URL
 		if mock_ip is not None:

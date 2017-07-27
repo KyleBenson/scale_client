@@ -5,8 +5,8 @@ from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
 
 
 class DummyLightVirtualSensor(LightVirtualSensor):
-    def __init__(self, broker, device=None, interval=1, threshold=400):
-        super(DummyLightVirtualSensor, self).__init__(broker, device=device, interval=interval, threshold=threshold)
+    def __init__(self, broker, device=None, interval=1, threshold=400, **kwargs):
+        super(DummyLightVirtualSensor, self).__init__(broker, device=device, interval=interval, threshold=threshold, **kwargs)
         self._rand = Random()
         self._rand.seed()
         self._darkflag = True

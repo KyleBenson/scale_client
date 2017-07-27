@@ -1,14 +1,15 @@
-import logging
 from random import *
 
 from scale_client.sensors.community_seismic_network.csn_virtual_sensor import CSNVirtualSensor
 from scale_client.sensors.virtual_sensor import VirtualSensor
+
+import logging
 log = logging.getLogger(__name__)
 
 
 class DummyCSNVirtualSensor(CSNVirtualSensor):
-    def __init__(self, broker, device=None):
-        CSNVirtualSensor.__init__(self, broker, device=device)
+    def __init__(self, broker, device=None, **kwargs):
+        super(DummyCSNVirtualSensor, self).__init__(broker, device=device, **kwargs)
         self._rand = Random()
         self._rand.seed()
         self._whatflag = True
@@ -17,8 +18,8 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
 
     def on_start(self):
         # Avoid opening any connections to real sensors, so skip the on_start() of our parent
-        # super(CSNVirtualSensor, self).on_start()
-        self.timed_call(self._wait_period, VirtualSensor._do_sensor_read, repeat=True)
+        # and instead run this dummy sensor as a regular non-threaded VS.
+        VirtualSensor.on_start(self)
 
     def read_raw(self):
         readings = []
@@ -36,6 +37,6 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
         # NOTE: this relies on the set_wait_period API implementation resetting
         # the timer immediately!  consider it a hack!
         wait_time = self._rand.random() * 2 * DummyCSNVirtualSensor.WAIT_MEAN
-
+        log.debug("next seismic pick in %d seconds" % wait_time)
         self.set_wait_period(wait_time)
         return readings

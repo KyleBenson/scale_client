@@ -5,10 +5,10 @@ from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
 
 
 class DummyGasVirtualSensor(GasVirtualSensor):
-    def __init__(self, broker, device=None, interval=1, threshold=400, prob=0.05):
+    def __init__(self, broker, device=None, interval=1, threshold=400, prob=0.05, **kwargs):
         self._rand = Random()
         # we aren't specifying an analog port as the on_start() override takes care of avoiding the check for a legit 1
-        super(DummyGasVirtualSensor, self).__init__(broker, device=device, interval=interval, threshold=threshold)
+        super(DummyGasVirtualSensor, self).__init__(broker, device=device, interval=interval, threshold=threshold, **kwargs)
         self._rand.seed()
         self._prob = prob
         self._darkflag = True

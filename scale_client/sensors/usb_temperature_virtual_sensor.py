@@ -8,8 +8,8 @@ log = logging.getLogger(__name__)
 
 
 class UsbTemperatureVirtualSensor(TemperatureVirtualSensor):
-    def __init__(self, broker, device=None, interval=1, threshold=24.0, search_interval=60):
-        super(TemperatureVirtualSensor, self).__init__(broker, device, interval=interval)
+    def __init__(self, broker, device=None, interval=1, threshold=24.0, search_interval=60, **kwargs):
+        super(TemperatureVirtualSensor, self).__init__(broker, device, interval=interval, **kwargs)
         self._threshold = threshold
         self._search_interval = search_interval
 
