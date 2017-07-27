@@ -5,7 +5,7 @@ Server for changing activity status and location of clients.
 
 """
 
-from scale_client.sensors.virtual_csn_server import task_handler
+from scale_client.sensors.community_seismic_network.virtual_csn_server import task_handler
 
 
 #EPSILON = 0.00001

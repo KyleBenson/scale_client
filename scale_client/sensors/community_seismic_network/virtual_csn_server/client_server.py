@@ -4,13 +4,12 @@
 Server to handler creating and updating clients.
 
 """
-import random
 import hashlib
+import random
 
-from scale_client.sensors.virtual_csn_server import api_handler
 import util
 from messages import client_messages_pb2
-
+from scale_client.sensors.community_seismic_network.virtual_csn_server import api_handler
 
 CLIENT_FIELD_OPTIONAL = [
     'name', 'location_source_type', 'location_description', 'floor',

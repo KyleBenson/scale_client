@@ -1,10 +1,8 @@
-import time
+import logging
 from random import *
 
-from scale_client.sensors.csn_virtual_sensor import CSNVirtualSensor
+from scale_client.sensors.community_seismic_network.csn_virtual_sensor import CSNVirtualSensor
 from scale_client.sensors.virtual_sensor import VirtualSensor
-
-import logging
 log = logging.getLogger(__name__)
 
 

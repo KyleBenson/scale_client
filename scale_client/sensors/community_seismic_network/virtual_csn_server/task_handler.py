@@ -6,7 +6,8 @@ Define the base handler for tasks.
 import logging
 
 import webapp2
-from scale_client.sensors.virtual_csn_server import util
+
+from scale_client.sensors.community_seismic_network.virtual_csn_server import util
 
 
 class TaskHandler(webapp2.RequestHandler):

@@ -10,12 +10,12 @@ logging.basicConfig(filename='/var/log/csn_virtual_server', level=logging.DEBUG)
 
 import webapp2
 
-from scale_client.sensors.virtual_csn_server import import_fixer, util
+from scale_client.sensors.community_seismic_network.virtual_csn_server import import_fixer, util
 
 import_fixer.FixImports('protobuf')
 import google.protobuf
 
-from scale_client.sensors.virtual_csn_server.messages import common_pb2
+from scale_client.sensors.community_seismic_network.virtual_csn_server.messages import common_pb2
 
 
 SIGNATURE_FIELDS = ['message_id', 'date', 'signature']

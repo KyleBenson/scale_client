@@ -445,7 +445,7 @@ _RECENTEVENTRESPONSE = descriptor.Descriptor(
   serialized_end=1168,
 )
 
-from scale_client.sensors.virtual_csn_server.messages import client_messages_pb2, common_pb2
+from scale_client.sensors.community_seismic_network.virtual_csn_server.messages import client_messages_pb2, common_pb2
 
 _NAMEAVAILABLERESPONSE.fields_by_name['status'].message_type = common_pb2._STATUSMESSAGE
 _EXISTINGUUIDRESPONSE.fields_by_name['status'].message_type = common_pb2._STATUSMESSAGE

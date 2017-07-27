@@ -7,8 +7,7 @@ Server to handle heartbeat messages from clients.
 
 from scale_client.sensors.virtual_csn_server import api_handler, util
 
-from scale_client.sensors.virtual_csn_server.messages import heartbeat_pb2
-
+from scale_client.sensors.community_seismic_network.virtual_csn_server.messages import heartbeat_pb2
 
 MAX_RECENT_CHANGES = 10
 EVENT_RATE_REQUIRED_FIELDS = ['sensor_id', 'event_count', 'time_window']

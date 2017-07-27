@@ -12,11 +12,10 @@ import datetime
 import logging
 logging.basicConfig(filename='/var/log/csn_virtual_server', level=logging.DEBUG)
 
-from scale_client.sensors.virtual_csn_server import api_handler, util
+from scale_client.sensors.community_seismic_network.virtual_csn_server import api_handler, util
 import sys
 
-from scale_client.sensors.virtual_csn_server.messages import event_pb2
-
+from scale_client.sensors.community_seismic_network.virtual_csn_server.messages import event_pb2
 
 # Display time as a delta in seconds until delta is more than a year in size.
 # Then, dislpay the system time for comparison.

@@ -45,5 +45,6 @@ class UnexpectedMotionVirtualSensor(VirtualSensor):
 			else:
 				log.warning("Unsupported structure in light event")
 
+	# we always publish since we're doing it explicitly
 	def policy_check(self, event):
 		return False
