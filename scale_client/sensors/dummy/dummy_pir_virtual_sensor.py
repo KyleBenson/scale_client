@@ -1,6 +1,6 @@
 from random import *
 
-from scale_client.sensors.pir_virtual_sensor import PIRVirtualSensor
+from scale_client.sensors.environment.pir_virtual_sensor import PIRVirtualSensor
 from scale_client.sensors.gpio_virtual_sensor import GPIOVirtualSensor
 
 

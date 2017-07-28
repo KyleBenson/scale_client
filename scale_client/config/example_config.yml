@@ -1,82 +1,74 @@
 # This configuration file aims to document currently-available options for the SCALE Client.
+# Note the 5 possible sections, each of which is essentially a dictionary(map) containing either
+# parameter names and their values or a USER-DEFINED unique name and the arguments used to initialize
+# that module.  The uniqueness is important as you can overwrite and/or modify the modules' arguments
+# by referring to its unique name in another configuration file (see below).  Furthermore, please
+# BE VERY CAREFUL not to stray too far from this schema by e.g. using lists of modules to enable
+# ("-  LogEventSink: ...") as this may cause various errors in the configuration parsing engine...
+#
+# Each module configuration contains the following:
 # The 'class' fields are used to import the relevant module so as long as that module name is available on your PYTHONPATH it should work.
 # The other fields are passed as arguments to that class's constructor.
+#
 # You may also wish to try running with the 'test_config.yml' file first to verify the most basic features of the client work.
 # Note that these options may not be fully comprehensive and will evolve over time.
+# See the other config files for further examples that may be missing from here.
 
 Main:
+    # You can load multiple config files with this option.  Note that they will be loaded in the order
+    # specified so that the last one's options may overwrite any options specified by the first
+    # if the names match!  e.g. two occurrences of "LogEventSink: ..." will only run it once
+    # with the parameters specified in the left-most highest-level config file.  If, however,
+    # one of the lower config files includes additional parameters, they will be added in!
+    include_config_files: ["dummy_config.yml", "/path/to/my/custom/config.yml"]
+
     # These options are used to configure the Broker and EventReporter
     #DEPRECATED: an older version of SCALE used a thread-safe event queue implementation of the Broker
     #event_queue_size: 4096
 
 EventSinks:
     # Each entry here starts up an EventSink for forwarding events to external recipients.
-    # By default, not enabling any EventSinks will cause SCALE to start the LogEventSink:
-    #- LogEventSink:
-    #    class: "log_event_sink.LogEventSink"
-    # This is our default MQTT broker configuration
-    #- MQTTPublisher:
-    #    class: "mqtt_event_sink.MQTTEventSink"
-    #    hostname: "iqueue.ics.uci.edu"
-    #    hostport: 1883
-    #    username: null
-    #    password: null
-    #    keepalive: 60
+    # By default, not enabling any EventSinks (by not including this section alltogether)
+    # will cause SCALE to start the LogEventSink:
+    LogEventSink:
+      class: "log_event_sink.LogEventSink"
+    # See coap_test_config.yml for CoAP-related event sink options
+    # See mqtt_test_config.yml for the MQTT event sink options
 
 Applications:
     # Each entry here starts up an Application that may subscribe to and/or publish SensedEvents
     # This module collects the client's location info and reports it.
-    - LocationManager:
-        class: "location_manager.LocationManager"
+    LocationManager:
+      class: "location_manager.LocationManager"
 
 Sensors:
     # Each entry here starts up a VirtualSensor that will (a)periodically read data and possibly report SensedEvents.
+    # NOTE: see the pi_config.yml file(s) for mostly comprehensive examples of the various
+    # physical and virtual sensors we've implemented on the Raspberry Pi.
     # NOTE: most sensors have a 'dummy' version that doesn't require the actual hardware (see dummy_config.yml),
-    # but the ones enabled here require only Internet access.
-    ### Miscellaneous VirtualSensors
-    # The HBSensor simply periodically sends a heartbeat to external sources to check liveness.
-    - HBSensor:
-        class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
-        dev_name: "hb0"
-        interval: 60
-    #- GeoIPSensor:
-    #    class: "location_sensors.geo_ip_virtual_sensor.GeoIPVirtualSensor"
-    #    dev_name: "geoip0"
-    # Uses UDP to verify (more quickly/reliably than with TCP or ICMP) whether the client has public Internet access
-    - InternetAccessSensor:
-        class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
-        dev_name: "net0"
-    #- RawAnalogSensor:
-    #    class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
-    #    dev_name: "raw0"
-    #    analog_port: 2
-    ### Various environmental sensors
-    #- LightSensor:
-    #    class: "light_virtual_sensor.LightVirtualSensor"
-    #    dev_name: "light0"
-    #    analog_port: 3
-    #- GasSensor:
-    #    class: "gas_virtual_sensor.GasVirtualSensor"
-    #    dev_name: "gas0"
-    #    analog_port: 0
-    #- TemperatureSensor:
-    #    class: "temperature_virtual_sensor.TemperatureVirtualSensor"
-    #    dev_name: "cel0"
-    ### Presence sensors
-    #- PIRSensor:
-    #    class: "pir_virtual_sensor.PIRVirtualSensor"
-    #    dev_name: "pir0"
-    #    gpio_pin: 17
-    ### VirtualSensors that detect higher-level events: should work with dummy_sensors
-    #- PIRNoMotionSensor:
-    #    class: "pir_no_motion_virtual_sensor.PIRNoMotionVirtualSensor"
-    #    dev_name: "nomot0"
-    #- LightFlashSensor:
-    #    class: "light_flash_virtual_sensor.LightFlashVirtualSensor"
-    #    dev_name: "flash0"
-    #- TemperatureHighSensor:
-    #    class: "temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
-    #    dev_name: "heat0"
+    # but the ones enabled here require (at most) only Internet access.
 
-Networks:
+    ### Miscellaneous network sensors
+    # The HBSensor simply periodically sends a heartbeat to external sources to check liveness.
+    HBSensor:
+      class: "network.heartbeat_virtual_sensor.HeartbeatVirtualSensor"
+      dev_name: "hb0"
+      interval: 60
+    # Uses your IP address to do a lat/lon lookup of your approximate location
+    GeoIPSensor:
+      class: "location.geo_ip_virtual_sensor.GeoIPVirtualSensor"
+      dev_name: "geoip0"
+    # Uses UDP to verify (more quickly/reliably than with TCP or ICMP) whether the client has public Internet access
+    InternetAccessSensor:
+      class: "network.internet_access_virtual_sensor.InternetAccessVirtualSensor"
+      dev_name: "net0"
+    # You can use this class to get the raw analog reading from a sensor device for which you haven't
+    # actually implemented a complete sub-class for yet.
+    #RawAnalogSensor:
+    #  class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
+    #  dev_name: "raw0"
+    #  analog_port: 2
+
+#Networks:
     # These options configure various networking-related components, such as the mesh relay that is currently unsupported.
+    # See coap_test_config.yml for details about running the CoapServer

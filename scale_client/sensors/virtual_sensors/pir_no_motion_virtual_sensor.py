@@ -1,8 +1,9 @@
-from scale_client.sensors.virtual_sensor import VirtualSensor
-from scale_client.sensors.pir_virtual_sensor import PIRVirtualSensor
-
-from time import time as get_time
 import logging
+from time import time as get_time
+
+from scale_client.sensors.environment.pir_virtual_sensor import PIRVirtualSensor
+from scale_client.sensors.virtual_sensor import VirtualSensor
+
 log = logging.getLogger(__name__)
 
 

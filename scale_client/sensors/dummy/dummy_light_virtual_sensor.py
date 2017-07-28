@@ -1,7 +1,7 @@
 from random import *
 
-from scale_client.sensors.light_virtual_sensor import LightVirtualSensor
 from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
+from scale_client.sensors.environment.light_virtual_sensor import LightVirtualSensor
 
 
 class DummyLightVirtualSensor(LightVirtualSensor):

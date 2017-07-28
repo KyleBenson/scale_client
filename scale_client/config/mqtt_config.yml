@@ -1,0 +1,15 @@
+# This is our default MQTT configuration for uploading sensed events to our broker.
+# Include this file in your other configs to use this default, or you can manually configure your own broker.
+
+EventSinks:
+    MQTTEventSink:
+      class: "mqtt_event_sink.MQTTEventSink"
+      hostname: "iqueue.ics.uci.edu"
+      # This is no longer registered; was from original SCALE deployment and demo
+      #hostname: "dime.smartamerica.io"
+      # Assuming this still works, it's a good test broker
+      #hostname: "m2m.eclipse.org"
+      hostport: 1883
+      username: null
+      password: null
+      keepalive: 60

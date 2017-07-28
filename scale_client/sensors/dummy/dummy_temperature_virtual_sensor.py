@@ -1,6 +1,6 @@
 from random import *
 
-from scale_client.sensors.temperature_virtual_sensor import TemperatureVirtualSensor
+from scale_client.sensors.environment.temperature_virtual_sensor import TemperatureVirtualSensor
 
 
 class DummyTemperatureVirtualSensor(TemperatureVirtualSensor):

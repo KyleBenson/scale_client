@@ -1,58 +1,85 @@
+# This config file contains all of the sensors we've implemented and run on the Raspberry Pi SCALE client platform
+
 Main:
-    event_queue_size: 4096
+    # Here we include our default MqttEventSink configuration for uploading events to an MQTT broker
+    include_config_files: ["mqtt_config.yml"]
 
 EventSinks:
-    - MQTTPublisher:
-        class: "mqtt_event_sink.MQTTEventSink"
-        hostname: "iqueue.ics.uci.edu"
-        #hostname: "dime.smartamerica.io"
-        #hostname: "m2m.eclipse.org"
-        hostport: 1883
-        username: null
-        password: null
-        keepalive: 60
+    # Store events in a local MySQL database
+    MySQLDatabase:
+      class: "mysql_event_sink.MySQLEventSink"
+      dbname: "scale_client"
+      username: "scale_usr"
+      password: "123456"
+    # Currently not in use due to a lack of Sigfox ultra-narrowband towers near UCI,
+    # this publishes events encoded into very small messages using the
+    # USB-connected Sigfox adapter.  Sigfox will then send it back to our server through
+    # an HTTP call, at which point we have to convert the events back to our canonical format.
+    #SigfoxPublisher:
+    #  class: "sigfox_event_sink.SigfoxEventSink"
+    #  serialport: "/dev/ttyUSB0"
 
 Applications:
-    - LocationManager:
-        class: "location_manager.LocationManager"
+    # Collects location information from other sources and publishes changes so that other
+    # applications can tag their events with location data
+    LocationManager:
+      class: "location_manager.LocationManager"
+    # Works in concert with the MySQLEventSink to record events and clean them up
+    MySQLDatabase:
+      class: "mysql_maintainer.MySQLMaintainer"
+      dbname: "scale_client"
+      username: "scale_usr"
+      password: "123456"
 
 Sensors:
-    - HBSensor:
-        class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
-        dev_name: "hb0"
-        interval: 60
-    - PIRSensor:
-        class: "pir_virtual_sensor.PIRVirtualSensor"
-        dev_name: "pir0"
-        gpio_pin: 17
-    - LightSensor:
-        class: "light_virtual_sensor.LightVirtualSensor"
-        dev_name: "light0"
-        analog_port: 3
-    - GasSensor:
-        class: "gas_virtual_sensor.GasVirtualSensor"
-        dev_name: "gas0"
-        analog_port: 0
-    #- RawAnalogSensor:
-    #    class: "raw_analog_virtual_sensor.RawAnalogVirtualSensor"
-    #    dev_name: "raw0"
-    #    analog_port: 2
-    - GeoIPSensor:
-        class: "location_sensors.geo_ip_virtual_sensor.GeoIPVirtualSensor"
-        dev_name: "geoip0"
-    - InternetAccessSensor:
-        class: "internet_access_virtual_sensor.InternetAccessVirtualSensor"
-        dev_name: "net0"
-    - PIRNoMotionSensor:
-        class: "pir_no_motion_virtual_sensor.PIRNoMotionVirtualSensor"
-        dev_name: "nomot0"
-    - LightFlashSensor:
-        class: "light_flash_virtual_sensor.LightFlashVirtualSensor"
-        dev_name: "flash0"
-    #- TemperatureSensor:
-    #    class: "temperature_virtual_sensor.TemperatureVirtualSensor"
-    #    dev_name: "cel0"
-    #- TemperatureHighSensor:
-    #    class: "temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
-    #    dev_name: "heat0"
-
+    ### Physical environment sensors
+    LightSensor:
+      class: "environment.light_virtual_sensor.LightVirtualSensor"
+      dev_name: "light0"
+      analog_port: 3
+    GasSensor:
+      class: "environment.gas_virtual_sensor.GasVirtualSensor"
+      dev_name: "gas0"
+      analog_port: 0
+    # Passive infrared detects movement of living beings
+    PIRSensor:
+      class: "environment.pir_virtual_sensor.PIRVirtualSensor"
+      dev_name: "pir0"
+      gpio_pin: 17
+    TemperatureSensor:
+      class: "environment.temperature_virtual_sensor.TemperatureVirtualSensor"
+      dev_name: "cel0"
+    # The CSN sensor detects possible local seismic activity.  You can bump the table to set it off,
+    # but continuing to do so will convince it that this is now a normal level of shaking in the environment :)
+    CSNSensor:
+      class: "community_seismic_network.csn_virtual_sensor.CSNVirtualSensor"
+      dev_name: "accel0"
+    ### These virtual sensors consume physical environmental SensedEvents and
+    # produce higher-level events they detected from analyzing that data
+    PIRNoMotionSensor:
+      class: "virtual_sensors.pir_no_motion_virtual_sensor.PIRNoMotionVirtualSensor"
+      dev_name: "nomot0"
+    LightFlashSensor:
+      class: "virtual_sensors.light_flash_virtual_sensor.LightFlashVirtualSensor"
+      dev_name: "flash0"
+    TemperatureHighSensor:
+      class: "virtual_sensors.temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
+      dev_name: "heat0"
+    UnexpectedMotionSensor:
+      class: "virtual_sensors.unexpected_motion_virtual_sensor.UnexpectedMotionVirtualSensor"
+      dev_name: "uxmot0"
+    ### Network sensors
+    # A simple heartbeat to verify this client is alive
+    HBSensor:
+      class: "network.heartbeat_virtual_sensor.HeartbeatVirtualSensor"
+      dev_name: "hb0"
+      interval: 60
+    # Ensure we have Internet access and allow the rest of the system to adapt accordingly if we don't!
+    InternetAccessSensor:
+      class: "network.internet_access_virtual_sensor.InternetAccessVirtualSensor"
+      dev_name: "net0"
+    ### Location sensor
+    # Estimate our location using our IP address since we don't have GPS
+    GeoIPSensor:
+      class: "location.geo_ip_virtual_sensor.GeoIPVirtualSensor"
+      dev_name: "geoip0"

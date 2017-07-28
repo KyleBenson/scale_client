@@ -2,28 +2,18 @@
 # Not officially tested!
 
 Main:
-    event_queue_size: 4096
-
-EventSinks:
-    - MQTTEventSink:
-        class: "mqtt_event_sink.MQTTEventSink"
-        hostname: "iqueue.ics.uci.edu"
-        #hostname: "dime.smartamerica.io"
-        #hostname: "m2m.eclipse.org"
-        hostport: 1883
-        username: null
-        password: null
-        keepalive: 60
+    include_config_files: ["mqtt_config.yml"]
 
 Sensors:
-    - HBSensor:
-        class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor"
-        dev_name: "hb0"
-        interval: 60
-    # - TempSensor:
-    #     class: "temperature_virtual_sensor.TemperatureVirtualSensor"
-    #     dev_name: "cel0"
-    #     threshold: 24.0
-    # - CSNSensor:
-    #     class: "csn_virtual_sensor.CSNVirtualSensor"
-    #     dev_name: "accel0"
+    HBSensor:
+      class: "network.heartbeat_virtual_sensor.HeartbeatVirtualSensor"
+      dev_name: "hb0"
+      interval: 60
+    TempSensor:
+      class: "environment.usb_temperature_virtual_sensor.UsbTemperatureVirtualSensor"
+      dev_name: "cel0"
+      threshold: 24.0
+    # Ensure the CSN client daemon is running and has been configured properly, including the /etc/hosts hack!
+    CSNSensor:
+      class: "community_seismic_network.csn_virtual_sensor.CSNVirtualSensor"
+      dev_name: "accel0"

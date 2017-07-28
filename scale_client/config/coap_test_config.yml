@@ -23,60 +23,60 @@
 # when the program exits...
 
 EventSinks:
-    - CoapEventSink:
-        class: "local_coap_event_sink.LocalCoapEventSink"
-#        class: "remote_coap_event_sink.RemoteCoapEventSink"
-        # NOTE: we currently don't support longer hierarchical paths such as 'scale/events/temp'
-        # We'll probably need to add each layer one at a time to do that...
-        topic: "/events/%s"
-#        server_name: "default"
-        # Use defaults for the REMOTE event sink testing if you run the server locally
-        # e.g. by running the coapthon coapservery.py in which case use the following topic:
-        # topic: "/storage/%s"
-        # hostname: "127.0.0.1"
-        # port: DEFAULT_COAP_PORT
-        # username: None
-        # password: None
-        # timeout: 60
+    CoapEventSink:
+      class: "local_coap_event_sink.LocalCoapEventSink"
+#      class: "remote_coap_event_sink.RemoteCoapEventSink"
+      # NOTE: we currently don't support longer hierarchical paths such as 'scale/events/temp'
+      # We'll probably need to add each layer one at a time to do that...
+      topic: "/events/%s"
+#      server_name: "default"
+      # Use defaults for the REMOTE event sink testing if you run the server locally
+      # e.g. by running the coapthon coapservery.py in which case use the following topic:
+      # topic: "/storage/%s"
+      # hostname: "127.0.0.1"
+      # port: DEFAULT_COAP_PORT
+      # username: None
+      # password: None
+      # timeout: 60
 
 Networks:
-    - CoapServer:
-        class: "coap_server.CoapServer"
-        # By specifying this option, the server will create a root resource at this URI path
-        # such that other external nodes can POST/PUT resources under this path e.g. /events/temperature
-        # They will be published internally so that other apps may make use of them.
-        events_root: "/events/"
-        # Change this name if you want to run more than one CoapServer
-#        server_name: "default"
-        # hostname: "127.0.0.1"
-        # port: DEFAULT_COAP_PORT
-        # multicast: True
+    CoapServer:
+      class: "coap_server.CoapServer"
+      # By specifying this option, the server will create a root resource at this URI path
+      # such that other external nodes can POST/PUT resources under this path e.g. /events/temperature
+      # They will be published internally so that other apps may make use of them.
+      events_root: "/events/"
+      # Change this name if you want to run more than one CoapServer
+      # server_name: "default"
+      # hostname: "127.0.0.1"
+      # port: DEFAULT_COAP_PORT
+      # multicast: True
 
 Sensors:
-    - DummyThreadedSensor:
-        class: "dummy_sensors.dummy_threaded_virtual_sensor.DummyThreadedVirtualSensor"
-        dev_name: "dum0"
-        interval: 1
-    - DummyTempSensor:
-        class: "dummy_sensors.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
-        dev_name: "temp0"
-        interval: 2
+    DummyThreadedSensor:
+      class: "dummy.dummy_threaded_virtual_sensor.DummyThreadedVirtualSensor"
+      dev_name: "dum0"
+      interval: 1
+    DummyTempSensor:
+      class: "dummy.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
+      dev_name: "temp0"
+      interval: 2
     # This VS observes the given topics and internally publishes them as SensedEvents.
     # NOTE: Careful having both a RemoteCoapEventSink and CoapVirtualSensor
     # running simultaneously and pointing to the same server-resource.  We have a hack
     # in place, but if it changes you could create a loop!
-    - CoapSensor:
-        class: "coap_virtual_sensor.CoapVirtualSensor"
-        topic: "/events/temperature"
-        # For testing, we set a shorter timeout since that's used for
-        # re-trying an observe if the resource doesn't exist initially.
-        timeout: 4
-        # Enables polling at the regular VirtualSensor interval rather than 'observe' feature.
-        # NOTE: one topic polled per interval in a round-robin fashion
-#        use_polling: True
-        # Use defaults for testing since we're running the server locally:
-        # hostname: "127.0.0.1"
-        # port: DEFAULT_COAP_PORT
-        # username: None
-        # password: None
-        # timeout: 300
+    CoapSensor:
+      class: "network.coap_virtual_sensor.CoapVirtualSensor"
+      topic: "/events/temperature"
+      # For testing, we set a shorter timeout since that's used for
+      # re-trying an observe if the resource doesn't exist initially.
+      timeout: 4
+      # Enables polling at the regular VirtualSensor interval rather than 'observe' feature.
+      # NOTE: one topic polled per interval in a round-robin fashion
+#      use_polling: True
+      # Use defaults for testing since we're running the server locally:
+      # hostname: "127.0.0.1"
+      # port: DEFAULT_COAP_PORT
+      # username: None
+      # password: None
+      # timeout: 300

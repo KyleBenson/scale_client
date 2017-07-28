@@ -1,7 +1,7 @@
 from random import *
 
-from scale_client.sensors.gas_virtual_sensor import GasVirtualSensor
 from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
+from scale_client.sensors.environment.gas_virtual_sensor import GasVirtualSensor
 
 
 class DummyGasVirtualSensor(GasVirtualSensor):

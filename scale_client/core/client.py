@@ -1,10 +1,12 @@
 #!/usr/bin/python
+import random
 import sys
 import yaml
 import yaml.parser
 import logging
 import argparse
 import os
+from functools import reduce
 
 from device_descriptor import DeviceDescriptor
 from event_reporter import EventReporter
@@ -72,7 +74,10 @@ class ScaleClient(object):
         helper_fun with the class and requested configuration to finish its setup.  If
         helper_fun isn't specified, the default simply calls the class's constructor
         with the given arguments parsed from the configuration.
-        :param configs: should at least include 'class' for importing the class using python's import
+        :param configs: a dict where each entry is a component to set up; each component has a unique
+        name as its key and the value is a dict of parameters, which should at least include
+         'class' for importing the class using python's import
+        :type configs: dict
         :param package_name: root package_name for the class paths specified
          (these will be classes in the scale_client package e.g. sensors, event_sinks)
         :param human_readable: plain text short name of what component type this is e.g. network, sensor, etc.
@@ -87,11 +92,14 @@ class ScaleClient(object):
 
         results = []
 
-        for cfg in configs:
+        for comp_name, cfg in list(configs.items()):
             # need to get class definition to call constructor
             if 'class' not in cfg:
                 log.warn("Skipping %s config with no class definition: %s" % (human_readable, cfg))
                 continue
+
+            if not isinstance(comp_name, basestring):
+                comp_name = "no_name"
 
             # try importing the specified class extended by package_name first, then just 'class' if error
             cls_name = '.'.join([package_name, cfg['class']])
@@ -115,7 +123,7 @@ class ScaleClient(object):
 
                 res = helper_fun(cls, self.__broker, *args, **new_config)
                 results.append(res)
-                log.info("%s created from config: %s" % (human_readable, cfg))
+                log.info("%s (%s) created from config: %s" % (human_readable, comp_name, cfg))
 
             except Exception as e:
                 if self._raise_errors:
@@ -123,7 +131,6 @@ class ScaleClient(object):
                 log.error("Unexpected error while creating %s class: %s\nError: %s" % (human_readable, cfg, e))
 
         return results
-
 
     @classmethod
     def build_from_configuration_parameters(cls, config_filename, args=None):
@@ -147,16 +154,12 @@ class ScaleClient(object):
             raise ValueError("can't build from configuration parameters when both filename and args are None!")
 
         # Dummy config dict in case no config file
-        cfg = {'eventsinks': [], 'sensors': [], 'applications': [], 'networks': []}
+        cfg = {'eventsinks': {}, 'sensors': {}, 'applications': {}, 'networks': {}}
 
         if config_filename is not None:
             try:
-                log.info("Reading config file: %s" % config_filename)
-                with open(config_filename) as cfile:
-                    cfg = yaml.load(cfile)
-                    # lower-case all top-level headings to tolerate different capitalizations
-                    cfg = {k.lower(): v for k, v in cfg.items()}
-
+                cfg = cls.load_configuration_file(config_filename)
+                # log.debug("Final configuration: %s" % cfg)
             except IOError as e:
                 log.error("Error reading config file: %s" % e)
                 exit(1)
@@ -173,19 +176,6 @@ class ScaleClient(object):
             res = _class(broker, **config)
             event_reporter.add_sink(res)
             return res
-
-        def __join_configs_with_args(configs, relevant_args):
-            try:
-                configs = [c.values()[0] for c in configs]
-            except Exception as e:
-                raise ValueError("problem (error=%s) extracting configurations from configs: %s" % (e, configs))
-
-            try:
-                configs.extend([yaml.load(a) for a in relevant_args])
-            except yaml.parser.ParserError as e:
-                raise ValueError("error parsing manual configuration: %s\nError:%s" % (relevant_args, e))
-
-            return configs
 
         ### BEGIN ACTUAL CONFIG FILE USAGE
         # We call appropriate handlers for each section in the appropriate order,
@@ -204,7 +194,7 @@ class ScaleClient(object):
         # These components are all handled almost identically.
 
         # EventSinks
-        configs = __join_configs_with_args(cfg.get('eventsinks', []), args.event_sinks \
+        configs = cls.__join_configs_with_args(cfg.get('eventsinks', {}), args.event_sinks \
             if args is not None and args.event_sinks is not None else [])
         client.setup_components(configs, 'scale_client.event_sinks', 'event sinks', __make_event_sink, client.__reporter)
 
@@ -225,21 +215,124 @@ class ScaleClient(object):
             client.__reporter.add_sink(default_sink)
 
         # Sensors
-        configs = __join_configs_with_args(cfg.get('sensors', []), args.sensors \
+        configs = cls.__join_configs_with_args(cfg.get('sensors', {}), args.sensors \
             if args is not None and args.sensors is not None else [])
         client.setup_components(configs, 'scale_client.sensors', 'sensors', __make_sensor)
         # Networks
-        configs = __join_configs_with_args(cfg.get('networks', []), args.networks \
+        configs = cls.__join_configs_with_args(cfg.get('networks', {}), args.networks \
             if args is not None and args.networks is not None else [])
         client.setup_components(configs, 'scale_client.networks', 'networks')
         # Applications
-        configs = __join_configs_with_args(cfg.get('applications', []), args.applications \
+        configs = cls.__join_configs_with_args(cfg.get('applications', {}), args.applications \
             if args is not None and args.applications is not None else [])
         client.setup_components(configs, 'scale_client.applications', 'applications')
 
         # TODO: set some defaults if no applications, sensors, or networking components are enabled (heartbeat?)
 
         return client
+
+    @staticmethod
+    def __join_configs_with_args(configs, relevant_args):
+        """
+        Join the command-line arguments with the configuration file in order to add to
+        or even modify the file-specified configuration, if there even was one!
+        :param configs:
+        :param relevant_args:
+        :return:
+        """
+        # Configuration files are basically nested dictionaries and the command-line arguments
+        # are a list with each element being a dictionary. If the dict in the args has the key
+        # 'class', then it is anonymous and we should just give it a random unique name to
+        # ensure it is run.  If, however, it does not, then we should assume that it's a NAMED
+        # configuration and so we can actually use that to overwrite/modify the configurations
+        # pulled in from a file.
+
+        new_configs = {}
+        for arg in relevant_args:
+            try:
+                arg = yaml.load(arg)
+            except yaml.parser.ParserError as e:
+                raise ValueError("error parsing manual configuration: %s\nError:%s" % (arg, e))
+
+            if 'class' in arg:
+                random_key = random.random()
+                new_configs[random_key] = arg
+            else:
+                try:
+                    new_configs.update(arg)
+                except TypeError as e:
+                    raise ValueError("error in your manual configuration: %s\n"
+                                     "couldn't be interpreted as a dict due to error: %s" % (arg, e))
+
+        return ScaleClient.__merge_configs(new_configs, configs)
+
+    @classmethod
+    def __merge_configs(cls, a, b, path=None):
+        """Merges values found in b into a if a didn't have them. It does this
+        recursively so that dicts as values will be merged too.  If they're lists
+        they are merged in a similar way except that the top-level key of each contained
+        dict is assumed to be the unique id so that, for example, two entries of
+        'TestApp' will take the first one even if the parameters are different."""
+
+        # This function is modeled after:
+        # https://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge
+
+        if path is None: path = []
+
+        for key in b:
+            if key in a:
+                if isinstance(a[key], dict) and isinstance(b[key], dict):
+                    cls.__merge_configs(a[key], b[key], path + [str(key)])
+                elif isinstance(a[key], list) and isinstance(b[key], list):
+                    # Easy enough to merge lists of non-dict items...
+                    try:
+                        al = set(a[key])
+                        bl = set(b[key])
+                        bl.update(al)
+                        a[key] = list(bl)
+                    except (TypeError, AttributeError) as e:
+                        log.warning('problem merging lists when merging configurations'
+                                    '(are there dict args in one at path %s?):'
+                                    '\n%s\n%s\nKeeping the first one due to error %s'
+                                    % (path, a[key], b[key], e))
+                else:
+                    # Same key, but different value type.  This is difficult to
+                    # handle so we just keep the value of the first one.
+                    pass
+            else:
+                a[key] = b[key]
+        return a
+
+    @classmethod
+    def load_configuration_file(cls, config_filename):
+        """
+        Reads the YAML-based configuration file specified and optionally recurses on itself
+        to read other config files that were included in this one.
+        :param config_filename:
+        :return: the dict-like configuration
+        """
+        log.info("Reading config file: %s" % config_filename)
+        with open(config_filename) as cfile:
+            cfg = yaml.load(cfile)
+            # lower-case all top-level headings to tolerate different capitalizations
+            # also filter out any sections that didn't include anything
+            cfg = {k.lower(): v for k, v in cfg.items() if v is not None}
+
+            # Recursively call this function and merge the results back together
+            if 'main' in cfg and 'include_config_files' in cfg['main']:
+                # We want to do the update in reverse order so that the top-level config file
+                # overwrites the lower-level ones (same with left-most sub config).
+                sub_cfgs = [cfg]
+
+                for sub_fname in cfg['main']['include_config_files']:
+                    log.debug("recursively loading config file %s" % sub_fname)
+                    sub_fname = cls._build_config_file_path(sub_fname)
+                    sub_cfg = cls.load_configuration_file(sub_fname)
+                    sub_cfgs.append(sub_cfg)
+
+                cfg = reduce(cls.__merge_configs, sub_cfgs)
+
+        return cfg
 
     @classmethod
     def _build_config_file_path(cls, filename):
@@ -292,11 +385,17 @@ class ScaleClient(object):
         # Manually configure components
         parser.add_argument('--sensors', '-s', type=str, nargs='+', default=None,
                             help='''manually specify sensors (and their configurations) to run.
-                            Arguments should be in YAML format e.g. can specify two sensors using
-                            JSON: --sensors '{class: "heartbeat_virtual_sensor.HeartbeatVirtualSensor",
+                            Arguments should be in YAML format (JSON is a subset of YAML!)
+                            e.g. can specify two sensors using:
+                            --sensors '{class: "network.heartbeat_virtual_sensor.HeartbeatVirtualSensor",
                             dev_name: "hb0", interval: 5}' '{class:
-                             "dummy_sensors.dummy_gas_virtual_sensor.DummyGasVirtualSensor",
+                             "dummy.dummy_gas_virtual_sensor.DummyGasVirtualSensor",
                              dev_name: "gas0", interval: 3}'
+
+                            Alternatively, you can also assign a name to your custom component, which
+                            can be used to overwrite or modify one of the same name in your configuration
+                            file such as the following to change the actual class definition used:
+                            '{TempSensor: {class: "environment.usb_temperature_virtual_sensor.UsbTemperatureVirtualSensor"}'
                             ''')
         parser.add_argument('--applications', '-a', type=str, nargs='+', default=None,
                             help='''manually specify applications (and their configurations) to run.

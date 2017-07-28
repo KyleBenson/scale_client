@@ -1,4 +1,4 @@
-from virtual_sensor import VirtualSensor
+from scale_client.sensors.virtual_sensor import VirtualSensor
 
 import logging
 log = logging.getLogger(__name__)
