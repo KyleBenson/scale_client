@@ -1,9 +1,9 @@
-from scale_client.sensors.analog_virtual_sensor import AnalogVirtualSensor
+from scale_client.sensors.analog_physical_sensor import AnalogPhysicalSensor
 
 
-class GasVirtualSensor(AnalogVirtualSensor):
-    def __init__(self, broker, device=None, interval=1, analog_port=None, threshold=400, gas_type=None, **kwargs):
-        super(GasVirtualSensor, self).__init__(broker, device=device, interval=interval, analog_port=analog_port, **kwargs)
+class GasPhysicalSensor(AnalogPhysicalSensor):
+    def __init__(self, broker, interval=1, threshold=400, gas_type=None, **kwargs):
+        super(GasPhysicalSensor, self).__init__(broker, interval=interval, **kwargs)
         self._threshold = threshold
         self._gas_type = gas_type
 
@@ -15,7 +15,7 @@ class GasVirtualSensor(AnalogVirtualSensor):
         return "explosive_gas"
 
     def read(self):
-        event = super(GasVirtualSensor, self).read()
+        event = super(GasPhysicalSensor, self).read()
         event.data['condition'] = {
                 "threshold": {
                     "operator": ">",

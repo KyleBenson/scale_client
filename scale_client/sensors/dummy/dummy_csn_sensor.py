@@ -1,15 +1,15 @@
 from random import *
 
-from scale_client.sensors.community_seismic_network.csn_virtual_sensor import CSNVirtualSensor
+from scale_client.sensors.community_seismic_network.csn_sensor import CsnSensor
 from scale_client.sensors.virtual_sensor import VirtualSensor
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class DummyCSNVirtualSensor(CSNVirtualSensor):
-    def __init__(self, broker, device=None, **kwargs):
-        super(DummyCSNVirtualSensor, self).__init__(broker, device=device, **kwargs)
+class DummyCsnSensor(CsnSensor):
+    def __init__(self, broker, **kwargs):
+        super(DummyCsnSensor, self).__init__(broker, **kwargs)
         self._rand = Random()
         self._rand.seed()
         self._whatflag = True
@@ -36,7 +36,7 @@ class DummyCSNVirtualSensor(CSNVirtualSensor):
         # reset the timer to a random time so that events appear more dynamically
         # NOTE: this relies on the set_wait_period API implementation resetting
         # the timer immediately!  consider it a hack!
-        wait_time = self._rand.random() * 2 * DummyCSNVirtualSensor.WAIT_MEAN
+        wait_time = self._rand.random() * 2 * DummyCsnSensor.WAIT_MEAN
         log.debug("next seismic pick in %d seconds" % wait_time)
-        self.set_wait_period(wait_time)
+        self.set_sample_interval(wait_time)
         return readings

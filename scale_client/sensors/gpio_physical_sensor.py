@@ -1,19 +1,18 @@
-from scale_client.sensors.virtual_sensor import VirtualSensor
+from scale_client.sensors.physical_sensor import PhysicalSensor
 
 
-class GPIOVirtualSensor(VirtualSensor):
+class GpioPhysicalSensor(PhysicalSensor):
     """
     This class is specifically designed for use with GPIO sensors attached to a Raspberry Pi.
     """
-    def __init__(self, broker, device=None, interval=1, gpio_pin=None, **kwargs):
+    def __init__(self, broker, gpio_pin=None, **kwargs):
         """
         :param broker:
-        :param device:
-        :param interval:
         :param gpio_pin: uses P1 GPIO pin numbering convention
         :param kwargs:
         """
-        super(GPIOVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
+        super(GpioPhysicalSensor, self).__init__(broker, **kwargs)
+        # TODO: we probably need to error check that a pin was specified!  Explicit failure to configure a sensor appropriately would be best...
         self._pin = gpio_pin
         self._GPIO = None
 
@@ -31,7 +30,7 @@ class GPIOVirtualSensor(VirtualSensor):
         # set up GPIO channel
         self._GPIO.setup(self._pin, GPIO.IN)
 
-        super(GPIOVirtualSensor, self).on_start()
+        super(GpioPhysicalSensor, self).on_start()
 
     def read_raw(self):
         input_value = self._GPIO.input(self._pin)

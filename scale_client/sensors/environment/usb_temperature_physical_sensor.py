@@ -1,15 +1,19 @@
-from temperature_virtual_sensor import TemperatureVirtualSensor
+from temperature_physical_sensor import TemperaturePhysicalSensor
 
 import time
+# TODO: perhaps separate out some of the USB logic so we can make a UsbPhysicalSensor class?
 from usb.core import USBError
 from temperusb import TemperHandler
 import logging
 log = logging.getLogger(__name__)
 
 
-class UsbTemperatureVirtualSensor(TemperatureVirtualSensor):
-    def __init__(self, broker, device=None, interval=1, threshold=24.0, search_interval=60, **kwargs):
-        super(TemperatureVirtualSensor, self).__init__(broker, device, interval=interval, **kwargs)
+class UsbTemperaturePhysicalSensor(TemperaturePhysicalSensor):
+    """
+    This class connects to a USB temperature sensor that supports the 'TEMPered' USB driver.
+    """
+    def __init__(self, broker, threshold=24.0, search_interval=60, **kwargs):
+        super(TemperaturePhysicalSensor, self).__init__(broker, **kwargs)
         self._threshold = threshold
         self._search_interval = search_interval
 
@@ -19,7 +23,7 @@ class UsbTemperatureVirtualSensor(TemperatureVirtualSensor):
 
     def on_start(self):
         self._get_devices()
-        super(TemperatureVirtualSensor, self).on_start()
+        super(TemperaturePhysicalSensor, self).on_start()
 
     def _get_devices(self):
         self._devs = TemperHandler().get_devices()
@@ -31,7 +35,7 @@ class UsbTemperatureVirtualSensor(TemperatureVirtualSensor):
         return round(self._curr_dev.get_temperature(), 2)
 
     def read(self):
-        event = super(UsbTemperatureVirtualSensor, self).read()
+        event = super(UsbTemperaturePhysicalSensor, self).read()
         event.data['condition'] = {
                 "threshold": {
                     "operator": ">",

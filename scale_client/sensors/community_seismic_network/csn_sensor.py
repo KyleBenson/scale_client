@@ -2,21 +2,24 @@ import re
 import os
 import subprocess
 import sys
-import scale_client
 from scale_client.sensors.threaded_virtual_sensor import ThreadedVirtualSensor
 
 import logging
 log = logging.getLogger(__name__)
 
+class CsnSensor(ThreadedVirtualSensor):
+    """
+    This sensor gathers 'picks', which are aperiodic events indicative of a possible earthquake as evidenced by a significant increase in the shaking felt by the accelerometer the CSN client daemon monitors.  The CSN client should be running on this platform with the proper 'hacky' configuration: using a modified `/etc/hosts` file, we trick the CSN client daemon into reporting its picks to `localhost(127.0.0.1)`.  We run a stripped-down version of their server with none of the earthquake-analysis logic that receives the pick and passes it as a SensedEvent into the SCALE client for internal publishing.  In this manner, we're basically using their local event-detection algorithm completely unmodified and running that data through our IoT system.  The client daemon is available in the `csn_bin` folder at the root of this repo.
 
-class CSNVirtualSensor(ThreadedVirtualSensor):
-    def __init__(self, broker, device=None, **kwargs):
-        super(CSNVirtualSensor, self).__init__(broker, device, **kwargs)
+    While not truly a VirtualSensor, it does make use of periodically reading output from the virtual server.
+    We did this solely for the simplicity of implementing it...
+    """
+    def __init__(self, broker, **kwargs):
+        super(CsnSensor, self).__init__(broker, **kwargs)
         self._reading_regexp = re.compile(r'.*readings: ([\-\+]?[0-9]*(\.[0-9]+)?)')
         self._magic_ln_regexp = re.compile(self.SCALE_VS_MAGIC_LN)
 
-        scale_client_path = os.path.dirname(scale_client.__file__)
-        self._virtual_server = scale_client_path + "/sensors/virtual_csn_server/main.py"
+        self._virtual_server = os.path.join(os.path.dirname(os.path.abspath(__file__)), "virtual_csn_server", "main.py")
         self._result = None
 
     DEFAULT_PRIORITY = 4
@@ -32,7 +35,7 @@ class CSNVirtualSensor(ThreadedVirtualSensor):
             shell=False,
             stdout=subprocess.PIPE
         )
-        super(CSNVirtualSensor, self).on_start()
+        super(CsnSensor, self).on_start()
 
     def read_raw(self):
         readings = []

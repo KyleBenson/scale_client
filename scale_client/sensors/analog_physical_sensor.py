@@ -1,16 +1,16 @@
-from scale_client.sensors.virtual_sensor import VirtualSensor
+from scale_client.sensors.physical_sensor import PhysicalSensor
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class AnalogVirtualSensor(VirtualSensor):
+class AnalogPhysicalSensor(PhysicalSensor):
     """
     This class is specifically designed to support Analog sensors attached to a ADC board on a Raspberry Pi.
     """
 
-    def __init__(self, broker, device=None, interval=1, analog_port=None, **kwargs):
-        super(AnalogVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
+    def __init__(self, broker, analog_port=None, **kwargs):
+        super(AnalogPhysicalSensor, self).__init__(broker, **kwargs)
         self._port = analog_port
         self._spi = None
 
@@ -36,4 +36,4 @@ class AnalogVirtualSensor(VirtualSensor):
             log.error("Failed to open analog device: " + self.device.device)
             return
 
-        super(AnalogVirtualSensor, self).on_start()
+        super(AnalogPhysicalSensor, self).on_start()

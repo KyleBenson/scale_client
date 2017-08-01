@@ -5,8 +5,9 @@ log = logging.getLogger(__name__)
 
 
 class TemperatureHighVirtualSensor(VirtualSensor):
-    def __init__(self, broker, device=None, threshold=28.0, **kwargs):
-        super(TemperatureHighVirtualSensor, self).__init__(broker=broker, device=device, interval=None, **kwargs)
+    def __init__(self, broker, threshold=28.0, **kwargs):
+        super(TemperatureHighVirtualSensor, self).__init__(broker=broker, subscriptions=("temperature",),
+                                                           sample_interval=None, **kwargs)
         self._threshold = threshold
 
     DEFAULT_PRIORITY = 4
@@ -22,7 +23,7 @@ class TemperatureHighVirtualSensor(VirtualSensor):
             return
 
         if ed > self._threshold:
-            new_event = self.make_event_with_raw_data(ed, priority=self.__class__.DEFAULT_PRIORITY)
+            new_event = self.make_event_with_raw_data(ed)
             new_event.data["condition"] = {
                     "threshold": {
                         "operator": ">",

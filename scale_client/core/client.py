@@ -12,6 +12,7 @@ from device_descriptor import DeviceDescriptor
 from event_reporter import EventReporter
 from application import Application
 from broker import Broker
+from scale_client.sensors.physical_sensor import PhysicalSensor
 
 
 class ScaleClient(object):
@@ -170,7 +171,14 @@ class ScaleClient(object):
             dev_name = config.get("dev_name", "vs%i" % __scale_client_n_sensors_added__)
             config.pop('dev_name', dev_name)
             __scale_client_n_sensors_added__ += 1
-            return _class(broker, device=DeviceDescriptor(dev_name), **config)
+
+            # XXX: only PhysicalSensors should have a DeviceDescriptor
+            # TODO: perhaps this should be handled by the PhysicalSensor class instead?  Should also support more than just a device name...
+
+            if issubclass(_class, PhysicalSensor):
+                return _class(broker, device=DeviceDescriptor(dev_name), **config)
+            else:
+                return _class(broker, **config)
 
         def __make_event_sink(_class, broker, event_reporter, **config):
             res = _class(broker, **config)
@@ -387,15 +395,15 @@ class ScaleClient(object):
                             help='''manually specify sensors (and their configurations) to run.
                             Arguments should be in YAML format (JSON is a subset of YAML!)
                             e.g. can specify two sensors using:
-                            --sensors '{class: "network.heartbeat_virtual_sensor.HeartbeatVirtualSensor",
+                            --sensors '{class: "network.heartbeat_virtual_sensor.HeartbeatSensor",
                             dev_name: "hb0", interval: 5}' '{class:
-                             "dummy.dummy_gas_virtual_sensor.DummyGasVirtualSensor",
+                             "dummy.dummy_gas_virtual_sensor.DummyGasPhysicalSensor",
                              dev_name: "gas0", interval: 3}'
 
                             Alternatively, you can also assign a name to your custom component, which
                             can be used to overwrite or modify one of the same name in your configuration
                             file such as the following to change the actual class definition used:
-                            '{TempSensor: {class: "environment.usb_temperature_virtual_sensor.UsbTemperatureVirtualSensor"}'
+                            '{TempSensor: {class: "environment.usb_temperature_virtual_sensor.UsbTemperaturePhysicalSensor"}'
                             ''')
         parser.add_argument('--applications', '-a', type=str, nargs='+', default=None,
                             help='''manually specify applications (and their configurations) to run.

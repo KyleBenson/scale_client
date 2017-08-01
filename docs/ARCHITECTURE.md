@@ -13,6 +13,7 @@ through a `Broker`.
 `SensedEvent`s represent the core data object, containing the raw data and associated metadata representing a sensor reading.
 `VirtualSensor`s are basically `Application`s that periodically read data from some source, produce a `SensedEvent` that captures this data,
 and internally publish this data.
+A `PhysicalSensor` is just a `VirtualSensor` that explicitly and directly manages a physical sensing device attached to the client node.
 The `EventReporter` inspects all `SensedEvent`s that flow through the `Broker` and chooses how to handle the event:
 whether or not it should be published externally and which `EventSink`(s) to publish it via.
 See the source code files containing these files for further documentation about how their APIs and implementations work.
@@ -27,12 +28,12 @@ Most classes derive from `Application` with the notable exception of the core `S
 A `VirtualSensor` is basically just an `Application` that periodically reads sensor data to create a `SensedEvent`.
 While we could have chosen a different approach, we believed that this object-orientation would make the SCALE Client
 more accessible to individuals with only basic programming experience.
-It proved quite powerful as we were able to rapidly develop the intial client and extend it with new functionality as a team
+It proved quite powerful as we were able to rapidly develop the initial client and extend it with new functionality as a team
 that worked in different physical locations and even time zones.
 
 We chose this approach in order to allow end users to write only a few lines of code in order to modify existing modules
 or add new ones that behave similarly to existing ones (see [Modifying Documentation](MODIFYING.md) for details on how to do this).
-A user only needs to extend an existing module (e.g. `AnalogVirtualSensor`) and override a few methods that
+A user only needs to extend an existing module (e.g. `AnalogPhysicalSensor`) and override a few methods that
 handle the specific implementation details of the new module (e.g. the `read_raw()` method that actually reads data from the device).
 This allows us to logically separate implementation details into multiple class files
 and swap one functionality out for another (e.g. writing a new base `Application` module to run a single asynchronous thread

@@ -1,6 +1,7 @@
 from ..threaded_virtual_sensor import ThreadedVirtualSensor
 
-class DummyThreadedVirtualSensor(ThreadedVirtualSensor):
+
+class DummyThreadedSensor(ThreadedVirtualSensor):
     def read_raw(self):
         return "dummy_thread_reading"
 

@@ -2,6 +2,7 @@
 
 SCALE is designed to be modified or extended by anyone with minimal Python programming abilities.  Please take a look at the [Architecture Documentation](ARCHITECTURE.md) first to understand how the system works.
 
+
 ## Adding New Classes
 
 See the base classes for the following SCALE components in order to extend the system by deriving these classes to add new functionalities:
@@ -14,19 +15,29 @@ You can also extend existing derived classes to modify their functionality sligh
 
 After adding the new class make sure you enable it either via command line or the configuration file.
 
+
 ### Supporting SCALE's Inheritance Model
 
 SCALE expects all classes instantiated and run by the core to accept `**kwargs` (keyword arguments) in their constructor (e.g. `__init__(arg1, arg2=3, ..., **kwargs)`).  Make sure to specify these and document them in your classes so that they can be properly passed in from the confugartion file.
+ Note that the only positional argument (i.e. *args) your classes should accept is the `broker` argument that all children of `Application` accept.  This convention prevents placing such an argument in the wrong position and also ensures that users of your class can explicitly configure it using either the command line or configuration files as described in the [Configuring documentation](CONFIGURING.md).
 
 As SCALE is designed in a highly object-oriented manner, ensure that you properly defer to `super` when necessary wherever you override a method in order to properly handle inheritance.  In particular, you will need to do this with `__init__` (i.e. pass `**kwargs`) as well as methods such as `on_start()`.
+
 
 ### Protocol-specific Formatting in EventSinks
 
 Note that the `EventSink` class has a function called `encode_event()`.  You may need to overwrite this in order to format your `SensedEvent`s in a particular manner.  For example, our `SigfoxEventSink` needed to assign a well-known `SensedEvent` type to one of a few codes in order to transmit the event in the small message size supported by SigFox's ultra-narrowband technology.
 
+
 ### Using Threaded Applications/VirtualSensors
 
 You may need to run long blocking operations in your new class, in which case you should consider deriving from the `ThreadedApplication` or `ThreadedVirtualSensor` class.  This ensures that your class runs in its own thread and won't block the others.
+Note that we use explicit inheritance here rather than e.g. a keyword argument to enable threading because different runtime environments may need to handle threading differently than others.  By being explicit about when your class needs a thread to perform blocking operations, the scale client can ensure this guarantee while optimizing operations that may complete more quickly.
+
+
+### Testing with Dummy Sensors
+
+When you add a new `PhysicalSensor` class to support a new piece of directly-attached sensing hardware, you may wish to test other `Application`s that use this data without having to physically operate on the sensor to get certain readings.  You may also wish to run multiple scale clients exporting this data type but only have a single sensor.  In this case, you can make use of the `DummyPhysicalSensor` class to create your own dummy class like those found in the `sensors.dummy` module.  By subclassing `DummyPhysicalSensor` as well as your new `PhysicalSensor` implementation, you are explicitly telling the scale client that this test class does not actually manage a piece of hardware and so should not be treated like a device driver.  This has no major benefits currently but may affect platform optimizations in the future.
 
 
 ## Integrating New Protocols and Data Formats

@@ -10,19 +10,16 @@ Main:
 Sensors:
     # Dummy environment
     DummyLightSensor:
-      class: "dummy.dummy_light_virtual_sensor.DummyLightVirtualSensor"
+      class: "dummy.dummy_light_physical_sensor.DummyLightPhysicalSensor"
       dev_name: "light0"
     # Dummy presence_sensors
     DummyPIRSensor:
-      class: "dummy.dummy_pir_virtual_sensor.DummyPIRVirtualSensor"
+      class: "dummy.dummy_pir_physical_sensor.DummyPirPhysicalSensor"
       dev_name: "pir0"
     # VirtualSensors that detect higher-level events: should work with dummy ones
     PIRNoMotionSensor:
-      class: "virtual_sensors.pir_no_motion_virtual_sensor.PIRNoMotionVirtualSensor"
-      dev_name: "nomot0"
+      class: "event_detectors.no_motion_virtual_sensor.NoMotionVirtualSensor"
     LightFlashSensor:
-      class: "virtual_sensors.light_flash_virtual_sensor.LightFlashVirtualSensor"
-      dev_name: "flash0"
+      class: "event_detectors.light_flash_virtual_sensor.LightFlashVirtualSensor"
     TempHighSensor:
-      class: "virtual_sensors.temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
-      dev_name: "heat0"
+      class: "event_detectors.temperature_high_virtual_sensor.TemperatureHighVirtualSensor"

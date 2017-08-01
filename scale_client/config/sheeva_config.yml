@@ -6,14 +6,12 @@ Main:
 
 Sensors:
     HBSensor:
-      class: "network.heartbeat_virtual_sensor.HeartbeatVirtualSensor"
-      dev_name: "hb0"
+      class: "dummy.heartbeat_sensor.HeartbeatSensor"
       interval: 60
     TempSensor:
-      class: "environment.usb_temperature_virtual_sensor.UsbTemperatureVirtualSensor"
+      class: "environment.usb_temperature_physical_sensor.UsbTemperaturePhysicalSensor"
       dev_name: "cel0"
       threshold: 24.0
     # Ensure the CSN client daemon is running and has been configured properly, including the /etc/hosts hack!
     CSNSensor:
-      class: "community_seismic_network.csn_virtual_sensor.CSNVirtualSensor"
-      dev_name: "accel0"
+      class: "community_seismic_network.csn_sensor.CsnSensor"

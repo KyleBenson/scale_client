@@ -4,12 +4,12 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class TemperatureVirtualSensor(VirtualSensor):
+class TemperaturePhysicalSensor(VirtualSensor):
     """
     Temperature sensor that only reports data when it's above some threshold.
     """
-    def __init__(self, broker, device=None, interval=1, threshold=24.0, **kwargs):
-        super(TemperatureVirtualSensor, self).__init__(broker, device, interval=interval, **kwargs)
+    def __init__(self, broker, interval=1, threshold=24.0, **kwargs):
+        super(TemperaturePhysicalSensor, self).__init__(broker, interval=interval, **kwargs)
         self._threshold = threshold
 
     DEFAULT_PRIORITY = 5
@@ -18,7 +18,7 @@ class TemperatureVirtualSensor(VirtualSensor):
         return "temperature"
 
     def read(self):
-        event = super(TemperatureVirtualSensor, self).read()
+        event = super(TemperaturePhysicalSensor, self).read()
         event.data['condition'] = {
             "threshold": {
                 "operator": ">",

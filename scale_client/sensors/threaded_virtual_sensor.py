@@ -10,14 +10,13 @@ class ThreadedVirtualSensor(VirtualSensor, ThreadedApplication):
     Does its sensor reading in a background loop instead of using
     the repeat feature of Application.timed_call()
     """
-    def __init__(self, broker, device=None, interval=1, **kwargs):
-        super(ThreadedVirtualSensor, self).__init__(broker=broker, device=device,
-                                                    interval=interval, **kwargs)
-        self._vs_thread_running = False
+    def __init__(self, broker, **kwargs):
+        super(ThreadedVirtualSensor, self).__init__(broker=broker, **kwargs)
+        self._sensor_thread_running = False
 
     def __sensor_loop(self, interval):
         """
-        Simply loops until the VS stops, reading sensor data every
+        Simply loops until the sensor stops, reading sensor data every
         interval seconds.  Note that because this class is designed
         for long-running sensor reads that run best in background threads,
          it makes an effort to actually ensure the interval is followed
@@ -26,7 +25,7 @@ class ThreadedVirtualSensor(VirtualSensor, ThreadedApplication):
         :param interval:
         :return:
         """
-        while self._vs_thread_running:
+        while self._sensor_thread_running:
             t1 = time.time()
             self._do_sensor_read()
             time_delta = time.time() - t1
@@ -47,9 +46,9 @@ class ThreadedVirtualSensor(VirtualSensor, ThreadedApplication):
         than using a periodic timer.
         :return:
         """
-        self._vs_thread_running = True
-        self.run_in_background(self.__sensor_loop, self._wait_period)
+        self._sensor_thread_running = True
+        self.run_in_background(self.__sensor_loop, self._sample_interval)
 
     def on_stop(self):
-        self._vs_thread_running = False
+        self._sensor_thread_running = False
         super(ThreadedVirtualSensor, self).on_stop()

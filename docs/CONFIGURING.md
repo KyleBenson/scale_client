@@ -2,6 +2,7 @@
 
 This section assumes that you have already somewhat familiarised yourself with the [SCALE Client Architecture](ARCHITECTURE.md).  You may wish to do so first in order to understand the options available for you to configure.
 
+
 ## Main Command line arguments
 ```
 --config FILENAME
@@ -10,9 +11,11 @@ This section assumes that you have already somewhat familiarised yourself with t
 ```
 
 Note that you can run the client with `-h` to view all available options, which include the ability to manually configure sensors, applications, and event_sinks as if they were written in the configuration file as described below.
+Note also that these manual configurations can be used to overwrite or modify the configuration parameters specified in a configuration file.  For example, you may wish to change the sensor sampling rate or the IP address of the MQTT broker but keep the rest of the configurations intact.  See the help option for more details.
 
 
 ## Configuration file
+
 Configuration files are written in the [YAML](http://www.yaml.org/start.html) data serialization language.
 See examples in the `scale_client/config` directory especially the [example configuration file that documents the various options available](../scale_client/config/example_config.yml).
 The different possible sections in a configuration file mostly correspond to packages in the `scale_client` directory.
@@ -34,8 +37,27 @@ Another major advantage is that only the necessary dependencies and third-party 
 The remaining arguments for each class are passed directly to the class's constructor as `**kwargs`, so ensure you include all necessary ones, spell them properly, and verify that the value is legitimate or it may create an error during runtime.  SCALE tries to fail gracefully by logging these errors and not starting up the class in question when one occurs, and so it is your responsibility to enable logging during testing and verify that the classes are configured and run properly.
 
 
-## Location for machine-specific configuration file
+### Importing multiple configuration files
+
+The `Main` section supports a special option for combining multiple configuration files.  You can import these files in a manner that merges options whenever possible and overwrites the later (left-most) files by adding the following option:
+
+`include_config_files: ["config_file_1.yml", "config2.yml"]`
+
+See the example config file for more details.
+
+
+### Location for machine-specific configuration file
 
 The SCALE daemon as a system service will always try to load `/etc/scale/client/config.yml` on start-up for a machine-specific configuration file. If it fails, it will try to load one of the default configuration files that comes with the package.
 
 The setup script `setup.py` will create the directory `/etc/scale/client` recursively and put an example configuration file `example-config.yml` inside. Your machine-specific configuration file will NOT be overwritten during setup.
+
+
+## Configuring `Application`s and `VirtualSensor`s
+
+While you should see the individual classes for a more detailed and complete list, the following parameters are some of the configuration options supported by most `Application`s and `VirtualSensor`s:
+
+* `sample_interval` - the sensor will call `read()` and possibly publish an event every `sample_interval` seconds (this is synchronous mode).  You can also use the keyword `interval` for backwards compatibility with the older API.
+* `subscriptions` - accepts a list of strings where each entry is the event topic (e.g. temperature) that this `Application` should subscribe to.  Every time such an event is published, the `Application`'s `on_event()` method will be called.  For a `VirtualSensor`, this is asynchronous mode.
+* `dev_name` - this parameter for a `PhysicalSensor` is intercepted by the scale client and used to create a `DeviceDescriptor` that simply identifies the sensing device by `dev_name`.  It will be automatically generated in a unique manner (e.g. 'vs0, vs1, ...' if unspecified.
+* `threshold` - many of the `PhysicalSensor` implementations accept this parameter in order to only publish sensor readings when their raw data value exceeds `threshold`.  This parameter may eventually be incorporated into `VirtualSensor` so that all derived classes can make use of it.

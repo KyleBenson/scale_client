@@ -1,15 +1,16 @@
 import logging
 from time import time as get_time
 
-from scale_client.sensors.environment.pir_virtual_sensor import PIRVirtualSensor
+from scale_client.sensors.environment.pir_physical_sensor import PirPhysicalSensor
 from scale_client.sensors.virtual_sensor import VirtualSensor
 
 log = logging.getLogger(__name__)
 
 
-class PIRNoMotionVirtualSensor(VirtualSensor):
-    def __init__(self, broker, device=None, interval=1, inact_threshold=600, **kwargs):
-        super(PIRNoMotionVirtualSensor, self).__init__(broker=broker, device=device, interval=interval, **kwargs)
+class NoMotionVirtualSensor(VirtualSensor):
+    def __init__(self, broker, sample_interval=1, inact_threshold=600, **kwargs):
+        super(NoMotionVirtualSensor, self).__init__(broker=broker, subscriptions=("motion",),
+                                                    sample_interval=sample_interval, **kwargs)
         self._inact_timer = get_time()
         self._inact_threshold = inact_threshold
 
@@ -19,10 +20,10 @@ class PIRNoMotionVirtualSensor(VirtualSensor):
         return "no_motion"
 
     def read_raw(self):
-        return PIRVirtualSensor.IDLE
+        return PirPhysicalSensor.IDLE
 
     def read(self):
-        event = super(PIRNoMotionVirtualSensor, self).read()
+        event = super(NoMotionVirtualSensor, self).read()
         event.data["condition"] = self.__get_condition()
         return event
 
@@ -40,7 +41,7 @@ class PIRNoMotionVirtualSensor(VirtualSensor):
         if et != "motion":
             return
 
-        if ed == PIRVirtualSensor.IDLE:
+        if ed == PirPhysicalSensor.IDLE:
             self._inact_timer = get_time()
         else:
             self._inact_timer = None

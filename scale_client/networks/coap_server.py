@@ -36,7 +36,7 @@ def get_coap_server(name=_DEFAULT_COAP_SERVER_NAME):
 class CoapServer(ThreadedApplication):
     """
     This special Application runs a CoAP server so that other modules may use it to store CoAP resources
-    for external nodes (e.g. those running a CoapVirtualSensor) to GET/POST/PUT/etc.  It allows for
+    for external nodes (e.g. those running a CoapSensor) to GET/POST/PUT/etc.  It allows for
     defining custom CoapResources that can handle application-specific logic.
     """
     def __init__(self, broker,

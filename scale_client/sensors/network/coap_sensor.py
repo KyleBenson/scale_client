@@ -10,11 +10,13 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class CoapVirtualSensor(ThreadedVirtualSensor):
+class CoapSensor(ThreadedVirtualSensor):
     """
-    This VirtualSensor reads events from a remote CoAP server and publishes them internally.
-    You can configure it to use the 'observe' feature (default) or simply poll the server
-    with a GET request every *interval* seconds.
+    This networked 'sensor' reads events from a remote CoAP server and publishes them internally.
+    You can configure it to use the 'observe' feature (default) to receive and publish events
+     asynchronously by specifying its 'subscriptions'.  Alternatively, you can have it
+    simply poll the server with a GET request every *sample_interval* seconds by specifying
+    that parameter.
     """
     
     DEFAULT_PRIORITY = 5
@@ -25,7 +27,6 @@ class CoapVirtualSensor(ThreadedVirtualSensor):
                  port=DEFAULT_COAP_PORT,
                  username=None,
                  password=None,
-                 use_polling=False,
                  timeout=300,
                  **kwargs):
         """
@@ -35,12 +36,11 @@ class CoapVirtualSensor(ThreadedVirtualSensor):
         :param port: port of remote server
         :param username:
         :param password:
-        :param use_polling: periodically polls if True, uses 'observe' feature for async updates if False
         :param timeout: timeout (in seconds) for a request (also used to periodically send observe requests
         to keep the request fresh and handle the case where it was NOT_FOUND initially)
         :param kwargs:
         """
-        super(CoapVirtualSensor, self).__init__(broker, **kwargs)
+        super(CoapSensor, self).__init__(broker, **kwargs)
 
         self._topic = topic
         self._client = None  # Type: coapthon.client.helperclient.HelperClient
@@ -51,7 +51,7 @@ class CoapVirtualSensor(ThreadedVirtualSensor):
             log.warning("SECURITY authentication using username & password not yet supported!")
         self._username = username
         self._password = password
-        self.use_polling = use_polling
+        self.use_polling = self._sample_interval is not None
         self._timeout = timeout
 
         self._client_running = False
@@ -65,7 +65,7 @@ class CoapVirtualSensor(ThreadedVirtualSensor):
         """
         A unique human-readable identifier of the type of sensor this object represents.
         """
-        return "coap_virtual_sensor"
+        return "coap_sensor"
 
     def read_raw(self):
         """
@@ -161,7 +161,7 @@ class CoapVirtualSensor(ThreadedVirtualSensor):
         self._client_running = True
 
         if self.use_polling:
-            super(CoapVirtualSensor, self).on_start()
+            super(CoapSensor, self).on_start()
         else:
             self.observe_topic()
 
@@ -171,4 +171,4 @@ class CoapVirtualSensor(ThreadedVirtualSensor):
                 self._client.cancel_observing(self._last_observe_response, True)
             self._client.close()
             self._client_running = False
-        super(CoapVirtualSensor, self).on_stop()
+        super(CoapSensor, self).on_stop()

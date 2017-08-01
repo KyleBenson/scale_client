@@ -7,10 +7,10 @@ from scale_client.sensors.threaded_virtual_sensor import ThreadedVirtualSensor
 import logging
 log = logging.getLogger(__name__)
 
-class IWListVirtualSensor(ThreadedVirtualSensor):
-	def __init__(self, broker, device=None, interval=4, if_name=None, **kwargs):
-		super(IWListVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
-		self._interval = interval
+# TODO: document this class...
+class IwListSensor(ThreadedVirtualSensor):
+	def __init__(self, broker, sample_interval=4, if_name=None, **kwargs):
+		super(IwListSensor, self).__init__(broker, sample_interval=sample_interval, **kwargs)
 		self._if_name = if_name # Interface device name, for example: wlan0
 
 	def get_type(self):
@@ -26,7 +26,7 @@ class IWListVirtualSensor(ThreadedVirtualSensor):
 			log.error("failed to start because of OSError")
 			return False
 		
-		super(IWListVirtualSensor, self).on_start()
+		super(IwListSensor, self).on_start()
 
 	def scan(self):
 		return iwlist.scan(self._if_name)

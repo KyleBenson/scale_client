@@ -34,52 +34,44 @@ Applications:
 Sensors:
     ### Physical environment sensors
     LightSensor:
-      class: "environment.light_virtual_sensor.LightVirtualSensor"
+      class: "environment.light_physical_sensor.LightPhysicalSensor"
       dev_name: "light0"
       analog_port: 3
     GasSensor:
-      class: "environment.gas_virtual_sensor.GasVirtualSensor"
+      class: "environment.gas_physical_sensor.GasPhysicalSensor"
       dev_name: "gas0"
       analog_port: 0
     # Passive infrared detects movement of living beings
     PIRSensor:
-      class: "environment.pir_virtual_sensor.PIRVirtualSensor"
+      class: "environment.pir_physical_sensor.PirPhysicalSensor"
       dev_name: "pir0"
       gpio_pin: 17
     TemperatureSensor:
-      class: "environment.temperature_virtual_sensor.TemperatureVirtualSensor"
+      class: "environment.temperature_physical_sensor.TemperaturePhysicalSensor"
       dev_name: "cel0"
     # The CSN sensor detects possible local seismic activity.  You can bump the table to set it off,
     # but continuing to do so will convince it that this is now a normal level of shaking in the environment :)
     CSNSensor:
-      class: "community_seismic_network.csn_virtual_sensor.CSNVirtualSensor"
-      dev_name: "accel0"
+      class: "community_seismic_network.csn_sensor.CsnSensor"
     ### These virtual sensors consume physical environmental SensedEvents and
     # produce higher-level events they detected from analyzing that data
     PIRNoMotionSensor:
-      class: "virtual_sensors.pir_no_motion_virtual_sensor.PIRNoMotionVirtualSensor"
-      dev_name: "nomot0"
+      class: "event_detectors.no_motion_virtual_sensor.NoMotionVirtualSensor"
     LightFlashSensor:
-      class: "virtual_sensors.light_flash_virtual_sensor.LightFlashVirtualSensor"
-      dev_name: "flash0"
+      class: "event_detectors.light_flash_virtual_sensor.LightFlashVirtualSensor"
     TemperatureHighSensor:
-      class: "virtual_sensors.temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
-      dev_name: "heat0"
+      class: "event_detectors.temperature_high_virtual_sensor.TemperatureHighVirtualSensor"
     UnexpectedMotionSensor:
-      class: "virtual_sensors.unexpected_motion_virtual_sensor.UnexpectedMotionVirtualSensor"
-      dev_name: "uxmot0"
+      class: "event_detectors.unexpected_motion_virtual_sensor.UnexpectedMotionVirtualSensor"
     ### Network sensors
     # A simple heartbeat to verify this client is alive
     HBSensor:
-      class: "network.heartbeat_virtual_sensor.HeartbeatVirtualSensor"
-      dev_name: "hb0"
+      class: "dummy.heartbeat_sensor.HeartbeatSensor"
       interval: 60
     # Ensure we have Internet access and allow the rest of the system to adapt accordingly if we don't!
     InternetAccessSensor:
-      class: "network.internet_access_virtual_sensor.InternetAccessVirtualSensor"
-      dev_name: "net0"
+      class: "network.internet_access_sensor.InternetAccessSensor"
     ### Location sensor
     # Estimate our location using our IP address since we don't have GPS
     GeoIPSensor:
-      class: "location.geo_ip_virtual_sensor.GeoIPVirtualSensor"
-      dev_name: "geoip0"
+      class: "location.geo_ip_sensor.GeoIpSensor"

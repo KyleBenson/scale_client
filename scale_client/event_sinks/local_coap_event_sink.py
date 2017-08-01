@@ -12,7 +12,7 @@ from scale_client.networks.coap_server import get_coap_server
 class LocalCoapEventSink(ThreadedEventSink):
     """
     This EventSink stores events in a CoAP server so that external nodes
-    (e.g. those running a CoapVirtualSensor) can GET them as CoAP resources.
+    (e.g. those running a CoapSensor) can GET them as CoAP resources.
     """
     def __init__(self, broker,
                  topic="scale/events/%s",

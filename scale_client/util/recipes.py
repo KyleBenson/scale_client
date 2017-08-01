@@ -30,7 +30,7 @@ if THREAD_CREATION_LOGGING:
 # XXX: circuits seems to set its own signal handler that fires a Signal Event and then calls stop(),
 # but the current version fails to call Manager.stop() so we do so manually as a patch...  see circuits #234
 # NOTE: this seems to be a bug related only to the fact that coapthon is creating its own threads and then
-# calling back into the circuits library as this doesn't manifest when the CoapVirtualSensor isn't running.
+# calling back into the circuits library as this doesn't manifest when the CoapSensor isn't running.
 # def __quit_signal_handler(signo, stack_frame):
 #     self.__broker.__class__._signal_handler(self.__broker, signo, stack_frame)
 #     self.__broker.stop()
@@ -46,7 +46,7 @@ if THREAD_CREATION_LOGGING:
 # hanging after quitting.  So we just force exit as a HACK instead...
 # BUG: this seems to be due to something coapthon is doing with firing up additional threads,
 # but I haven't investigated it fully other than to notice that it seems to only happen
-# when the CoapVirtualSensor is running...
+# when the CoapSensor is running...
 
 # This should normally do it, but since it seems to hang even with the main thread
 # raise SystemExit(0)

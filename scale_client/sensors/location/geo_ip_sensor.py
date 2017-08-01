@@ -6,20 +6,19 @@ import time
 import logging
 log = logging.getLogger(__name__)
 
-class GeoIPVirtualSensor(ThreadedVirtualSensor):
+class GeoIpSensor(ThreadedVirtualSensor):
 	"""
-	This virtual sensor connects to Internet,
-	determines the public IP address of current system,
-	and find the latitude and longitude of the corresponding IP address.
-
-	It doesn't need to be accurate so far.
+	This sensor periodically connects to the Internet,
+	determines the public IP address of the current system,
+	and finds the latitude and longitude of the corresponding IP address.
+	Note that this may not be extremely accurate...
 	"""
 	GEO_IP_LOOKUP_URL = "http://ip-api.com/json"
 
-	def __init__(self, broker, device=None, interval=60, exp=600, mock_ip=None, **kwargs):
-		super(GeoIPVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
+	def __init__(self, broker, interval=60, exp=600, mock_ip=None, **kwargs):
+		super(GeoIpSensor, self).__init__(broker, interval=interval, **kwargs)
 		self._exp = exp
-		self._lookup_url = GeoIPVirtualSensor.GEO_IP_LOOKUP_URL
+		self._lookup_url = GeoIpSensor.GEO_IP_LOOKUP_URL
 		if mock_ip is not None:
 			if type(mock_ip) != type("") and type(mock_ip) != type(u""):
 				raise TypeError

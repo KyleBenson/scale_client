@@ -5,28 +5,29 @@ from time import time as get_time
 import logging
 log = logging.getLogger(__name__)
 
-class InternetAccessVirtualSensor(ThreadedVirtualSensor):
+class InternetAccessSensor(ThreadedVirtualSensor):
     """
-    VirtualSensor that 'pings' the Internet periodically and publishes
+    Network sensor that 'pings' the Internet periodically and publishes
     events when the connection status changes as well as every so many
     seconds. Note that it simply calls out to a util class, so only
     bother changing the default parameters if you really need to.
+    It uses a UDP/DNS probe for better performance than anything TCP-based
+    while still being able to circumvent most firewalls.
     """
 
-    def __init__(self, broker, device=None, interval=10, report_every=60,
+    def __init__(self, broker, sample_interval=10, report_every=60,
                  # Taken directly from net.util.ping_interet():
                  host="8.8.8.8", port=53, timeout=3, **kwargs):
         """
         :param broker:
-        :param device:
-        :param interval:
+        :param sample_interval: defaults to 10 seconds
         :param report_every: policy_check will return True at least every this many secs
-        :param host: host to 'ping'
-        :param port: port to 'ping'
+        :param host: host to 'ping' (default is Google DNS server)
+        :param port: port to 'ping' (default is DNS)
         :param timeout: timeout for 'ping'
         """
 
-        super(InternetAccessVirtualSensor, self).__init__(broker, device=device, interval=interval, **kwargs)
+        super(InternetAccessSensor, self).__init__(broker, sample_interval=sample_interval, **kwargs)
         self._last_value = None
         self._last_report_time = None
         self._report_every = report_every

@@ -14,25 +14,22 @@ Applications:
 
 Sensors:
     HBSensor:
-      class: "network.heartbeat_virtual_sensor.HeartbeatVirtualSensor"
-      dev_name: "hb0"
+      class: "dummy.heartbeat_sensor.HeartbeatSensor"
       interval: 5
     DummyGasSensor:
-      class: "dummy.dummy_gas_virtual_sensor.DummyGasVirtualSensor"
+      class: "dummy.dummy_gas_physical_sensor.DummyGasPhysicalSensor"
       dev_name: "gas0"
       interval: 3
     DummyTempSensor:
-      class: "dummy.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
+      class: "dummy.dummy_temperature_physical_sensor.DummyTemperaturePhysicalSensor"
       dev_name: "cel0"
     DummySeismicSensor:
       # This is useful for testing that VirtualSensor.set_wait_period functions properly.
-      class: "dummy.dummy_csn_virtual_sensor.DummyCSNVirtualSensor"
-      dev_name: "seismic0"
+      class: "dummy.dummy_csn_sensor.DummyCsnSensor"
       interval: 2
     # Disable this one if you don't have internet access and it causes issues
     InternetAccessSensor:
-      class: "network.internet_access_virtual_sensor.InternetAccessVirtualSensor"
-      dev_name: "net0"
+      class: "network.internet_access_sensor.InternetAccessSensor"
 
 #####    FURTHER TESTING TO CONSIDER!
 
@@ -44,8 +41,8 @@ Sensors:
 # even with dummy physical sensors.
 
 # To test your PYTHONPATH is set up properly for importing external modules, execute:
-# cp scale_client/sensors/dummy/dummy_temperature_virtual_sensor.py ~/scratch/scale_client/external_scale_client/
-# and then put ~scratch/scale_client on your PYTHONPATH and uncomment the dummy sensor below:
+# cp scale_client/sensors/dummy/dummy_temperature_physical_sensor.py ~/scratch/scale_client/external_scale_client/
+# and then put ~/scratch/scale_client on your PYTHONPATH and uncomment the dummy sensor below:
 # NOTE: this simple copy test only works because this class does "from scale_client.sensors..."
 #   ExternalDummySensor:
-#     class: "external_scale_client.dummy_temperature_virtual_sensor.DummyTemperatureVirtualSensor"
+#     class: "external_scale_client.dummy_temperature_physical_sensor.DummyTemperaturePhysicalSensor"

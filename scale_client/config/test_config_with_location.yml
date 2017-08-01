@@ -16,5 +16,4 @@ Applications:
 
 Sensors:
     GeoIPSensor:
-        class: "location.geo_ip_virtual_sensor.GeoIPVirtualSensor"
-        dev_name: "geoip0"
+        class: "location.geo_ip_sensor.GeoIpSensor"
