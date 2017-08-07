@@ -57,7 +57,7 @@ The raw data value is formatted in JSON and is currently assumed to follow the S
                  potentially ID, name, model, version, manufacturer, chipset, etc.
                  NOTE: this info is typically populated from the config file."},
      "location" : "lat/lon, building floor, human readable description, etc.",
-     "cond" : {"indicates data values on which condition is raised that caused this event to be published"},
+     "condition" : {"indicates data values on which condition is raised that caused this event to be published"},
      "prio_value": "in range 0-10; 1- high prio, 5- medium prio, 10-low prio",
      "prio_class":  "low, medium, high event priority",
      "schema" : "URI reference to this schema",
@@ -79,7 +79,7 @@ As a concrete example, consider the following:
                  "version" : "1.0",
                 },
      "location" : {"lat" : 33.3, "lon" : "-71"},
-     "cond" : {"threshold" : {"operator" : ">", "value" : "95"},
+     "condition" : {"threshold" : {"operator" : ">", "value" : "95"},
      "prio_class":  "low",
      "prio_value": 2,
      "schema" : "www.schema.org/scale_sensors.1.0.whatever",
