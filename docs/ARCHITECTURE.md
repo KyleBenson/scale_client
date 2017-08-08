@@ -80,7 +80,7 @@ As a concrete example, consider the following:
                 },
      "location" : {"lat" : 33.3, "lon" : "-71"},
      "condition" : {"threshold" : {"operator" : ">", "value" : "95"}},
-     "prio_class":  "low",
+     "prio_class":  "high",
      "prio_value": 2,
      "schema" : "www.schema.org/scale_sensors.1.0.whatever",
    }
