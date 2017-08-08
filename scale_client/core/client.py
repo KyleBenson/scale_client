@@ -133,11 +133,11 @@ class ScaleClient(object):
         """
         Builds an instance using the (optionally) specified configuration file.  If any args are specified
         (e.g. from parse_args()), they may overwrite the configurations in the file.  However,
-        such args that create sensors, apps, etc. will just be interpreted as additional
-        components being configured: IT'S UP TO YOU to ensure there aren't conflicts!
+        such args that create sensors, apps, etc. will be interpreted as additional
+        parameters for components sharing the same names: IT'S UP TO YOU to ensure there aren't conflicts!
         If config_filename is None, we just build using the specified args.
-        :param config_filename:
-        :param args:
+        :param config_filename: optional filename to read config parameters from
+        :param args: optional additional configuration arguments
         :return:
         """
 
