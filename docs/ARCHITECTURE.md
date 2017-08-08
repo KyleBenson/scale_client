@@ -121,6 +121,11 @@ SCHEME is (currently) `scale-local` when referring to a local entity, in which c
 NET_ID is of the form `//[username[:password]]ip.add.re.ss[:port]` when referring to an external (i.e. network) entity, in which case SCHEME will be the protocol used to communicate with it e.g. mqtt, coap, http, etc.
 
 Note that the root of the URI path (i.e. 'scale') is the default namespace in the scale client.  The URI manipulation API explicitly exposes this namespace concept so as to distinguish URIs managed by the SCALE core from those that users may wish to define in their own namespace in order to implement very different logic for.
+
+These URIs are typically used for referring to scale client components for two reasons:
+
+1. Serialized representations can be passed around between nodes more easily instead of worrying about  converting the object pointer reference.
+1. We don't want multiple objects acting on the same `Application` reference simultaneously unless they know it's thread-safe.  By using URIs, we could instead include in our (future) URI registry  the ability to get access to an object with a lock during the lookup process.
  
 In an attempt to maintain RFC 3986 compliance and limit development bugs, the `scale_client.util.uri` package leverages the third-party Python library `uritools`.
 
