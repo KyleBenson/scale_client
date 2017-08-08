@@ -6,19 +6,16 @@ class PirPhysicalSensor(GpioPhysicalSensor):
     Monitors a passive infrared (PIR) device to detect movement.  Note that
     PIR pretty much only works on warm-blooded living creatures.
     """
-    def __init__(self, broker, interval=1, **kwargs):
-        super(PirPhysicalSensor, self).__init__(broker, interval=interval, **kwargs)
+    def __init__(self, broker, interval=1, event_type="motion", **kwargs):
+        super(PirPhysicalSensor, self).__init__(broker, interval=interval, event_type=event_type, **kwargs)
         self._state = PirPhysicalSensor.IDLE
 
     DEFAULT_PRIORITY = 7
     IDLE = 0
     ACTIVE = 1
 
-    def get_type(self):
-        return "motion"
-
-    def policy_check(self, data):
-        raw = data.get_raw_data()
+    def policy_check(self, event):
+        raw = event.data
         success = False
 
         # State transitions

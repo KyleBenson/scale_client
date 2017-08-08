@@ -9,12 +9,9 @@ log = logging.getLogger(__name__)
 
 # TODO: document this class...
 class IwListSensor(ThreadedVirtualSensor):
-	def __init__(self, broker, sample_interval=4, if_name=None, **kwargs):
-		super(IwListSensor, self).__init__(broker, sample_interval=sample_interval, **kwargs)
+	def __init__(self, broker, sample_interval=4, if_name=None, event_type="iwlist_scan", **kwargs):
+		super(IwListSensor, self).__init__(broker, sample_interval=sample_interval, event_type=event_type, **kwargs)
 		self._if_name = if_name # Interface device name, for example: wlan0
-
-	def get_type(self):
-		return "iwlist_scan"
 
 	def on_start(self):
 		try:
@@ -38,9 +35,9 @@ class IwListSensor(ThreadedVirtualSensor):
 			return ap["Cell"]
 		log.info("BSSID field not found for ESSID: %s" % ap["ESSID"])
 		return None
-	
+
 	def _do_sensor_read(self):
-		log.debug("%s reading sensor data..." % self.get_type())
+		log.debug("%s reading sensor data..." % self.name)
 
 		ap_list = self.scan()
 		timestamp = time.time()
@@ -54,7 +51,7 @@ class IwListSensor(ThreadedVirtualSensor):
 					"level": ap["stats"]["level"],
 					"quality": ap["stats"]["quality"]
 				}
-			event = self.make_event_with_raw_data(data)
+			event = self.make_event(data=data)
 			event.timestamp = timestamp
 			event_list.append(event)
 

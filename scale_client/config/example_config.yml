@@ -53,6 +53,8 @@ Sensors:
     HBSensor:
       class: "dummy.heartbeat_sensor.HeartbeatSensor"
       interval: 60
+      # You can manually change the event_type for events created by most VirtualSensors using this parameter:
+      event_type: "check-in"
     # Uses your IP address to do a lat/lon lookup of your approximate location
     GeoIPSensor:
       class: "location.geo_ip_sensor.GeoIpSensor"
@@ -63,7 +65,7 @@ Sensors:
     # actually implemented a complete sub-class for yet.
     #RawAnalogSensor:
     #  class: "raw_analog_physical_sensor.RawAnalogPhysicalSensor"
-    #  dev_name: "raw0"
+    #  device: "raw0"
     #  analog_port: 2
 
 #Networks:

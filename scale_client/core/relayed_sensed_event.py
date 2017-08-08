@@ -6,6 +6,8 @@ import json
 import logging
 log = logging.getLogger(__name__)
 
+# TODO: should be able to totally refactor this class in order to use as much logic from SensedEvent as possible...
+
 class RelayedSensedEvent(Event):
     """
     A RelayedSensedEvent is used to reconstruct SensedEvent class from a relayed sensed event json string

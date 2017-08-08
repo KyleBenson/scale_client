@@ -14,8 +14,8 @@ class CsnSensor(ThreadedVirtualSensor):
     While not truly a VirtualSensor, it does make use of periodically reading output from the virtual server.
     We did this solely for the simplicity of implementing it...
     """
-    def __init__(self, broker, **kwargs):
-        super(CsnSensor, self).__init__(broker, **kwargs)
+    def __init__(self, broker, event_type="seismic", **kwargs):
+        super(CsnSensor, self).__init__(broker, event_type=event_type, **kwargs)
         self._reading_regexp = re.compile(r'.*readings: ([\-\+]?[0-9]*(\.[0-9]+)?)')
         self._magic_ln_regexp = re.compile(self.SCALE_VS_MAGIC_LN)
 
@@ -24,9 +24,6 @@ class CsnSensor(ThreadedVirtualSensor):
 
     DEFAULT_PRIORITY = 4
     SCALE_VS_MAGIC_LN = r"\$\$\$_SCALE_VS_MAGIC_LN_\$\$\$"
-
-    def get_type(self):
-        return "seismic"
 
     def on_start(self):
         # TODO: asynchronous callback when something is actually available on this pipe
@@ -51,8 +48,8 @@ class CsnSensor(ThreadedVirtualSensor):
 
         return readings
 
-    def policy_check(self, data):
-        data = data.get_raw_data()
+    def policy_check(self, event):
+        data = event.data
         if len(data) < 3:
             if len(data) > 0:
                 log.warn("Not sure why there are less than 3 components to the CSN reading")

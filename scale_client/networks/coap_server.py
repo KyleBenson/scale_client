@@ -19,6 +19,7 @@ from scale_client.core.sensed_event import SensedEvent
 
 # Users need to access the server in their other CoAP-based modules,
 # so we keep a registry of them indexed by the user-assigned name.
+# TODO: use Application.name and a registration service for this
 _coap_server_instances = dict()
 _DEFAULT_COAP_SERVER_NAME = '__default_scale_coap_server__'
 def get_coap_server(name=_DEFAULT_COAP_SERVER_NAME):
@@ -87,7 +88,7 @@ class CoapServer(ThreadedApplication):
         self._server_running = True
 
         if self._events_root is not None:
-            root_event = SensedEvent(self._events_root, priority=1, data='root of SCALE events resources')
+            root_event = self.make_event(source=self._events_root, data='root of SCALE events resources', priority=1)
             self.store_event(root_event, self._events_root)
 
         # Listen for remote connections GETting data, etc.
@@ -118,7 +119,7 @@ class CoapServer(ThreadedApplication):
         """
 
         if path is None:
-            path = event.get_type()
+            path = event.event_type
         # XXX: Ensure path is formatted properly for CoAP's internals
         if not path.startswith('/'):
             path = '/' + path
@@ -144,7 +145,7 @@ class CoapServer(ThreadedApplication):
         except KeyError:
             post_cb = None if disable_post else lambda req, res: self.publish(res.event)
             put_cb = None if disable_put else lambda req, res: self.publish(res.event)
-            new_resource = SensedEventCoapResource(event, name=event.get_type(),
+            new_resource = SensedEventCoapResource(event, name=event.event_type,
                                                    get_callback=lambda x, y: y,  # always enabled
                                                    post_callback=post_cb, put_callback=put_cb,
                                                    delete_callback=None if disable_delete else lambda x, y: True)

@@ -45,10 +45,8 @@ class AsyncoreClientUDP(asyncore.dispatcher):
             self.buffer = self.buffer[sent:]
 
 class RelayEventSink(EventSink, ScaleNetworkManager):
-    def __init__(self, broker, relay_port, scan_interval, refresh_socket_conns):
-        EventSink.__init__(self, broker)
-        
-        ScaleNetworkManager.__init__(self, broker)
+    def __init__(self, broker, relay_port, scan_interval, refresh_socket_conns, **kwargs):
+        super(RelayEventSink, self).__init__(broker, **kwargs)
 
         self._neighbors = self.get_neighbors()
         self.batman_interface = self.get_batman_interface()
@@ -157,12 +155,11 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
         return True
 
     def on_event(self, event, topic):
-        et = event.get_type()
-        ed = event.get_raw_data()
+        et = event.event_type
+        ed = event.data
 
         if et == "internet_access":
             self._neta = ed
 
     def encode_event(self, event):
-        # return event.to_json()
         return json.dumps({"d": event.to_map()})

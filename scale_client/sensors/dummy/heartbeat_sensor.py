@@ -10,11 +10,8 @@ class HeartbeatSensor(VirtualSensor):
     useful for ensuring a remote client is alive and connected to the data exchange.
     """
 
-    def __init__(self, broker, interval=1, **kwargs):
-        super(HeartbeatSensor, self).__init__(broker=broker, interval=interval, **kwargs)
-
-    def get_type(self):
-        return "heartbeat"
+    def __init__(self, broker, interval=1, event_type="hearbeat", **kwargs):
+        super(HeartbeatSensor, self).__init__(broker=broker, interval=interval, event_type=event_type, **kwargs)
 
     DEFAULT_PRIORITY = 10
 

@@ -1,7 +1,9 @@
 from scale_client.core.application import Application
 from scale_client.core.sensed_event import SensedEvent
+from scale_client.util import uri
 
 import logging
+
 log = logging.getLogger(__name__)
 
 
@@ -25,10 +27,10 @@ class VirtualSensor(Application):
     Open implementation questions:
       1) How to handle sampling rates, modifying priorities, and turning sensors on/off remotely?
     """
-    
+
     DEFAULT_PRIORITY = 5
 
-    def __init__(self, broker, data_source=None, sample_interval=None, **kwargs):
+    def __init__(self, broker, sample_interval=None, event_type=None, **kwargs):
         """
         Configures the VirtualSensor in one of three sensing modes:
 
@@ -37,30 +39,53 @@ class VirtualSensor(Application):
         stream: not currently implemented!  This will eventually use a queue for sensor data expected in streams rather than less-frequent discrete events.
 
         :param broker:
-        :param data_source: used to tag events with the source event (or physical sensing device) that created them (default is to use list of event subscriptions or get_type() if no subscriptions; this can be safely ignored if you will manually set the source(s) for events your VirtualSensor creates)
         :param sample_interval: the sensor will read() every sample_interval seconds (synchronous mode) if not None (default)
+        :param event_type: short string used like the type of sensor or topic it publishes events to e.g. temperature
+                NOTE: the event topic specified, if any, will be passed along as an advertisement
         :raises ValueError: if parameters don't successfully configure one of the three modes
         :param kwargs:
         """
         # XXX for backwards compatibility
         if 'interval' in kwargs:
-            sample_interval = kwargs.pop('interval')
-        super(VirtualSensor, self).__init__(broker, **kwargs)
+            if sample_interval is None:
+                sample_interval = kwargs.pop('interval')
+            else:
+                raise DeprecationWarning("sample_interval is now used for telling a VirtualSensor its period data reading interval, but you specified both sample_interval=%f and interval=%f!" % (sample_interval, kwargs['interval']))
 
-        # Ensure that at least one mode has been chosen
+        # We use the event_type as the default type for making SensedEvents by passing
+        # it as the first (and likely only) publication advertisement.
+        ads = kwargs.get('advertisements')
+        if event_type is not None:
+            if not ads:
+                ads = (event_type,)
+            elif len(ads) > 0:
+                new_ads = list((event_type,))
+                new_ads.extend(ads)
+                ads = new_ads
+
+        super(VirtualSensor, self).__init__(broker, advertisements=ads, **kwargs)
+
+        # Check that at least one mode has been chosen
+        # We can't raise an assertion like this as some sensors may be configured for hardware-based
+        # asynchronous mode (rather than through our pub-sub system).
         if not kwargs.get('subscriptions') and sample_interval is None:
-            raise ValueError("Invalid parameters failed to enable the sensor in (a)synchronous mode: subs=%s, interval=%s" % (kwargs.get('subscriptions'), sample_interval))
+            log.debug("NOTE: Invalid parameters failed to enable the sensor in (a)synchronous mode:"
+                      " subs=%s, interval=%s\nHopefully you enabled a hardware-based async mode"
+                      " or you might encounter threading problems!" %
+                      (kwargs.get('subscriptions'), sample_interval))
 
-        self.data_source = data_source
         self._sample_interval = sample_interval
         # used to track and possibly cancel the timer used for synchronous mode
         self._sensor_timer = None
 
-    def get_type(self):
+    @property
+    def path(self):
         """
-        A unique human-readable identifier of the type of sensor this object represents.
+        Get the canonical path for this Application as determined by its name and any user-specified
+        path components from derived class implementations.
+        :return:
         """
-        raise NotImplementedError
+        return uri.build_uri(relative_path="sensors/%s" % self.name)
 
     def read_raw(self):
         """
@@ -77,10 +102,31 @@ class VirtualSensor(Application):
         :return:
         """
         data = self.read_raw()
-        return self.make_event_with_raw_data(data)
+        return self.make_event(data=data)
+
+    def make_event(self, priority=None, condition=None, **kwargs):
+        """
+        Make a SensedEvent with the assigned default parameters specified in the class implementation.
+        :param priority:
+        :param condition: default will specify either the interval or the subscriptions
+        :param kwargs:
+        :return:
+        """
+        if priority is None:
+            priority = self.__class__.DEFAULT_PRIORITY
+        if condition is None:
+            if self._sample_interval is not None:
+                condition = {'interval': self._sample_interval}
+            elif self._topic_subscriptions:
+                condition = {'topic_subscriptions': self._topic_subscriptions}
+            else:
+                log.error("couldn't set condition from either sample interval or topic subscriptions:"
+                          " this shouldn't happen in a properly configuration!")
+        return super(VirtualSensor, self).make_event(priority=priority, condition=condition, **kwargs)
 
     def make_event_with_raw_data(self, raw_data, priority=None):
         """
+        DEPRECATED: you should just use Application.make_event(**kwargs) instead
         This function returns a new SensedEvent that contains the raw data specified packaged in the SensedEvent.data
         instance variable.  Override this method to tweak your custom SensedEvent.
 
@@ -88,12 +134,7 @@ class VirtualSensor(Application):
         :param priority: priority to assign this event (None uses the class default)
         :return: SensedEvent
         """
-        if priority is None:
-            priority = self.__class__.DEFAULT_PRIORITY
-        # TODO: this logic should be handled in the SensedEvent class!
-        structured_data = {"event": self.get_type(), "value": raw_data}
-
-        event = SensedEvent(self.data_source, structured_data, priority)
+        event = self.make_event(data=raw_data, priority=priority)
         return event
 
     def set_sample_interval(self, period=1):
@@ -126,10 +167,10 @@ class VirtualSensor(Application):
         try:
             event = self.read()
         except IOError as e:
-            log.debug("%s failed read sensor data! reason: %s" % (self.get_type(), e))
+            log.debug("%s failed read sensor data! reason: %s" % (self.name, e))
             return
 
-        log.debug("%s read sensor data. raw value: %s" % (self.get_type(), event.get_raw_data()))
+        log.debug("%s read sensor data. raw value: %s" % (self.name, event.data))
         if event is None:
             log.error("SensedEvent is None! Default policy is to not report.")
             return
@@ -151,20 +192,3 @@ class VirtualSensor(Application):
         # We make an effort to get the child class's _do_sensor_read method in case they override it.
         t = self.timed_call(self._sample_interval, self.__class__._do_sensor_read, repeat=True)
         self._sensor_timer = t
-
-        @property
-        def data_source(self):
-            return self.__data_source
-
-        @data_source.getter
-        def data_source(self):
-            if self.__data_source is not None:
-                return self.__data_source
-            elif self._topic_subscriptions:
-                return {'topic_subscriptions': self._topic_subscriptions}
-            else:
-                return self.get_type()
-
-        @data_source.setter
-        def data_source(self, value):
-            self.__data_source = value

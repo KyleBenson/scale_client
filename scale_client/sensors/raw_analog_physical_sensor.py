@@ -6,8 +6,5 @@ class RawAnalogPhysicalSensor(AnalogPhysicalSensor):
 
     DEFAULT_PRIORITY = 9
 
-    def get_type(self):
-        return "raw_analog"
-
     def policy_check(self, data):
         return True

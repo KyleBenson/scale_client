@@ -18,10 +18,11 @@ After adding the new class make sure you enable it either via command line or th
 
 ### Supporting SCALE's Inheritance Model
 
-SCALE expects all classes instantiated and run by the core to accept `**kwargs` (keyword arguments) in their constructor (e.g. `__init__(arg1, arg2=3, ..., **kwargs)`).  Make sure to specify these and document them in your classes so that they can be properly passed in from the confugartion file.
+SCALE expects all classes instantiated and run by the core to accept `**kwargs` (keyword arguments) in their constructor (e.g. `__init__(broker, arg2=3, ..., **kwargs)`).  Make sure to specify these and document them in your classes so that they can be properly passed in from the confugartion file.
  Note that the only positional argument (i.e. *args) your classes should accept is the `broker` argument that all children of `Application` accept.  This convention prevents placing such an argument in the wrong position and also ensures that users of your class can explicitly configure it using either the command line or configuration files as described in the [Configuring documentation](CONFIGURING.md).
 
 As SCALE is designed in a highly object-oriented manner, ensure that you properly defer to `super` when necessary wherever you override a method in order to properly handle inheritance.  In particular, you will need to do this with `__init__` (i.e. pass `**kwargs`) as well as methods such as `on_start()`.
+Note that we use the convention of setting `kwargs` defaults by specifying that particular argument in the derived class with a new default value and passing it to the super constructor.  In this way, you essentially strip out the relevant parameters as they make their way up the `super` chain, leaving the final call to `object.__init__` with no `kwargs` left.
 
 
 ### Protocol-specific Formatting in EventSinks

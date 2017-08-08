@@ -27,28 +27,28 @@ class TestApplication(Application):
         :param topic: the Topic the Event was published to
         """
         if topic is None:
-            topic = event.get_type()
+            topic = event.topic
 
-        if not event.data.has_key('touched_by_test_app'):
+        if not event.metadata.has_key('touched_by_test_app'):
             log.debug("TestApp received event (topic %s): %s" % (topic, event))
 
-        raw_data = event.get_raw_data()
+        raw_data = event.data
         try:
-            event.set_raw_data(raw_data + self.increment)
+            event.data = raw_data + self.increment
         except (ValueError, TypeError):
             # maybe not be a numeric value?
             try:
-                event.set_raw_data(float(raw_data) + self.increment)
+                event.data = float(raw_data) + self.increment
             except ValueError:
                 # can't even parse a numeric, so hopefully a string?
                 if isinstance(raw_data, str):
-                    event.set_raw_data(raw_data + str(self.increment))
+                    event.data = raw_data + str(self.increment)
                 else:
-                    event.set_raw_data(self.increment)
-                    event.set_type("TEST_EVENT")
+                    event.data = self.increment
+                    event.event_type = "TEST_EVENT"
 
         # TODO: perhaps the topic should be different to avoid loops?  For now, we just
         # XXX: hack to avoid infinite looping with this event
-        if not event.data.has_key('touched_by_test_app'):
-            event.data['touched_by_test_app'] = True
+        if not event.metadata.has_key('touched_by_test_app'):
+            event.metadata['touched_by_test_app'] = True
             self.publish(event, topic)

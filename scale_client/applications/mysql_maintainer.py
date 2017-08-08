@@ -10,8 +10,8 @@ import logging
 log = logging.getLogger(__name__)
 
 class MySQLMaintainer(Application):
-	def __init__(self, broker, dbname, username, password, interval=10, cleanup=43200):
-		super(MySQLMaintainer, self).__init__(broker)
+	def __init__(self, broker, dbname, username, password, interval=10, cleanup=43200, **kwargs):
+		super(MySQLMaintainer, self).__init__(broker, **kwargs)
 
 		self._interval = interval
 		self._dbname = dbname
@@ -24,7 +24,9 @@ class MySQLMaintainer(Application):
 		self._db_lock = Lock()
 		self._clean_timer = None
 		self._clean_timeout = cleanup
-	
+
+	# TODO: move this class somewhere so we aren't multiply-defining it!
+    # TODO: also update the fields to better represent a SensedEvent; maybe make use of multiple inheritance?
 	class EventRecord(peewee.Model):
 		class Meta:
 			database = None
@@ -85,24 +87,12 @@ class MySQLMaintainer(Application):
 		try:
 			res_list = self.EventRecord.select().where(self.EventRecord.upload_time == None)
 			for rec in res_list:
-				structured_data = {
-						"event": rec.event,
-						"value": json.loads(rec.value_json)
-					}
-				if rec.geotag is not None:
-					structured_data["geotag"] = json.loads(rec.geotag)
-				if rec.condition is not None:
-					structured_data["condition"] = json.loads(rec.condition)
-				event = SensedEvent(
-						rec.sensor,
-						structured_data,
-						rec.priority,
-						timestamp = rec.timestamp
-					)
-				event.db_record = {
-						"table_id": rec.id,
-						"upload_time": rec.upload_time # should be None
-					}
+				event = SensedEvent(data=json.loads(rec.value_json), source=rec.sensor, priority=rec.priority,
+                                    event_type=rec.event, timestamp=rec.timestamp,
+                                    condition=json.loads(rec.condition) if rec.condition else None,
+                                    location=json.loads(rec.geotag) if rec.geotag else None,
+                                    metadata={"table_id": rec.id,
+                                              "upload_time": rec.upload_time})
 				id_list.append(rec.id)
 				event_list.append(event)
 		except peewee.OperationalError, err:
@@ -138,8 +128,8 @@ class MySQLMaintainer(Application):
 			self.publish(event)
 	
 	def on_event(self, event, topic):
-		et = event.get_type()
-		ed = event.get_raw_data()
+		et = event.event_type
+		ed = event.data
 
 		if et == "internet_access":
 			self._neta = ed

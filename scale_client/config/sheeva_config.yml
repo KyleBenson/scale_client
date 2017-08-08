@@ -10,7 +10,7 @@ Sensors:
       interval: 60
     TempSensor:
       class: "environment.usb_temperature_physical_sensor.UsbTemperaturePhysicalSensor"
-      dev_name: "cel0"
+      device: "cel0"
       threshold: 24.0
     # Ensure the CSN client daemon is running and has been configured properly, including the /etc/hosts hack!
     CSNSensor:

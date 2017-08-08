@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import random
 import sys
 import yaml
 import yaml.parser
@@ -8,11 +7,9 @@ import argparse
 import os
 from functools import reduce
 
-from device_descriptor import DeviceDescriptor
 from event_reporter import EventReporter
 from application import Application
 from broker import Broker
-from scale_client.sensors.physical_sensor import PhysicalSensor
 
 
 class ScaleClient(object):
@@ -68,7 +65,7 @@ class ScaleClient(object):
         # Run the broker until it, and thus the whole scale client, have a stop event fully propagated
         self.__broker.run()
 
-    def setup_components(self, configs, package_name, human_readable, helper_fun=None, *args):
+    def setup_components(self, configs, package_name, helper_fun=None, *args):
         """
         Iterate over each component configuration in configs, import the specified class
         (possibly using package_name as the root for the import statement), and then call
@@ -81,7 +78,6 @@ class ScaleClient(object):
         :type configs: dict
         :param package_name: root package_name for the class paths specified
          (these will be classes in the scale_client package e.g. sensors, event_sinks)
-        :param human_readable: plain text short name of what component type this is e.g. network, sensor, etc.
         :param helper_fun: responsible for creating the component in question and doing any bookkeeping
         :param args: these args will be passed to helper_fun
         :return: list of constructed classes
@@ -96,11 +92,8 @@ class ScaleClient(object):
         for comp_name, cfg in list(configs.items()):
             # need to get class definition to call constructor
             if 'class' not in cfg:
-                log.warn("Skipping %s config with no class definition: %s" % (human_readable, cfg))
+                log.warn("Skipping %s config with no class definition: %s" % (comp_name, cfg))
                 continue
-
-            if not isinstance(comp_name, basestring):
-                comp_name = "no_name"
 
             # try importing the specified class extended by package_name first, then just 'class' if error
             cls_name = '.'.join([package_name, cfg['class']])
@@ -114,22 +107,24 @@ class ScaleClient(object):
                 except ImportError as e2:
                     log.error("ImportErrors while creating %s class: %s\n"
                               "Did you remember to put the repository in your PYTHONPATH???"
-                              "skipping import..." % (human_readable, cfg))
+                              "skipping import..." % (other_cls_name, cfg))
                     log.debug("Errors were: %s\n%s" % (e, e2))
                     continue
             try: # building the class
                 # copy config s so we can tweak it as necessary to expose only correct kwargs
                 new_config = cfg.copy()
                 new_config.pop('class')
+                if 'name' not in new_config:
+                    new_config['name'] = comp_name
 
                 res = helper_fun(cls, self.__broker, *args, **new_config)
                 results.append(res)
-                log.info("%s (%s) created from config: %s" % (human_readable, comp_name, cfg))
+                log.info("%s created from config: %s" % (comp_name, cfg))
 
             except Exception as e:
+                log.error("Unexpected error while creating %s class: %s\nError: %s" % (cls.__name__, cfg, e))
                 if self._raise_errors:
                     raise
-                log.error("Unexpected error while creating %s class: %s\nError: %s" % (human_readable, cfg, e))
 
         return results
 
@@ -146,10 +141,10 @@ class ScaleClient(object):
         :return:
         """
 
-        # XXX: in case the user forgets to specify a device name,
+        # XXX: in case the user doesn't specify a name,
         # this will help auto-generate unique ones in a sequence.
-        global __scale_client_n_sensors_added__
-        __scale_client_n_sensors_added__ = 0
+        global __scale_client_n_anon_apps_added__
+        __scale_client_n_anon_apps_added__ = 0
 
         if config_filename is None and args is None:
             raise ValueError("can't build from configuration parameters when both filename and args are None!")
@@ -164,21 +159,6 @@ class ScaleClient(object):
             except IOError as e:
                 log.error("Error reading config file: %s" % e)
                 exit(1)
-
-        # Helper functions for actual config file parsing and handling below.
-        def __make_sensor(_class, broker, **config):
-            global __scale_client_n_sensors_added__
-            dev_name = config.get("dev_name", "vs%i" % __scale_client_n_sensors_added__)
-            config.pop('dev_name', dev_name)
-            __scale_client_n_sensors_added__ += 1
-
-            # XXX: only PhysicalSensors should have a DeviceDescriptor
-            # TODO: perhaps this should be handled by the PhysicalSensor class instead?  Should also support more than just a device name...
-
-            if issubclass(_class, PhysicalSensor):
-                return _class(broker, device=DeviceDescriptor(dev_name), **config)
-            else:
-                return _class(broker, **config)
 
         def __make_event_sink(_class, broker, event_reporter, **config):
             res = _class(broker, **config)
@@ -204,7 +184,7 @@ class ScaleClient(object):
         # EventSinks
         configs = cls.__join_configs_with_args(cfg.get('eventsinks', {}), args.event_sinks \
             if args is not None and args.event_sinks is not None else [])
-        client.setup_components(configs, 'scale_client.event_sinks', 'event sinks', __make_event_sink, client.__reporter)
+        client.setup_components(configs, 'scale_client.event_sinks', __make_event_sink, client.__reporter)
 
         # Set defaults if none were made
         if len(client.__reporter.get_sinks()) == 0:
@@ -224,33 +204,38 @@ class ScaleClient(object):
 
         # Sensors
         configs = cls.__join_configs_with_args(cfg.get('sensors', {}), args.sensors \
-            if args is not None and args.sensors is not None else [])
-        client.setup_components(configs, 'scale_client.sensors', 'sensors', __make_sensor)
+            if args is not None and args.sensors is not None else [], "anon_vs")
+        log.info("Setting up Sensors...")
+        client.setup_components(configs, 'scale_client.sensors')
         # Networks
+        log.info("Setting up Networks...")
         configs = cls.__join_configs_with_args(cfg.get('networks', {}), args.networks \
-            if args is not None and args.networks is not None else [])
-        client.setup_components(configs, 'scale_client.networks', 'networks')
+            if args is not None and args.networks is not None else [], "anon_network_app")
+        client.setup_components(configs, 'scale_client.networks')
         # Applications
+        log.info("Setting up other Applications...")
         configs = cls.__join_configs_with_args(cfg.get('applications', {}), args.applications \
             if args is not None and args.applications is not None else [])
-        client.setup_components(configs, 'scale_client.applications', 'applications')
+        client.setup_components(configs, 'scale_client.applications')
 
         # TODO: set some defaults if no applications, sensors, or networking components are enabled (heartbeat?)
 
         return client
 
     @staticmethod
-    def __join_configs_with_args(configs, relevant_args):
+    def __join_configs_with_args(configs, relevant_args, anon_component_prefix="anon_app"):
         """
         Join the command-line arguments with the configuration file in order to add to
         or even modify the file-specified configuration, if there even was one!
         :param configs:
         :param relevant_args:
+        :param anon_component_prefix: for anonymous components (no name as config dict key), use this string with
+        a unique sequential number appended
         :return:
         """
         # Configuration files are basically nested dictionaries and the command-line arguments
         # are a list with each element being a dictionary. If the dict in the args has the key
-        # 'class', then it is anonymous and we should just give it a random unique name to
+        # 'class', then it is anonymous and we should just give it a sequential unique name to
         # ensure it is run.  If, however, it does not, then we should assume that it's a NAMED
         # configuration and so we can actually use that to overwrite/modify the configurations
         # pulled in from a file.
@@ -262,9 +247,15 @@ class ScaleClient(object):
             except yaml.parser.ParserError as e:
                 raise ValueError("error parsing manual configuration: %s\nError:%s" % (arg, e))
 
+            # If this config is anonymous, give it a unique name and add it to configs
+            # since it couldn't possibly overwrite another config entry.
+            # NOTE: if user specified a 'name' entry directly, we will still take that later on...
             if 'class' in arg:
-                random_key = random.random()
-                new_configs[random_key] = arg
+                # TODO: perhaps register these names somewhere to ensure uniqueness?
+                global __scale_client_n_anon_apps_added__
+                unique_key = anon_component_prefix + str(__scale_client_n_anon_apps_added__)
+                __scale_client_n_anon_apps_added__ += 1
+                new_configs[unique_key] = arg
             else:
                 try:
                     new_configs.update(arg)
@@ -396,9 +387,9 @@ class ScaleClient(object):
                             Arguments should be in YAML format (JSON is a subset of YAML!)
                             e.g. can specify two sensors using:
                             --sensors '{class: "network.heartbeat_virtual_sensor.HeartbeatSensor",
-                            dev_name: "hb0", interval: 5}' '{class:
+                            interval: 5}' '{class:
                              "dummy.dummy_gas_virtual_sensor.DummyGasPhysicalSensor",
-                             dev_name: "gas0", interval: 3}'
+                             name: "gas0", interval: 3}'
 
                             Alternatively, you can also assign a name to your custom component, which
                             can be used to overwrite or modify one of the same name in your configuration

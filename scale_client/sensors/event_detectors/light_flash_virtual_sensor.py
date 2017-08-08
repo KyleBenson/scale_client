@@ -7,16 +7,13 @@ log = logging.getLogger(__name__)
 
 
 class LightFlashVirtualSensor(VirtualSensor):
-    def __init__(self, broker, flash_delta=600, **kwargs):
+    def __init__(self, broker, flash_delta=600, event_type="light_flash", **kwargs):
         super(LightFlashVirtualSensor, self).__init__(broker=broker, subscriptions=("light",),
-                                                      sample_interval=None, **kwargs)
+                                                      sample_interval=None, event_type=event_type, **kwargs)
         self._flash_delta = flash_delta
         self._last_value = None
 
     DEFAULT_PRIORITY = 5
-
-    def get_type(self):
-        return "light_flash"
 
     def on_event(self, event, topic):
         """
@@ -24,8 +21,8 @@ class LightFlashVirtualSensor(VirtualSensor):
         since the last reading and publishes a "light_flash" event if so.  Note that this will
         be highly dependent on how often light events are published!
         """
-        et = event.get_type()
-        ed = event.get_raw_data()
+        et = event.event_type
+        ed = event.data
 
         if et != "light":
             return
@@ -33,8 +30,8 @@ class LightFlashVirtualSensor(VirtualSensor):
         if self._last_value is None:
             pass
         elif ed - self._last_value > self._flash_delta:
-            new_event = self.make_event_with_raw_data(ed, priority=self.__class__.DEFAULT_PRIORITY)
-            new_event.data["condition"] = {
+            new_event = self.make_event(data=ed)
+            new_event.condition = {
                     "delta": {
                         "operator": ">",
                         "value": self._flash_delta

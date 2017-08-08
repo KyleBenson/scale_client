@@ -15,8 +15,8 @@ class LocationManager(Application):
 
 	It reports location changes to other components for them to tag SensedEvent
 	"""
-	def __init__(self, broker, report_update=True):
-		super(LocationManager, self).__init__(broker)
+	def __init__(self, broker, report_update=True, **kwargs):
+		super(LocationManager, self).__init__(broker, **kwargs)
 
 		# Keep location coordinates and its time-stamp, associated with source
 		# Format: sensor: {"lat": , "lon": , "alt": , "expire": , "priority": }
@@ -38,8 +38,8 @@ class LocationManager(Application):
 			return
 
 		# Analyze event
-		et = event.get_type()
-		data = event.get_raw_data()
+		et = event.event_type
+		data = event.data
 		if not et in LocationManager.SOURCE_SUPPORT:
 			return
 		log.debug("event from " + et)
@@ -55,7 +55,7 @@ class LocationManager(Application):
 		self._pool_lock.acquire()
 		try:
 			#XXX: maybe check if timestamp is newer before update?
-			self._location_pool[event.sensor] = item
+			self._location_pool[event.source] = item
 			self._update_location()
 		finally:
 			self._pool_lock.release()
@@ -80,9 +80,7 @@ class LocationManager(Application):
 		# 	return
 
 		if not self._ack_success:
-			ack = SensedEvent(sensor="lman",
-					data={"event": "location_manager_ack", "value": self},
-					priority=4)
+			ack = self.make_event(event_type="location_manager_ack", data=self, priority=4)
 			self.publish(ack)
 			log.debug("send ack to event reporter");
 
@@ -100,9 +98,7 @@ class LocationManager(Application):
 			return
 		if type(self._last_value) != type(value) or self._last_value["lon"] != value["lon"] or self._last_value["lat"] != value["lat"] or self._last_value["alt"] != value["alt"]:
 			if self._report_update:
-				up = SensedEvent(sensor="lman",
-						data={"event": "location_update", "value": value},
-						priority=8)
+				up = self.make_event(event_type="location_update", data=value, priority=8)
 				self.publish(up)
 			self._last_value = value
 
@@ -114,4 +110,4 @@ class LocationManager(Application):
 		finally:
 			self._pool_lock.release()
 		if self._last_value is not None:
-			event.data["geotag"] = copy.copy(self._last_value)
+			event.location = copy.copy(self._last_value)

@@ -7,8 +7,8 @@ import logging
 log = logging.getLogger(__name__)
 
 class MySQLEventSink(EventSink):
-	def __init__(self, broker, dbname, username, password):
-		super(MySQLEventSink, self).__init__(broker)
+	def __init__(self, broker, dbname, username, password, **kwargs):
+		super(MySQLEventSink, self).__init__(broker, **kwargs)
 
 		self._dbname = dbname
 		self._username = username
@@ -68,9 +68,9 @@ class MySQLEventSink(EventSink):
 
 	def encode_event(self, event):
 		# If event is from database, update upload stamp
-		if hasattr(event, "db_record"):
-			table_id = event.db_record["table_id"]
-			upload_time = event.db_record["upload_time"]
+		if "db_record" in event.metadata:
+			table_id = event.metadata['db_record']["table_id"]
+			upload_time = event.metadata['db_record']["upload_time"]
 			encoded_event = self.EventRecord.update(
 					upload_time = upload_time
 				).where(self.EventRecord.id == table_id)
@@ -78,18 +78,18 @@ class MySQLEventSink(EventSink):
 
 		# If event is NOT from database, insert into database
 		geotag = None
-		if "geotag" in event.data:
-			geotag = json.dumps(event.data["geotag"])
+		if event.location:
+			geotag = json.dumps(event.location)
 		condition = None
-		if "condition" in event.data:
-			condition = json.dumps(event.data["condition"])
+		if event.condition:
+			condition = json.dumps(event.condition)
 		encoded_event = self.EventRecord(
 				sensor=event.sensor,
-				event=event.data["event"],
+				event=event.event_type,
 				priority=event.priority,
 				timestamp=event.timestamp,
 				geotag=geotag,
-				value_json=json.dumps(event.data["value"]),
+				value_json=json.dumps(event.data),
 				condition=condition
 			)
 		return encoded_event

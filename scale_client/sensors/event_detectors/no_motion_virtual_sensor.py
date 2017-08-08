@@ -8,23 +8,20 @@ log = logging.getLogger(__name__)
 
 
 class NoMotionVirtualSensor(VirtualSensor):
-    def __init__(self, broker, sample_interval=1, inact_threshold=600, **kwargs):
+    def __init__(self, broker, sample_interval=1, inact_threshold=600, event_type="no_motion", **kwargs):
         super(NoMotionVirtualSensor, self).__init__(broker=broker, subscriptions=("motion",),
-                                                    sample_interval=sample_interval, **kwargs)
+                                                    sample_interval=sample_interval, event_type=event_type, **kwargs)
         self._inact_timer = get_time()
         self._inact_threshold = inact_threshold
 
     DEFAULT_PRIORITY = 7
-
-    def get_type(self):
-        return "no_motion"
 
     def read_raw(self):
         return PirPhysicalSensor.IDLE
 
     def read(self):
         event = super(NoMotionVirtualSensor, self).read()
-        event.data["condition"] = self.__get_condition()
+        event.condition = self.__get_condition()
         return event
 
     def __get_condition(self):
@@ -35,8 +32,8 @@ class NoMotionVirtualSensor(VirtualSensor):
             }
 
     def on_event(self, event, topic):
-        et = event.get_type()
-        ed = event.get_raw_data()
+        et = event.event_type
+        ed = event.data
 
         if et != "motion":
             return

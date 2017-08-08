@@ -13,20 +13,20 @@ from circuits.core.timers import Timer
 
 class BombLit(SensedEvent):
 
-    def __init__(self):
-        SensedEvent.__init__(self, "explosion_sensor", "psssssss!!", 4)
+    def __init__(self=None:
+        SensedEvent.__init__("explosion_sensor", self, "psssssss!!", 4)
 
 
 class Explosion(SensedEvent):
     """blahblah"""
 
-    def __init__(self):
-        SensedEvent.__init__(self, "explosion_sensor", "BOOM!", 1)
+    def __init__(self=None:
+        SensedEvent.__init__("explosion_sensor", self, "BOOM!", 1)
 
 
 class Fire(SensedEvent):
-    def __init__(self):
-        SensedEvent.__init__(self, "fire_sensor", "Fire!", 2)
+    def __init__(self=None:
+        SensedEvent.__init__("fire_sensor", self, "Fire!", 2)
 
 
 class Bomb(Application):
@@ -82,12 +82,12 @@ class Gasoline(Application):
 class FireAlarm(Application):
 
     def on_start(self):
-        self.publish(SensedEvent("some sensor", "blah", 1))
+        self.publish(SensedEvent("blah", "some sensor", 1))
 
     @handler("Fire")
     def on_fire(self, event):
         print "beep beep! FIRE!"
-        self.publish(SensedEvent("fire sensor", "fire alarm!", 1))
+        self.publish(SensedEvent("fire alarm!", "fire sensor", 1))
 
 
 class Logger(Application):

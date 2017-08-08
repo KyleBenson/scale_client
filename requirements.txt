@@ -3,6 +3,7 @@ circuits==3.2
 paho-mqtt==1.2.3
 PyYAML==3.12
 CoAPthon==4.0.2
+uritools==2.0.0
 
 # These were required for virtualenv-based pip installation.
 appdirs==1.4.3

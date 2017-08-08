@@ -7,6 +7,7 @@ from circuits import Event
 import logging
 
 import scale_client.core.sensed_event
+from scale_client.util import uri
 
 log = logging.getLogger(__name__)
 
@@ -26,26 +27,48 @@ class AbstractApplication(object):
     """
 
     # TODO: also allow optionally-specified handlers other than on_event
-    def __init__(self, broker, subscriptions=tuple(), **kwargs):
+    def __init__(self, broker, subscriptions=tuple(), advertisements=tuple(),
+                 name=None, **kwargs):
         """
         :param broker: the broker used for the internal pub-sub feature core to the scale_client
         :param subscriptions: list of topics this app subscribes to and will handle with on_event()
+        :param advertisements: list of topics this app may publish to / event types it might publish
+               NOTE: the first advertised topic is the assumed default event_type for make_event()
+        :param name: unique human-readable name for this Application
         :param kwargs: used for passing args to other constructors when doing multiple inheritance
         """
         super(AbstractApplication, self).__init__()
-        # HACK: circuits-specific: it never actually 'pops' the channel kwargs in its __init__
+        # HACK: BUGFIX: circuits-specific: it never actually 'pops' the channel kwargs in its __init__
         kwargs.pop('channel')
         assert len(kwargs) == 0, "kwargs should be empty by this point since" \
                                  " AbstractApplication is just an object! It has: %s" % kwargs
 
         self._broker = None  # for auto completion
         self._register_broker(broker)
+        # We currently assume this will never be changed!
+        if name is None:
+            self.__name = self.__class__.__name__
+        else:
+            self.__name = name
 
         # store all timer objects used for self.timed_call() so we can cancel them on_stop()
         self._timers = []
         self._topic_subscriptions = list(subscriptions)
+        # TODO: something useful other than just setting these in sensors...
+        self._topic_advertisements = list(advertisements)
 
-    # TODO: get_name()?
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def path(self):
+        """
+        Get the canonical path for this Application as determined by its name and any user-specified
+        path components from derived class implementations.
+        :return:
+        """
+        return uri.build_uri(relative_path="applications/%s" % self.name)
 
     def _register_broker(self, broker):
         """Connects this Application to the specified pub-sub event broker.  This method is automatically called for
@@ -96,6 +119,27 @@ class AbstractApplication(object):
         """
         pass
 
+    def make_event(self, **kwargs):
+        """
+        Creates a SensedEvent passing kwargs directly to the constructor but filling it in with missing details
+        based on this Application's logic/state.  See its implementation for the default values it sets.
+        Override this function to customize the events you create
+        (e.g. call super with additional default kwargs set or even use a Factory).
+
+        :param kwargs:
+        :return: SensedEvent
+        """
+        if 'source' not in kwargs:
+            kwargs['source'] = self.path
+        if 'event_type' not in kwargs:
+            # First advertised topic is assumed the default for making events
+            if self._topic_advertisements:
+                kwargs['event_type'] = self._topic_advertisements[0]
+            # Otherwise we can at least have SOMETHING set...
+            else:
+                kwargs['event_type'] = self.name
+        return scale_client.core.sensed_event.SensedEvent(**kwargs)
+
     #TODO: unsubscribe?
 
     def publish(self, event, topic=None):
@@ -107,7 +151,7 @@ class AbstractApplication(object):
         :return: a True-ish object if successful
         """
         if topic is None:
-            topic = event.get_type()
+            topic = event.topic
         ret = self._publish(event, topic)
         self.on_publish(event, topic)
 
@@ -246,11 +290,14 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
         t.register(self)
         return t
 
+    # TODO: test whether inheritance can be used with SensedEvent and have all derived event types show up to us.
+    # Thought on how to do this: accept either strings or SensedEvent instances or classes (issubclass?);
+    # just get that class's __name__ if None specified
     def subscribe(self, topic, callback=None, names=(scale_client.core.sensed_event.SensedEvent.__name__,)):
         """
         Subscribe to the given topic such that the specified callback is called when an event matching that topic
         is published.
-        :param topic: topic string to subscribe to
+        :param topic: topic string subscribe to
         :param callback: an instancemethod of the subscribing class that accepts just the Event being published
         (default=self.on_event(event) ; (WARNING: use self.__class__.fun not self.fun as circuits creates
          a bound method in self.addHandler)
@@ -260,7 +307,7 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
         """
         if callback is None:
             def callback(myself, event):
-                return myself.on_event(event, event.get_type())
+                return myself.on_event(event, event.event_type)
 
         # BEWARE: there are some serious dragons here... This is a bunch of
         # hacky nonsense I had to do to convince the circuits system that the

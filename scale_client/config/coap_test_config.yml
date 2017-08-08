@@ -55,11 +55,11 @@ Networks:
 Sensors:
     DummyThreadedSensor:
       class: "dummy.dummy_threaded_physical_sensor.DummyThreadedSensor"
-      dev_name: "dum0"
+      device: "dum0"
       interval: 1
     DummyTempSensor:
-      class: "dummy.dummy_temperature_physical_sensor.DummyTemperatureVirtualSensor"
-      dev_name: "temp0"
+      class: "dummy.dummy_temperature_physical_sensor.DummyTemperaturePhysicalSensor"
+      device: "temp0"
       interval: 2
     # This VS observes the given topics and internally publishes them as SensedEvents.
     # NOTE: Careful having both a RemoteCoapEventSink and CoapSensor

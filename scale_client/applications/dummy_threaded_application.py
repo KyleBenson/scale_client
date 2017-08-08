@@ -20,4 +20,5 @@ class DummyThreadedApplication(ThreadedApplication):
     """
 
     def on_start(self):
+        super(DummyThreadedApplication, self).on_start()
         self.run_in_background(f, self, 10)

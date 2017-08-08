@@ -4,8 +4,8 @@ from scale_client.sensors.analog_physical_sensor import AnalogPhysicalSensor
 
 
 class LightPhysicalSensor(AnalogPhysicalSensor):
-    def __init__(self, broker, interval=1, threshold=400, **kwargs):
-        super(LightPhysicalSensor, self).__init__(broker, interval=interval, **kwargs)
+    def __init__(self, broker, interval=1, threshold=400, event_type="light", **kwargs):
+        super(LightPhysicalSensor, self).__init__(broker, interval=interval, event_type=event_type, **kwargs)
         self._threshold = threshold
         # TODO: this should probably start in a None state so that the first reading is always published with its true state; otherwise we might be left in the dark forever...
         self._state = LightPhysicalSensor.DARK
@@ -14,12 +14,9 @@ class LightPhysicalSensor(AnalogPhysicalSensor):
     DARK = 0
     BRIGHT = 1
 
-    def get_type(self):
-        return "light"
-
     def read(self):
         event = super(LightPhysicalSensor, self).read()
-        event.data['condition'] = self.__get_condition()
+        event.condition = self.__get_condition()
         return event
 
     def __get_condition(self):
@@ -42,7 +39,7 @@ class LightPhysicalSensor(AnalogPhysicalSensor):
         :param data: SensedEvent to check
         :return bool:
         """
-        raw = float(data.get_raw_data())
+        raw = float(data.data)
         success = False
 
         if self._state == LightPhysicalSensor.DARK and raw > self._threshold:

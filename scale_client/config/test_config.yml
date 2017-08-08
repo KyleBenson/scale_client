@@ -18,11 +18,11 @@ Sensors:
       interval: 5
     DummyGasSensor:
       class: "dummy.dummy_gas_physical_sensor.DummyGasPhysicalSensor"
-      dev_name: "gas0"
+      device: "gas0"
       interval: 3
     DummyTempSensor:
       class: "dummy.dummy_temperature_physical_sensor.DummyTemperaturePhysicalSensor"
-      dev_name: "cel0"
+      device: "cel0"
     DummySeismicSensor:
       # This is useful for testing that VirtualSensor.set_wait_period functions properly.
       class: "dummy.dummy_csn_sensor.DummyCsnSensor"

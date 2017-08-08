@@ -35,20 +35,20 @@ Sensors:
     ### Physical environment sensors
     LightSensor:
       class: "environment.light_physical_sensor.LightPhysicalSensor"
-      dev_name: "light0"
+      device: "light0"
       analog_port: 3
     GasSensor:
       class: "environment.gas_physical_sensor.GasPhysicalSensor"
-      dev_name: "gas0"
+      device: "gas0"
       analog_port: 0
     # Passive infrared detects movement of living beings
     PIRSensor:
       class: "environment.pir_physical_sensor.PirPhysicalSensor"
-      dev_name: "pir0"
+      device: "pir0"
       gpio_pin: 17
     TemperatureSensor:
       class: "environment.temperature_physical_sensor.TemperaturePhysicalSensor"
-      dev_name: "cel0"
+      device: "cel0"
     # The CSN sensor detects possible local seismic activity.  You can bump the table to set it off,
     # but continuing to do so will convince it that this is now a normal level of shaking in the environment :)
     CSNSensor:

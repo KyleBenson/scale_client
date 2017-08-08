@@ -75,7 +75,7 @@ class RemoteCoapEventSink(ThreadedEventSink):
         :return:
         """
         # Resource paths must end with /
-        return self._topic % event.get_type() + '/'
+        return self._topic % event.event_type + '/'
 
     def __put_event_callback(self, event, response):
         """

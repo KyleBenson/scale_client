@@ -17,7 +17,8 @@ class InternetAccessSensor(ThreadedVirtualSensor):
 
     def __init__(self, broker, sample_interval=10, report_every=60,
                  # Taken directly from net.util.ping_interet():
-                 host="8.8.8.8", port=53, timeout=3, **kwargs):
+                 host="8.8.8.8", port=53, timeout=3,
+                 event_type="internet_access", **kwargs):
         """
         :param broker:
         :param sample_interval: defaults to 10 seconds
@@ -27,7 +28,8 @@ class InternetAccessSensor(ThreadedVirtualSensor):
         :param timeout: timeout for 'ping'
         """
 
-        super(InternetAccessSensor, self).__init__(broker, sample_interval=sample_interval, **kwargs)
+        super(InternetAccessSensor, self).__init__(broker, sample_interval=sample_interval,
+                                                   event_type=event_type, **kwargs)
         self._last_value = None
         self._last_report_time = None
         self._report_every = report_every
@@ -38,14 +40,11 @@ class InternetAccessSensor(ThreadedVirtualSensor):
 
     DEFAULT_PRIORITY = 8
 
-    def get_type(self):
-        return "internet_access"
-
     def read_raw(self):
         return ping_internet(host=self._host_to_ping, port=self._port, timeout=self._timeout)
 
-    def policy_check(self, data):
-        raw = data.get_raw_data()
+    def policy_check(self, event):
+        raw = event.data
         success = False
 
         # Conditionally report data

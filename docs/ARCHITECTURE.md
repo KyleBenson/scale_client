@@ -43,8 +43,8 @@ rather than busy waiting during long operations).
 ## Data Model
 
 The `SensedEvent` class abstractly represents almost all data in the SCALE Client.
-It contains a pointer to the raw data value, an event type, a priority associated with it, a timestamp it was created at,
-and an identifier that refers to the physical or virtual device (e.g. an `Application` that publishes events) that initialized it.
+It mainly contains the raw data value, an event type, a priority associated with it, and a timestamp it was created at.
+It also contains a URI string (see [URI section below](#uris-in-scale)) referencing the source of the event: a `VirtualSensor` or `Application` instance (NOTE: this is new in SCALE 3.0 and not yet reflected in the below schema where it used to be the sensor device hardware info!).
 The raw data value is formatted in JSON and is currently assumed to follow the SCALE SensedEvent Schema:
 
 ```json
@@ -87,6 +87,19 @@ As a concrete example, consider the following:
 }
 ```
 
+
+### Previous Data Schemas
+
+The original SCALE 1.0-2.0 schema followed the above format.  By the SCALE 3.0 release, we expect to have a newer schema that saves some repetition/overhead in each published event  and changes some names to reflect the newer APIs.  In particular, it removes the outer "d", the "prio_class", and changes the field names in the following manner:
+
+* event --> event_type
+* value --> data (this could be a more complex object such as a dict)
+* device --> source (this is now a URI referring to the `Application` instance that made it, which can eventually be used to look up the referred `PhysicalSensor`'s `DeviceDescriptor` entry in order to glean that hardware information.)
+* cond --> condition
+
+
+### Potential Future Enhancements
+
 In the future, we plan to relax this JSON assumption and allow for other data formats and schemas.
 A user could easily do this currently, but a few hacks still exist that make such a transition less clean than it could be.
 Furthermore, we are also exploring the option of using object inheritance for `SensedEvent`s too.
@@ -95,6 +108,21 @@ As an example, one might wish to treat all *fire*-related data with a higher pri
 different channel (`EventSink`).
 After writing the base class for this `FireEvent` they can then build on it with `HighHeatEvent`, `SmokeEvent`, and `FlameEvent`.
 We have not found this approach necessary in practice and so defer to others to determine whether it would be useful.
+
+
+## URIs in SCALE
+
+New in SCALE 3.0, the SCALE Client adopted the commonly-used practice of using URIs to reference logical entities in the system.  Every scale_client runtime component (i.e. deriving from `Application`) has a `.path` attribute that returns this URI.    The following is a current (tentative) schema for the default `path`s you may see:
+
+`SCHEME:[//NET_ID]/scale/(sensors|devices|applications|networks|events)/NAME`
+
+Where NAME is typically the `Application.name` attribute;
+SCHEME is (currently) `scale-local` when referring to a local entity, in which case it will have no NET_ID;
+NET_ID is of the form `//[username[:password]]ip.add.re.ss[:port]` when referring to an external (i.e. network) entity, in which case SCHEME will be the protocol used to communicate with it e.g. mqtt, coap, http, etc.
+
+Note that the root of the URI path (i.e. 'scale') is the default namespace in the scale client.  The URI manipulation API explicitly exposes this namespace concept so as to distinguish URIs managed by the SCALE core from those that users may wish to define in their own namespace in order to implement very different logic for.
+ 
+In an attempt to maintain RFC 3986 compliance and limit development bugs, the `scale_client.util.uri` package leverages the third-party Python library `uritools`.
 
 
 ## The SCALE Client Underlying Runtime
@@ -107,3 +135,10 @@ Some limitations of this framework and current implementation include:
 * `scale_client` currently does not fully support subscribing to events locally
 * Running long blocking operations requires the use of a `ThreadedApplication` or `ThreadedVirtualSensor`.  This
 introduces more overhead than a single thread due to the manner in which Circuits creates a pool of workers.
+
+
+## Backwards Compatibility
+
+Because SCALE underwent several iterations over the years, we made an effort to maintain backwards compatibility.  Note that this does not always work and is not well tested.  Our main effort in this regard was to maintain compatibility for the various `SensedEvent` schemas so as not to crash older clients or render their exported data useless.
+  
+You'll notice most of the hacks to accomplish this backwards compatibility in the `SensedEvent` class (i.e. its encoding/decoding methods) as well as for some constructors i.e. `VirtualSensor`.

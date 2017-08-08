@@ -3,6 +3,7 @@ from scale_client.core.sensed_event import SensedEvent
 
 from scale_client.networks.util import coap_response_success, coap_code_to_name
 from scale_client.util.defaults import DEFAULT_COAP_PORT
+from scale_client.util import uri
 # this is basically replaceable by the coapthon HelperClient, but this version has a bugfix (see below)
 from scale_client.networks.coap_client import CoapClient
 
@@ -23,6 +24,7 @@ class CoapSensor(ThreadedVirtualSensor):
 
     def __init__(self, broker,
                  topic=None,
+                 event_type="coap_sensor",
                  hostname="127.0.0.1",
                  port=DEFAULT_COAP_PORT,
                  username=None,
@@ -30,8 +32,11 @@ class CoapSensor(ThreadedVirtualSensor):
                  timeout=300,
                  **kwargs):
         """
+        Many of these parameters are used to connect to the remote CoAP server.
+
         :param broker:
         :param topic: path of remote resource this 'sensor' monitors
+        :param event_type: used as the default event type for events we publish (if none already specified in retrieved event)
         :param hostname: hostname of remote server this 'sensor' monitors
         :param port: port of remote server
         :param username:
@@ -40,7 +45,7 @@ class CoapSensor(ThreadedVirtualSensor):
         to keep the request fresh and handle the case where it was NOT_FOUND initially)
         :param kwargs:
         """
-        super(CoapSensor, self).__init__(broker, **kwargs)
+        super(CoapSensor, self).__init__(broker, event_type=event_type, **kwargs)
 
         self._topic = topic
         self._client = None  # Type: coapthon.client.helperclient.HelperClient
@@ -61,11 +66,16 @@ class CoapSensor(ThreadedVirtualSensor):
         # We only want to use the threaded version of observe ONCE due to a bug in coapthon
         self._observe_started = False
 
-    def get_type(self):
-        """
-        A unique human-readable identifier of the type of sensor this object represents.
-        """
-        return "coap_sensor"
+    @property
+    def remote_path(self):
+        userinfo = None
+        if self._username:
+            userinfo = self._username
+            if self._password:
+                userinfo += ':' + self._password
+        return uri.build_uri(scheme='coap' if not userinfo else 'coaps',
+                             host=self._hostname, port=self._port if self._port != DEFAULT_COAP_PORT else None,
+                             path=self._topic, userinfo=userinfo)
 
     def read_raw(self):
         """
@@ -130,10 +140,10 @@ class CoapSensor(ThreadedVirtualSensor):
             return
         elif coap_response_success(response):
             event = self.make_event_with_raw_data(response.payload)
-            remote_origin = 'coap://%s:%d/%s' % (self._hostname, self._port, event.get_type())
+            remote_origin = self.remote_path
             log.debug("received content update for observed resource: %s" % remote_origin)
-            # XXX: tag the event as coming from a remote CoAP resource so we don't send it back there.
-            event.data['remote_origin'] = remote_origin
+            # tag the event as coming from a remote CoAP resource so we don't send it back there.
+            event.source = remote_origin
             if self.policy_check(event):
                 self.publish(event)
 

@@ -10,33 +10,30 @@ log = logging.getLogger(__name__)
 
 
 class UnexpectedMotionVirtualSensor(VirtualSensor):
-	def __init__(self, broker, darktime=60, **kwargs):
+	def __init__(self, broker, darktime=60, event_type="unexpected_motion", **kwargs):
 		super(UnexpectedMotionVirtualSensor, self).__init__(broker=broker, subscriptions=("motion",),
-															sample_interval=None, **kwargs)
+                                                            sample_interval=None, event_type=event_type, **kwargs)
 		self._light = LightPhysicalSensor.DARK
 		self._dark_timer = get_time()
 		self._dark_timeout = darktime
 
 	DEFAULT_PRIORITY = 5
-
-	def get_type(self):
-		return "unexpected_motion"
 	
 	def on_event(self, event, topic):
-		et = event.get_type()
-		ed = event.get_raw_data()
+		et = event.event_type
+		ed = event.data
 
 		if et == "motion":
 			if ed == PirPhysicalSensor.ACTIVE and self._light == LightPhysicalSensor.DARK:
 				if type(self._dark_timer) != type(9.0):
 					log.warning("Timer is not set correctly")
 				elif self._dark_timer + self._dark_timeout < get_time():
-					new_event = self.make_event_with_raw_data(ed, priority=self.DEFAULT_PRIORITY)
+					new_event = self.make_event(data=ed)
 					self.publish(new_event)
 		elif et == "light":
 			op = None
 			try:
-				op = event.data["condition"]["threshold"]["operator"]
+				op = event.condition["threshold"]["operator"]
 			except (KeyError, AttributeError):
 				pass
 			if op == ">":

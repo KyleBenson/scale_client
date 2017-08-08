@@ -7,8 +7,8 @@ import logging
 log = logging.getLogger(__name__)
 
 class MySQLClassifiedEventSink(MySQLEventSink):
-	def __init__(self, broker, dbname, username, password, event_types=[]):
-		super(MySQLClassifiedEventSink, self).__init__(broker, dbname, username, password)
+	def __init__(self, broker, dbname, username, password, event_types=tuple(), **kwargs):
+		super(MySQLClassifiedEventSink, self).__init__(broker, dbname, username, password, **kwargs)
 		
 		if type(event_types) != type([]):
 			raise TypeError
@@ -50,29 +50,29 @@ class MySQLClassifiedEventSink(MySQLEventSink):
 
 	def encode_event(self, event):
 		# If event is from database, ignore
-		if hasattr(event, "db_record"):
+		if "db_record" in event.metadata:
 			return None
 
 		# Filter other events
-		et = event.get_type()
+		et = event.event_type
 		if not et in self._kls_types:
 			return None
 
 		# If event is NOT from database
 		geotag = None
-		if "geotag" in event.data:
-			geotag = json.dumps(event.data["geotag"])
+		if event.location:
+			geotag = json.dumps(event.location)
 		condition = None
-		if "condition" in event.data:
-			condition = json.dumps(event.data["condition"])
+		if event.condition:
+			condition = json.dumps(event.condition)
 		kls = self._kls_types[et]
 		encoded_event = kls(
 				sensor=event.sensor,
-				event=event.data["event"],
+				event=event.event_type,
 				priority=event.priority,
 				timestamp=event.timestamp,
 				geotag=geotag,
-				value_json=json.dumps(event.data["value"]),
+				value_json=json.dumps(event.data),
 				condition=condition
 			)
 		return encoded_event

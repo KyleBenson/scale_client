@@ -14,7 +14,7 @@ import time
 from circuits.core.timers import Timer
 from circuits.core.events import Event
 
-
+# TODO: do this using timed_call() instead
 class SigfoxCheckEventSent(Event):
     """Signals the SigfoxEventSink to check whether the event was successfully sent."""
 
@@ -25,8 +25,9 @@ class SigfoxEventSink(EventSink):
                 _baudrate=9600,
                 _parity=serial.PARITY_NONE,
                 _stopbits=serial.STOPBITS_ONE,
-                _bytesize=serial.EIGHTBITS):
-        EventSink.__init__(self, broker)
+                _bytesize=serial.EIGHTBITS,
+                **kwargs):
+        super(SigfoxEventSink, self).__init__(broker, **kwargs)
         self._event_type_json_file = "sigfox_event_types.json"
 
         # Read from event type enum definition file (in JSON format)
@@ -71,7 +72,7 @@ class SigfoxEventSink(EventSink):
         return True
 
     def check_available(self, event):
-        if not event.get_type() in self._type_info:
+        if not event.event_type in self._type_info:
             return False
         if self._ser is None or not self._ser.isOpen():
             if self._reconnect_timer is None or self._reconnect_timer + self._reconnect_timeout < time.time():
@@ -84,6 +85,7 @@ class SigfoxEventSink(EventSink):
         log.error(message)
 
     def on_start(self):
+        super(SigfoxEventSink, self).on_start()
         self._try_connect()
 
     def send_raw(self, encoded_event):
@@ -186,7 +188,7 @@ class SigfoxEventSink(EventSink):
 
 
         # 1. Encode Event Type
-        event_type_original = event.get_type() #event.data["event"]
+        event_type_original = event.event_type
 
         try:
             event_type_encoded = self._type_info[event_type_original]
@@ -203,7 +205,7 @@ class SigfoxEventSink(EventSink):
 
         # 3. Encode Value
         # Temporary method, just encode one float to first 4 bytes. Use for temperature data
-        value_original = event.get_raw_data() #event.data["value"]
+        value_original = event.data
 
         if type(value_original) == type(9.0): # Handle float value
             hex_payload_value = hex(ctypes.c_int.from_buffer(ctypes.c_float(value_original)).value)[2:].zfill(8)

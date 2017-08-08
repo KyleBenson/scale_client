@@ -6,8 +6,8 @@ import logging
 log = logging.getLogger(__name__)
 
 class GpsSensor(VirtualSensor):
-    def __init__(self, broker, interval=5, exp=10, **kwargs):
-        super(GpsSensor, self).__init__(broker, interval=interval, **kwargs)
+    def __init__(self, broker, interval=5, exp=10, event_type="gps", **kwargs):
+        super(GpsSensor, self).__init__(broker, interval=interval, event_type=event_type, **kwargs)
         self._exp = exp
         self._gps_poller = None
 
@@ -21,9 +21,6 @@ class GpsSensor(VirtualSensor):
         self._gps_poller.start()
         super(GpsSensor, self).on_start()
 
-    def get_type(self):
-        return "gps"
-
     def read_raw(self):
         if self._gps_poller is None:
             return None
@@ -33,8 +30,8 @@ class GpsSensor(VirtualSensor):
         raw["exp"] = time.time() + self._exp
         return raw
 
-    def policy_check(self, data):
-        raw = data.get_raw_data()
+    def policy_check(self, event):
+        raw = event.data
         if raw is None or type(raw) != type({}):
             return False
         if not "mode" in raw or raw["mode"] < 2:

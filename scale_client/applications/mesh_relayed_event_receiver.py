@@ -17,9 +17,9 @@ import logging
 log = logging.getLogger(__name__)
 
 class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
-    def __init__(self, broker):
+    def __init__(self, broker, **kwargs):
         asyncore.dispatcher.__init__(self)
-        Application.__init__(self, broker)
+        Application.__init__(self, broker, **kwargs)
        
         self.relayedSensedEvent = RelayedSensedEvent()
         self.relayedSensedEvent.__init__()
@@ -77,7 +77,8 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
         return True
 
     def publish_neighbors_avarage_temp(self):
-        
+
+        # TODO: all of this should be replaced with a proper call to creating a SensedEvent (using the newer API)
         data = {}
         data['event'] = 'MeshSensor'
         data['event_type'] = 'average_temperature'
@@ -88,7 +89,7 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
             
         try:
             encoded_data = json.dumps(data)
-            event = SensedEvent(data['event'], data, 5)
+            event = SensedEvent(data, data['event'], 5)
             self.publish(event)
             log.info('Published neighbors avarage temperature to application. Data: ' + encoded_data)
 
@@ -102,11 +103,11 @@ class AsyncoreReceiverUDP(asyncore.dispatcher, RelayedSensedEvent, Application):
         pass
 
     def convert_to_sensed_event(self, relayedSensedEvent):
-        structured_data = {"event": relayedSensedEvent.sensor, 
-                "value": relayedSensedEvent.data['value'],
-                "published": relayedSensedEvent.published} 
-
-        event = SensedEvent(relayedSensedEvent, structured_data, relayedSensedEvent.priority, relayedSensedEvent.timestamp)
+        # TODO: verify these parameters are correct and propagate them to the rest of the mesh logic
+        event = SensedEvent(data=relayedSensedEvent.data, source=relayedSensedEvent,
+                            priority=relayedSensedEvent.priority, event_type=relayedSensedEvent.source,
+                            timestamp=relayedSensedEvent.timestamp,
+                            metadata={"published": relayedSensedEvent.published})
         return event
 
 def f(nsec, broker):

@@ -11,11 +11,11 @@ Sensors:
     # Dummy environment
     DummyLightSensor:
       class: "dummy.dummy_light_physical_sensor.DummyLightPhysicalSensor"
-      dev_name: "light0"
+      device: "light0"
     # Dummy presence_sensors
     DummyPIRSensor:
       class: "dummy.dummy_pir_physical_sensor.DummyPirPhysicalSensor"
-      dev_name: "pir0"
+      device: "pir0"
     # VirtualSensors that detect higher-level events: should work with dummy ones
     PIRNoMotionSensor:
       class: "event_detectors.no_motion_virtual_sensor.NoMotionVirtualSensor"

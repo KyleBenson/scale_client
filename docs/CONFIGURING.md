@@ -16,7 +16,7 @@ Note also that these manual configurations can be used to overwrite or modify th
 
 ## Configuration file
 
-Configuration files are written in the [YAML](http://www.yaml.org/start.html) data serialization language.
+Configuration files are written in the [YAML](http://www.yaml.org/start.html) data serialization language and structured mostly as nested dictionaries.
 See examples in the `scale_client/config` directory especially the [example configuration file that documents the various options available](../scale_client/config/example_config.yml).
 The different possible sections in a configuration file mostly correspond to packages in the `scale_client` directory.
 Each section may contain any number of entries, each of which express configurations used by the main `ScaleClient` thread of execution
@@ -27,14 +27,20 @@ The currently possible sections are the following:
 * `EventSinks` - Enable and configure `EventSink`s, which provide methods for handling the reporting of `SensedEvent`s to a data exchange or other entity.
 * `Sensors` - The real heart of SCALE, each class here represents a connection to some physical or virtual sensor and the configuration parameters that drive this connection and how it creates `SensedEvent`s.
 * `Applications` - Applications represent entities that subscribe to certain sensor data feeds and may publish new events as a result.  The only real difference from `Sensors` is that they don't automatically perform a `read()` periodically.
-* `Networks` - Currently unused but is reserved for networking-related configurations.
+* `Networks` - This section runs `Application`s and any required support modules for networking-related configurations e.g. CoAP, detecting Internet access, mesh networking, etc.
 
-Note that each section (other than `Main`) lists the configurations for a number of Python classes.  The core system will try to import and then create an instance of each listed class and run it within the SCALE environment on startup.
-Of particular importance are the class names, which are resolved either relative to the topmost directory or to the corresponding directory within `scale_client` (e.g. `scale_client/sensors` for `Sensors`).
+Note that each section (other than `Main`) lists the configurations for a number of Python classes.  The core system will try to import and then create an instance of each listed class (see below) and run it within the SCALE environment on startup.
+The heading for each entry (a YAML key for the dictionary that is the configuration) should be a unique human-readable name for the component being configured; it is passed as the `name` argument to the component's constructor (see below).
+
+The remaining arguments for each class are passed directly to the class's constructor as `**kwargs`, so ensure you include all necessary ones, spell them properly, and verify that the value is legitimate or it may create an error during runtime.  SCALE tries to fail gracefully by logging these errors and not starting up the class in question when one occurs, and so it is your responsibility to enable logging during testing and verify that the classes are configured and run properly.
+
+
+### Importing Classes by Path
+
+Of particular importance are the `class` names, which are resolved either relative to the topmost directory or to the corresponding directory within `scale_client` (e.g. `scale_client/sensors` for `Sensors`).
 The core system tries to *lazily import* these classes for each possible resolved location before finally showing an error message that the import was unsuccessful.
 A key advantage of this *lazy import* strategy is that the client will start more quickly instead of waiting for all of the possible modules and their dependencies to be imported.
 Another major advantage is that only the necessary dependencies and third-party modules for a particular deployment need be installed on the system; this prevents import errors related to an unneeded dependency or unavailable module (e.g. `VirtualSensor`).
-The remaining arguments for each class are passed directly to the class's constructor as `**kwargs`, so ensure you include all necessary ones, spell them properly, and verify that the value is legitimate or it may create an error during runtime.  SCALE tries to fail gracefully by logging these errors and not starting up the class in question when one occurs, and so it is your responsibility to enable logging during testing and verify that the classes are configured and run properly.
 
 
 ### Importing multiple configuration files
@@ -59,5 +65,7 @@ While you should see the individual classes for a more detailed and complete lis
 
 * `sample_interval` - the sensor will call `read()` and possibly publish an event every `sample_interval` seconds (this is synchronous mode).  You can also use the keyword `interval` for backwards compatibility with the older API.
 * `subscriptions` - accepts a list of strings where each entry is the event topic (e.g. temperature) that this `Application` should subscribe to.  Every time such an event is published, the `Application`'s `on_event()` method will be called.  For a `VirtualSensor`, this is asynchronous mode.
-* `dev_name` - this parameter for a `PhysicalSensor` is intercepted by the scale client and used to create a `DeviceDescriptor` that simply identifies the sensing device by `dev_name`.  It will be automatically generated in a unique manner (e.g. 'vs0, vs1, ...' if unspecified.
+* `advertisements` - list of topics this `Application` may publish to.  Note that the first one is used as the default `event_type` for created `SensedEvent`s.  The `event_type` parameter is available for `VirtualSensor`s and can set this first advertisement directly.
+* `name` - a unique human-readable name for the configured object that defaults to its class name.  Note that the key for the whole object configuration is assumed as the default name; so you will overwrite that by specifying this parameter directly.  By default, not specifying a name (i.e. configuring via command-line option) will cause a random name to be generated, but if you create an `Application` instance directly without a name its class name will be used.
+* `device` - this parameter, a URI string or simple name, for a `PhysicalSensor` is intercepted by the scale client and used to create a `DeviceDescriptor` that simply identifies the sensing device by its path and name.  It will be automatically generated from the object's `name` if unspecified.
 * `threshold` - many of the `PhysicalSensor` implementations accept this parameter in order to only publish sensor readings when their raw data value exceeds `threshold`.  This parameter may eventually be incorporated into `VirtualSensor` so that all derived classes can make use of it.

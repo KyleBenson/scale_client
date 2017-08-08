@@ -36,7 +36,7 @@ class UsbTemperaturePhysicalSensor(TemperaturePhysicalSensor):
 
     def read(self):
         event = super(UsbTemperaturePhysicalSensor, self).read()
-        event.data['condition'] = {
+        event.condition = {
                 "threshold": {
                     "operator": ">",
                     "value": self._threshold
@@ -53,7 +53,7 @@ class UsbTemperaturePhysicalSensor(TemperaturePhysicalSensor):
             return
 
         self._dev_timer = None
-        log.debug("%s reading sensor data..." % self.get_type())
+        log.debug("%s reading sensor data..." % self.name)
         # XXX: seems like we iterate over multiple possible available devices, but a Sensor should
         # only be associated with a single device... Instead (if we choose to continue using the USB
         # sensor) we should put this for loop in read() and handle the error there instead of
