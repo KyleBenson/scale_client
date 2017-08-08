@@ -324,6 +324,8 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
 
         self.on_subscribe(topic)
 
+        return f
+
     def _get_channel_name(self):
         """
         Returns a channel name to be used by circuits for routing events properly.
