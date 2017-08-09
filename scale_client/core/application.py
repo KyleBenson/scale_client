@@ -1,4 +1,6 @@
 # note that we'll always keep around a 'handler' decorator even if we stop using circuits!
+import inspect
+
 from circuits.core.handlers import handler
 from circuits.core.components import BaseComponent
 from circuits.core.timers import Timer
@@ -290,24 +292,36 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
         t.register(self)
         return t
 
-    # TODO: test whether inheritance can be used with SensedEvent and have all derived event types show up to us.
+    # TODO: since inheritance cannot be directly used with SensedEvent
+    # (i.e. have all derived event types show up to to this callback), here's a
     # Thought on how to do this: accept either strings or SensedEvent instances or classes (issubclass?);
     # just get that class's __name__ if None specified
+    # Could make use of SensedEvent's .topic property to get the actual class name and have that get
+    # passed around to subscribe calls, etc.
     def subscribe(self, topic, callback=None, names=(scale_client.core.sensed_event.SensedEvent.__name__,)):
         """
         Subscribe to the given topic such that the specified callback is called when an event matching that topic
         is published.
         :param topic: topic string subscribe to
-        :param callback: an instancemethod of the subscribing class that accepts just the Event being published
-        (default=self.on_event(event) ; (WARNING: use self.__class__.fun not self.fun as circuits creates
-         a bound method in self.addHandler)
+        :param callback: an unbound method of the subscribing class that accepts just self and the Event
+             being published (default=self.on_event(event, event.event_type))
         :param names: circuits-specific hack: the actual class name of the Event type must be specified here
         (default=SensedEvent.__name__ so you can typically ignore this parameter unless you subclass SensedEvent)
+        :raises ValueError: when callback is an instancemethod rather than an unbound one;
+                 instead use self.__class__.fun not self.fun
         :return:
         """
+
+        # XXX: In order to call on_event(), we need to pass it the event_type (topic) too!
         if callback is None:
-            def callback(myself, event):
-                return myself.on_event(event, event.event_type)
+            def callback(myself, the_event):
+                return myself.on_event(the_event, the_event.event_type)
+        # XXX: Because specifying an instancemethod will cause an error due to another
+        # self parameter being bound in by circuits in self.addHandler, we should
+        # raise this error prematurely since circuits doesn't give a very helpful error message...
+        elif inspect.ismethod(callback) and callback.im_self:
+            raise ValueError("ERROR: specified callback is an instancemethod but we need an unbound method!"
+                             "Please use self.__class__.fun not self.fun")
 
         # BEWARE: there are some serious dragons here... This is a bunch of
         # hacky nonsense I had to do to convince the circuits system that the
@@ -319,6 +333,9 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
         # with the former.
         def f(*fargs, **fkwargs):
             return callback(*fargs, **fkwargs)
+
+        # override=True ensures if a base class redefines an event handler it will be
+        # called separately instead of as an additional handler for the event
         f = handler(*names, channel=topic, override=True)(f)
         self.addHandler(f)
 
