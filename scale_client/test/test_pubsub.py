@@ -6,6 +6,9 @@ from scale_client.core.broker import Broker
 # NOTE: we add sleep statements to make the progression easier to read, but we might not really want them...
 import time
 
+# TODO: make this into a unittest?
+# TODO: further tests: publishing to multiple subscribers, multiple-to-multiple
+
 """
 The basic idea of this silly pub-sub demonstration is that the BombTimer will publish
 a BombLit event after a few seconds, which causes the Bomb to then make a timed_call()
