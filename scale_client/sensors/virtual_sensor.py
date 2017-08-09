@@ -54,11 +54,11 @@ class VirtualSensor(Application):
 
         # We use the event_type as the default type for making SensedEvents by passing
         # it as the first (and likely only) publication advertisement.
-        ads = kwargs.get('advertisements')
+        ads = kwargs.get('advertisements', tuple())
         if event_type is not None:
             if not ads:
                 ads = (event_type,)
-            elif len(ads) > 0:
+            elif ads:
                 new_ads = list((event_type,))
                 new_ads.extend(ads)
                 ads = new_ads
