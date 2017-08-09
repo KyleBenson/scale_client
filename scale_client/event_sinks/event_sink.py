@@ -1,4 +1,4 @@
-from ..core.application import Application
+from scale_client.core.application import Application
 from scale_client.core.threaded_application import ThreadedApplication
 
 
