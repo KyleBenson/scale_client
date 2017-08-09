@@ -24,15 +24,23 @@ class ScaleClient(object):
 
         self.__broker = None
         self.__reporter = None
-        self.__sensors = []
+        self.__sensors = None
         self.__applications = None
+        self.__networks = None
 
-    def setup_reporter(self, cfg):
+    def setup_reporter(self, cfg=None):
 
         if self.__broker is None:
             self.setup_broker(cfg)
 
         self.__reporter = EventReporter(self.__broker)
+
+    @property
+    def event_reporter(self):
+        """
+        :rtype: EventReporter
+        """
+        return self.__reporter
 
     def setup_broker(self, cfg=None):
         """
@@ -43,27 +51,59 @@ class ScaleClient(object):
         """
         self.__broker = Broker()
 
-    def run(self):
-        """Currently just loop forever to allow the other threads to do their work."""
+    @property
+    def broker(self):
+        """
+        :rtype: Broker
+        """
+        return self.__broker
 
-        ####    SCHEDULE QUIT TIME FIRST
-
+    def schedule_quit_time(self, quit_time):
+        """
+        Terminate the client and all Applications at the given time.
+        :param quit_time: time to quit after in seconds
+        :return:
+        """
         # HACK: create a dummy app that just calls Broker.stop() at the requested quit_time.
         # We need to do it in an app like this to get the self variables bound in correctly.
         # This is circuits-specific!
+        class QuitApp(Application):
+            def _quitter(self):
+                log.info("Stopping client...")
+                self._broker.stop()
+
+        quit_app = QuitApp(self.__broker)
+        quit_app.timed_call(quit_time, QuitApp._quitter)
+
+    def run(self):
+        """Currently just loop forever to allow the other threads to do their work."""
+
         if self._quit_time is not None:
-            class QuitApp(Application):
-                def _quitter(self):
-                    log.info("Stopping client...")
-                    self._broker.stop()
-
-            quit_app = QuitApp(self.__broker)
-            quit_app.timed_call(self._quit_time, QuitApp._quitter)
-
-        ####    RUN THE BROKER AND SCALE CLIENT
+            self.schedule_quit_time(self._quit_time)
 
         # Run the broker until it, and thus the whole scale client, have a stop event fully propagated
         self.__broker.run()
+
+    def setup_sensors(self, configs):
+        """
+        Configure the sensors expressed in the name-keyed configs dict.
+        :param configs:
+        """
+        self.__sensors = self.setup_components(configs, 'scale_client.sensors')
+
+    def setup_networks(self, configs):
+        """
+        Configure the sensors expressed in the name-keyed configs dict.
+        :param configs:
+        """
+        self.__networks = self.setup_components(configs, 'scale_client.networks')
+
+    def setup_applications(self, configs):
+        """
+        Configure the sensors expressed in the name-keyed configs dict.
+        :param configs:
+        """
+        self.__applications = self.setup_components(configs, 'scale_client.applications')
 
     def setup_components(self, configs, package_name, helper_fun=None, *args):
         """
@@ -79,7 +119,7 @@ class ScaleClient(object):
         :param package_name: root package_name for the class paths specified
          (these will be classes in the scale_client package e.g. sensors, event_sinks)
         :param helper_fun: responsible for creating the component in question and doing any bookkeeping
-        :param args: these args will be passed to helper_fun
+        :param args: these positional args will be passed to helper_fun
         :return: list of constructed classes
         """
 
@@ -137,7 +177,7 @@ class ScaleClient(object):
         parameters for components sharing the same names: IT'S UP TO YOU to ensure there aren't conflicts!
         If config_filename is None, we just build using the specified args.
         :param config_filename: optional filename to read config parameters from
-        :param args: optional additional configuration arguments
+        :param args: optional additional configuration arguments as parsed from command line
         :return:
         """
 
@@ -203,20 +243,22 @@ class ScaleClient(object):
             client.__reporter.add_sink(default_sink)
 
         # Sensors
+        log.info("Setting up Sensors...")
         configs = cls.__join_configs_with_args(cfg.get('sensors', {}), args.sensors \
             if args is not None and args.sensors is not None else [], "anon_vs")
-        log.info("Setting up Sensors...")
-        client.setup_components(configs, 'scale_client.sensors')
+        client.setup_sensors(configs)
+
         # Networks
         log.info("Setting up Networks...")
         configs = cls.__join_configs_with_args(cfg.get('networks', {}), args.networks \
             if args is not None and args.networks is not None else [], "anon_network_app")
-        client.setup_components(configs, 'scale_client.networks')
+        client.setup_networks(configs)
+
         # Applications
         log.info("Setting up other Applications...")
         configs = cls.__join_configs_with_args(cfg.get('applications', {}), args.applications \
             if args is not None and args.applications is not None else [])
-        client.setup_components(configs, 'scale_client.applications')
+        client.setup_applications(configs)
 
         # TODO: set some defaults if no applications, sensors, or networking components are enabled (heartbeat?)
 
@@ -225,12 +267,26 @@ class ScaleClient(object):
     @staticmethod
     def __join_configs_with_args(configs, relevant_args, anon_component_prefix="anon_app"):
         """
-        Join the command-line arguments with the configuration file in order to add to
+        Join the command-line arguments with the configuration file's parsed args in order to add to
         or even modify the file-specified configuration, if there even was one!
         :param configs:
-        :param relevant_args:
+        :type configs: dict
+        :param relevant_args: list of individual YAML-encoded dict-like args, possibly without a top-level key for the name
         :param anon_component_prefix: for anonymous components (no name as config dict key), use this string with
         a unique sequential number appended
+        :return:
+        """
+        new_configs = ScaleClient._parse_yaml_configs(relevant_args, anon_component_prefix)
+        return ScaleClient.__merge_configs(new_configs, configs)
+
+    @staticmethod
+    def _parse_yaml_configs(args, anon_component_prefix="anon_app"):
+        """
+        Parses the given list of YAML-encoded config dicts and returns all of them as a dict.
+        If one of the args doesn't have a top-level key for the name, a unique one is generated
+        for you prefixed with the given parameter
+        :param args:
+        :param anon_component_prefix: prefix for 'anonymous' component configs with no name
         :return:
         """
         # Configuration files are basically nested dictionaries and the command-line arguments
@@ -241,7 +297,7 @@ class ScaleClient(object):
         # pulled in from a file.
 
         new_configs = {}
-        for arg in relevant_args:
+        for arg in args:
             try:
                 arg = yaml.load(arg)
             except yaml.parser.ParserError as e:
@@ -263,7 +319,7 @@ class ScaleClient(object):
                     raise ValueError("error in your manual configuration: %s\n"
                                      "couldn't be interpreted as a dict due to error: %s" % (arg, e))
 
-        return ScaleClient.__merge_configs(new_configs, configs)
+        return new_configs
 
     @classmethod
     def __merge_configs(cls, a, b, path=None):
@@ -417,7 +473,6 @@ class ScaleClient(object):
                             a stack trace rather than trying to gracefully skip it and logging the error''')
 
         parsed_args = parser.parse_args(args)
-
 
         # Correct configuration filename
         if parsed_args.test:
