@@ -71,8 +71,7 @@ Sensors:
       # For testing, we set a shorter timeout since that's used for
       # re-trying an observe if the resource doesn't exist initially.
       timeout: 4
-      # Enables polling at the regular VirtualSensor interval rather than 'observe' feature.
-      # NOTE: one topic polled per interval in a round-robin fashion
+      # Enables polling at the regular VirtualSensor sample_interval rather than 'observe' feature.
 #      use_polling: True
       # Use defaults for testing since we're running the server locally:
       # hostname: "127.0.0.1"
