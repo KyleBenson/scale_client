@@ -7,6 +7,7 @@ from scale_client.networks.util import coap_response_success, coap_code_to_name
 # this is basically replaceable by the coapthon HelperClient, but this version has a bugfix (see below)
 from scale_client.networks.coap_client import CoapClient
 from scale_client.util.defaults import DEFAULT_COAP_PORT
+from scale_client.util import uri
 
 from event_sink import ThreadedEventSink
 from scale_client.core.sensed_event import SensedEvent
@@ -116,7 +117,7 @@ class RemoteCoapEventSink(ThreadedEventSink):
             # blocking one too, but we've had to extend the coapthon HelperClient to fix some threading problems
             # that don't allow it to handle more than one callback-based call in a client's lifetime.
 
-            self._client.post(topic, event.to_json(), callback=__bound_post_callback, timeout=self._timeout)
+            self._client.post(topic, self.encode_event(event), callback=__bound_post_callback, timeout=self._timeout)
         else:
             log.error("server rejected PUT request: %s" % response)
 
@@ -136,9 +137,28 @@ class RemoteCoapEventSink(ThreadedEventSink):
         # that don't allow it to handle more than one callback-based call in a client's lifetime.
         def __bound_put_callback(response):
             return self.__put_event_callback(event, response)
-        self._client.put(topic, event.to_json(), callback=__bound_put_callback, timeout=self._timeout)
+        self._client.put(topic, self.encode_event(event), callback=__bound_put_callback, timeout=self._timeout)
 
         return True
+
+    def encode_event(self, event):
+        """
+        Prepares the event for transmission to the remote CoAP server and encodes it in JSON
+        :param event:
+        :return:
+        """
+        # May need to set our local source to be a remote one, but let's restore the local source afterwards
+        local_event = event.is_local
+        if local_event:
+            old_source = event.source
+            event.source = uri.get_remote_uri(event.source)
+
+        encoding = super(RemoteCoapEventSink, self).encode_event(event)
+
+        if local_event:
+            event.source = old_source
+        return encoding
+
 
     def check_available(self, event):
         return self._client_running

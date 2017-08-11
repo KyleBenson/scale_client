@@ -1,143 +1,263 @@
 import unittest
 import json
 import subprocess
+import os
 
+from scale_client.util.defaults import DEFAULT_COAP_PORT
 
 # quit all tests after this long in case they hang
 QUIT_TIME = 10
 LOG_LEVEL = 'debug'
+# optionally ignore the processes' output (stderr since most output is logging; stdout still prints for quick hacking)
+DISPLAY_PROC_OUTPUT = False
+# ideally this would only be 1-2, but it does seem like it can go up to 4 fairly often...
+TOLERATED_EVENT_COUNT_DIFFERENCE = 4
 
 
 class TestCoapRemoteSink(unittest.TestCase):
     """
-    Run two clients as separate processes: 'client' will generate dummy events and sink them to a RemoteCoapEventSink;
-    'server' will receive these events on its CoapServer and gather statistics about the events received.
-    The unit test validates that these received event-related statistics match our expectations.
+    Basic Coap integration testing by running multiple scale clients in different processes in order to verify
+    their proper interactions via coap
     """
 
-    def test_with_stats(self):
-        server_config = """--networks '
-CoapServer:
-    class: "coap_server.CoapServer"
-    events_root: "/events/"
-' \
---applications '
-StatisticsApp:
-    class: "statistics_application.StatisticsApplication"
-    subscriptions: ["dummy_event"]
-    output_file: "_server_stats.json"
-' \
-"""
+    def test_remote_sink(self):
+        """
+        Run two clients as separate processes:
+        'client' will generate dummy events and sink them to a RemoteCoapEventSink;
+        'server' will receive these events on its CoapServer;
+        both gather statistics about the events seen, which the unit test uses to validate our expectations.
+        Also verifies that events received from a remote source are published internally but not sent to an EventSink.
+        """
+        ""
 
-        client_config = """--sensors '
-DummySensor:
-    class: "dummy.heartbeat_sensor.HeartbeatSensor"
-    event_type: "dummy_event"
-' \
---event-sinks '
-CoapEventSink:
-    class: "remote_coap_event_sink.RemoteCoapEventSink"
-    topic: "/events/%s"
-' \
---applications '
-StatisticsApp:
-    class: "statistics_application.StatisticsApplication"
-    subscriptions: ["dummy_event"]
-    output_file: "_client_stats.json"
-' \
-"""
-        # NOTE: to keep output from showing in console and possibly retrieve it later, use:
-        # stderr=subprocess.PIPE and then do self.server_client.stderr.read()
-        self.server = subprocess.Popen("python -m scale_client --raise-errors --quit-time %d --log-level %s %s" % (QUIT_TIME, LOG_LEVEL, server_config), shell=True)
-        self.client = subprocess.Popen("python -m scale_client --raise-errors --quit-time %d --log-level %s %s" % (QUIT_TIME, LOG_LEVEL, client_config), shell=True)
+        self.server_output_file = "_server_stats.json"
+        self.client_output_file = "_client_stats.json"
+        self.zero_expected_sink_output_file = "_zero_sink_stats.json"
+        # these will be cleaned up in tearDown
+        self.output_files = (self.server_output_file, self.client_output_file, self.zero_expected_sink_output_file)
+        self.server_config = make_scale_config(applications=get_stats_app_config(self.server_output_file),
+                                               networks=get_coap_server_config(),
+                                               sinks=get_stats_sink_config(self.zero_expected_sink_output_file))
+        self.client_config = make_scale_config(sensors=get_dummy_sensor_config(), sinks=get_remote_sink_config(),
+                                               applications=get_stats_app_config(self.client_output_file))
 
-        print "waiting for clients to finish..."
-        self.server.wait()
-        self.client.wait()
-        # print self.server_client.stderr.read()
+        self.run_procs(self.server_config, self.client_config)
+        server_stats, client_stats, zero_expected_sink_stats = self.read_output_files(self.server_output_file,
+                                                                                      self.client_output_file,
+                                                                                      self.zero_expected_sink_output_file)
+        server_count = server_stats[DEFAULT_EVENT_TYPE]['count']
+        client_count = client_stats[DEFAULT_EVENT_TYPE]['count']
+        zero_expected_sink_count = zero_expected_sink_stats[DEFAULT_EVENT_TYPE]['count']
 
-        with open("_server_stats.json") as f:
-            text = f.read().strip()
-            data = json.loads(text)
-            print "server stats:", data
-            server_count = data['dummy_event']['count']
-
-        with open("_client_stats.json") as f:
-            text = f.read().strip()
-            data = json.loads(text)
-            print "client stats:", data
-            client_count = data['dummy_event']['count']
-
+        # Check that results are correct
+        print "counts:", server_count, "(server app)", zero_expected_sink_count, "(0-expected sink)", client_count, "(client)"
         self.assertGreaterEqual(client_count, server_count, "how can server have received more events than the client that made them???")
-        self.assertAlmostEqual(server_count, client_count, delta=3,
-                               msg="difference between #events on server vs. client exceeded threshold! why so many missing?")
+        self.assertAlmostEqual(server_count, client_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
+                               msg="difference between #events on server vs. client exceeded threshold of %d!"
+                                   " why so many missing? may try running again as this happens sometimes..." %\
+                               TOLERATED_EVENT_COUNT_DIFFERENCE)
+        self.assertEqual(zero_expected_sink_count, 0, "EventSink should not receive remote events!")
 
 
-# TODO: we'll test local coap sink later, but probably in a different manner.  This was an attempt to experiment with
-# running a unit test with multiple threads/processes (each client needs one) and then inspect the components directly.
-# HOWEVER, this will probably be more hassle than it's worth especially since most use cases
-# (e.g. mininet/raspi experiments) will require launching a separate process through command line args rather than
-# directly constructing a class in python.
+    def test_local_sink_remote_observer(self):
+        """
+        Run two clients as separate processes:
+        'server' will generate dummy events and sink them to its CoapServer via a LocalCoapEventSink;
+        'client' will observe these events with a CoapSensor;
+        both gather statistics about the events seen, which the unit test uses to validate our expectations.
+        Also verifies that events received from a remote source are published internally but not sent to an EventSink.
+        """
 
-# class TestCoapLocal(unittest.TestCase):
-#     """
-#     Store events in the LocalCoapEventSink and ensure others can read them.
-#     """
-#
-#     def setUp(self):
-#         from scale_client.util.defaults import set_logging_config
-#         import logging
-#         set_logging_config(level=logging.DEBUG)
-#
-#         ## First create the clients to get a broker
-#
-#         # This one runs the sink
-#         self.server_client = ScaleClient(quit_time=QUIT_TIME)
-#         self.server_client.setup_broker()
-#         self.server_client.setup_reporter()
-#
-#         # This one will pull data from it
-#         # NOTE: maybe we can't get away with this ...  unclear that we'll be able to run two clients in separate processes: what happens to the socket handles that were opened???
-#         self.remote_client = self.server_client
-#         # self.remote_client = ScaleClient(quit_time=QUIT_TIME)
-#         # self.remote_client.setup_broker()
-#         # self.remote_client.setup_reporter()
-#
-#         ## Now set up the other components
-#
-#         # Coap parts
-#         topic_to_share = "/events/dummy_data"
-#         self.coap_sink = LocalCoapEventSink(self.server_client.broker, topic=topic_to_share)
-#         self.coap_sensor = CoapSensor(self.remote_client.broker, topic=topic_to_share)
-#         # since we cache the server we should only build it once
-#         try:
-#             self.coap_server = CoapServer(self.server_client.broker)
-#         except ValueError:
-#             self.coap_server = get_coap_server()
-#
-#         # Dummy heartbeat sensor to provide data
-#         self.dummy_sensor = HeartbeatSensor(broker=self.server_client.broker, event_type="dummy_data")
-#
-#         # Test event sink to verify that data was received remotely
-#         self.test_sink = LogEventSink(broker=self.remote_client.broker)
-#
-#         # Register with event reporter
-#         self.server_client.event_reporter.add_sink(self.coap_sink)
-#         self.remote_client.event_reporter.add_sink(self.test_sink)
-#
-#     def test_remote_sensor(self):
-#         print 'should see some events being published by the sensor'
-#         self.server_client.run()
-#
-#     def tearDown(self):
-#         print 'sleeping so network ports can be reclaimed...'
-#         time.sleep(4)
+        # TODO: test both polling and observe modes of CoapSensor
+        # Could do this by putting most of the logic in the setup/teardown and have two different tests
+
+        self.server_output_file = "_server_stats.json"
+        self.client_output_file = "_client_stats.json"
+        self.zero_expected_sink_output_file = "_zero_sink_stats.json"
+
+        # these will be cleaned up in tearDown
+        self.output_files = (self.server_output_file, self.client_output_file, self.zero_expected_sink_output_file)
+        self.server_config = make_scale_config(sensors=get_dummy_sensor_config(),
+                                               applications=get_stats_app_config(self.server_output_file),
+                                               networks=get_coap_server_config(),
+                                               sinks=get_local_sink_config())
+        self.client_config = make_scale_config(sensors=get_coap_sensor_config(),
+                                               applications=get_stats_app_config(self.client_output_file),
+                                               sinks=get_stats_sink_config(self.zero_expected_sink_output_file))
+
+        self.run_procs(self.server_config, self.client_config)
+        server_stats, client_stats, zero_expected_sink_stats = self.read_output_files(self.server_output_file,
+                                                                                      self.client_output_file,
+                                                                                      self.zero_expected_sink_output_file)
+        server_count = server_stats[DEFAULT_EVENT_TYPE]['count']
+        client_count = client_stats[DEFAULT_EVENT_TYPE]['count']
+        zero_expected_sink_count = zero_expected_sink_stats[DEFAULT_EVENT_TYPE]['count']
+
+        # Check that results are correct
+        print "counts:", server_count, "(server app)", zero_expected_sink_count, "(0-expected sink)", client_count, "(client)"
+        self.assertGreaterEqual(server_count, client_count, "how can client have received more events than the server that made them???")
+        self.assertAlmostEqual(server_count, client_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
+                               msg="difference between #events on server vs. client exceeded threshold of %d!"
+                                   " why so many missing? may try running again as this happens sometimes..." %\
+                               TOLERATED_EVENT_COUNT_DIFFERENCE)
+        self.assertEqual(zero_expected_sink_count, 0, "EventSink should not receive remote events!")
 
 
+    def run_procs(self, *configs):
+        """
+        Runs the scale client processes for the configs, waits for them to complete,
+        and reads/returns the resulting statistics.
+        :param configs: list of config strings for determining which components to run on the scale client processes
+        :return:
+        """
+        procs = []
+        for cfg in configs:
+             procs.append(run_scale_client_process(cfg))
+
+        print "waiting for processes to finish (should only take %d seconds)..." % QUIT_TIME
+        for p in procs:
+            p.wait()
+            # if you piped the proc output, can still print it out after it's finished using:
+            # print p.stderr.read()
+
+
+    def read_output_files(self, *files):
+        outputs = []
+        for _file in files:
+            with open(_file) as f:
+                text = f.read().strip()
+                data = json.loads(text)
+                outputs.append(data)
+
+        return outputs
+
+
+    def tearDown(self):
+        try:
+            for f in self.output_files:
+                os.remove(f)
+        except AttributeError:
+            pass
+
+##### further tests to include:
+# TODO: verify that remote events aren't reported to sinks
+# TODO: test with multiple clients
 # TODO: simple unit tests on creating the coap components themselves
 # test these classes individually?
 # from scale_client.networks.coap_client import CoapClient
 # from scale_client.networks.coap_server import CoapServer
+
+
+############    CONFIGURATIONS      ###############
+
+
+# combine these raw YAML configs as needed for the various test cases
+# NOTE: we wrap them in single quotes to keep newlines from ending the commands
+DEFAULT_EVENT_ROOT = "/events/"
+DEFAULT_EVENT_TOPIC = DEFAULT_EVENT_ROOT + '%s'
+DEFAULT_EVENT_TYPE = "dummy_event"
+
+def get_coap_server_config(port=DEFAULT_COAP_PORT, event_root=DEFAULT_EVENT_ROOT):
+    return """'
+CoapServer:
+    class: "coap_server.CoapServer"
+    events_root: %s
+    port: %d
+'""" % (event_root, port)
+
+def get_remote_sink_config(topic=DEFAULT_EVENT_TOPIC):
+    return """'
+RemoteCoapEventSink:
+    class: "remote_coap_event_sink.RemoteCoapEventSink"
+    topic: %s
+'""" % topic
+
+def get_local_sink_config(topic=DEFAULT_EVENT_TOPIC):
+    return """'
+LocalCoapEventSink:
+    class: "local_coap_event_sink.LocalCoapEventSink"
+    topic: %s
+'""" % topic
+
+def get_coap_sensor_config(port=DEFAULT_COAP_PORT, timeout=4, polling_interval=None,
+                           topic=DEFAULT_EVENT_TOPIC % DEFAULT_EVENT_TYPE):
+    """
+    Configures a CoapSensor with the given parameters: it will use observe if polling_interval not set.
+    :param port:
+    :param timeout: NOTE: we use a short timeout since we're starting it at the same time as the other client's server.
+    This ensures that we'll retry an observe quickly since the first time the data usually isn't available yet.
+    :param polling_interval: if specified, sets the sample_interval to the given number of seconds
+    :param topic: topic to observe
+    :return:
+    """
+    cfg = """'
+CoapSensor:
+    class: "network.coap_sensor.CoapSensor"
+    topic: %s
+    timeout: %d
+    port: %d
+'""" % (topic, timeout, port)
+    if polling_interval:
+        cfg += "'use_polling: True\nsample_interval: %d'" % polling_interval
+    return cfg
+
+def get_dummy_sensor_config(event_type=DEFAULT_EVENT_TYPE):
+    return """'
+DummySensor:
+    class: "dummy.heartbeat_sensor.HeartbeatSensor"
+    event_type: %s
+'""" % event_type
+
+def get_stats_app_config(output_file, subscriptions=[DEFAULT_EVENT_TYPE]):
+    return """'
+StatisticsApp:
+    class: "statistics_application.StatisticsApplication"
+    subscriptions: %s
+    output_file: %s
+'""" % (subscriptions, output_file)
+
+def get_stats_sink_config(output_file, subscriptions=[DEFAULT_EVENT_TYPE]):
+    return """'
+StatisticsSink:
+    class: "statistics_event_sink.StatisticsEventSink"
+    subscriptions: %s
+    output_file: %s
+'""" % (subscriptions, output_file)
+
+# TODO: refactor this into a helper function for use in mininet experiments!
+def make_scale_config(applications=None, sensors=None, sinks=None, networks=None):
+    """
+    Builds a string to be used on the command line in order to run a scale client with the given configurations.
+    NOTE: make sure to properly space your arguments and wrap any newlines in quotes so they aren't interpreted
+    as the end of the command by the shell!
+    :param applications:
+    :param sensors:
+    :param sinks:
+    :return:
+    """
+    cfg = ""
+    if applications is not None:
+        cfg += ' --applications %s ' % applications
+    if sensors is not None:
+        cfg += ' --sensors %s ' % sensors
+    if networks is not None:
+        cfg += ' --networks %s ' % networks
+    if sinks is not None:
+        cfg += ' --event-sinks %s ' % sinks
+    return cfg
+
+# TODO: configurable quits, logs, etc.?
+def run_scale_client_process(config):
+    """Run the scale client in a subprocess"""
+    # NOTE: to keep output from showing in console and possibly retrieve it later, use:
+    #  and then do self.server_client.stderr.read()
+    if DISPLAY_PROC_OUTPUT:
+        return subprocess.Popen("python -m scale_client --raise-errors --quit-time %d --log-level %s %s" %\
+                                (QUIT_TIME, LOG_LEVEL, config), shell=True)
+    else:
+        return subprocess.Popen("python -m scale_client --raise-errors --quit-time %d --log-level %s %s" %\
+                                (QUIT_TIME, LOG_LEVEL, config), shell=True, stderr=subprocess.PIPE)
+
 
 if __name__ == '__main__':
     unittest.main()

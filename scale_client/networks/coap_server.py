@@ -1,6 +1,7 @@
 import logging
 
 from scale_client.core.threaded_application import ThreadedApplication
+from scale_client.util import uri
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -39,6 +40,10 @@ class CoapServer(ThreadedApplication):
     This special Application runs a CoAP server so that other modules may use it to store CoAP resources
     for external nodes (e.g. those running a CoapSensor) to GET/POST/PUT/etc.  It allows for
     defining custom CoapResources that can handle application-specific logic.
+
+    NOTE: much of the logic for how the server interacts with external requests resides in the CoapResource classes.
+    They actually handle exposing APIs, calling callbacks when they're activated, and managing SensedEvents from
+    remote sources.
     """
     def __init__(self, broker,
                  events_root=None,
@@ -50,6 +55,7 @@ class CoapServer(ThreadedApplication):
         """
         Simple constructor.  When on_start is called, the server will actually be run.
         :param broker: internal scale_client broker
+        :param events_root: if specified, will allow remote clients to store events at this root
         :param server_name: the user-assigned name for this server so as to distinguish between multiple running ones
         (if unspecified only a single server without an explicit name can be run)
         :param hostname: hostname/IP address to bind server to
@@ -315,13 +321,27 @@ class SensedEventCoapResource(ScaleCoapResource):
     @staticmethod
     def extract_event(request):
         """
-        Extracts a SensedEvent from the payload of the request.
+        Extracts a SensedEvent from the payload of the request.  Tries to convert it to a remote event if it was
+        left as a local one by setting the host/port/protocol.
         :param request:
         :type request: Request
         :return: the SensedEvent
         :rtype: SensedEvent
         """
         event = SensedEvent.from_json(request.payload)
+
+        # If this event came directly from its source node and it forgot to convert the source to a remote one
+        # or it didn't set the host address, we should do the conversion to avoid misinterpreting it as a local event.
+        is_host_known = uri.is_host_known(event.source)
+        if event.is_local or not is_host_known:
+            try:
+                # TODO: perhaps we want to allow remote to specify a different protocol without knowing its IP address?
+                # TODO: perhaps we should do some validation as some networks could make this a problem e.g. a NAT
+                host, port = request.source
+                event.source = uri.get_remote_uri(event.source, protocol='coap', host=host, port=port)
+            except BaseException as e:
+                log.error("error during converting local source to remote source in event extracted from CoAP request: %s" % e)
+
         return event
 
     @property

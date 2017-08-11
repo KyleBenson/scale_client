@@ -104,6 +104,10 @@ class CoapSensor(ThreadedVirtualSensor):
         # TODO: use priority? or log warning if someone tries to use it?
         try:
             ev = SensedEvent.from_json(raw_data)
+            # if necessary, tag the event as coming from a remote CoAP resource so we don't send it back there.
+            if ev.is_local or not uri.is_host_known(ev.source):
+                ev.source = uri.get_remote_uri(ev.source, host=self._hostname, port=self._port, protocol='coap')
+                # TODO: use self.remote_path or this coap sensor itself if the source isn't good
             return ev
         except ValueError as e:
             log.error("Failed to decode SensedEvent from: %s" % raw_data)
@@ -140,10 +144,7 @@ class CoapSensor(ThreadedVirtualSensor):
             return
         elif coap_response_success(response):
             event = self.make_event_with_raw_data(response.payload)
-            remote_origin = self.remote_path
-            log.debug("received content update for observed resource: %s" % remote_origin)
-            # tag the event as coming from a remote CoAP resource so we don't send it back there.
-            event.source = remote_origin
+            log.debug("received content update for observed resource: %s" % self.remote_path)
             if self.policy_check(event):
                 self.publish(event)
 

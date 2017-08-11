@@ -48,8 +48,7 @@ class LocalCoapEventSink(ThreadedEventSink):
         :type event: scale_client.core.sensed_event.SensedEvent
         :return:
         """
-        # Resource paths must end with /
-        return self._topic % event.event_type + '/'
+        return self._topic % event.event_type
 
     def send_event(self, event):
         """
