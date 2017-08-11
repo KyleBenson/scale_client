@@ -4,6 +4,8 @@ Various network-related utility functions to be used by apps.
 
 import time
 import socket
+import logging
+log = logging.getLogger(__name__)
 
 
 def wait_for_internet(sleep_time=10, host="8.8.8.8", port=53, timeout=3):
@@ -33,14 +35,19 @@ def ping_internet(host="8.8.8.8", port=53, timeout=3):
     :returns: True if connection successful, False if not
     """
 
+    # TODO: UDP support?
     try:
         socket.setdefaulttimeout(timeout)
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
 
     except Exception as ex:
-        print ex.message
+        log.debug("internet ping failed with error: %s" % ex.message)
         return False
+
+
+# CoAP-related stuff
+
 
 from coapthon.defines import Codes as CoapCodes
 def coap_response_success(resp):
