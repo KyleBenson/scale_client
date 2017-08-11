@@ -84,13 +84,7 @@ class SensedEvent(Event):
         due to the assumption that remotely-gathered events will be tagged with their network source!
         :return:
         """
-        _uri = uri.parse_uri(self.source)
-        if _uri.scheme == uri.DEFAULT_SCALE_URI_SCHEME or _uri.scheme is None:
-            return True
-        # TODO: can we consider some network-gathered events as local? e.g. dumb BLE sensor
-        # maybe this logic doesn't really belong on the SensedEvent...
-        else:
-            return False
+        return not uri.is_remote_uri(self.source)
 
     ## These properties are mostly maintained as convenience accessors to the event's fields,
     # some of which are for the purpose of backwards compatibility or getting default values.
