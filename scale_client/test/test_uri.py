@@ -109,6 +109,15 @@ class TestUri(unittest.TestCase):
         self.assertEqual(remote_uri, 'mqtt://www.google.com:1884/%s' % local_path)
         self.assertTrue(uri.is_remote_uri(remote_uri))
 
+    def test_is_host_known(self):
+        self.assertTrue(uri.is_host_known("http://www.google.com/blah"))
+        self.assertTrue(uri.is_host_known("coap://10.0.1.10/events"))
+        self.assertTrue(uri.is_host_known("mqtt://scale.ics.uci.edu"))
+
+        self.assertFalse(uri.is_host_known("temperature"))
+        self.assertFalse(uri.is_host_known("/scale/events/temperature"))
+        self.assertFalse(uri.is_host_known("coap://0.0.0.0/events"))
+
 
 if __name__ == '__main__':
     unittest.main()

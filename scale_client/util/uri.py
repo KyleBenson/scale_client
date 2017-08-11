@@ -106,3 +106,11 @@ def is_remote_uri(_uri):
     if uri_scheme is None or uri_scheme in LOCAL_URI_SCHEMES:
         return False
     return True
+
+
+def is_host_known(_uri):
+    """Returns true if the specified URI's host has been specified i.e. is included in the URI and isn't
+    a non-addressable value e.g. nonsense string, null route, etc."""
+    host_unknown = parse_uri(_uri).host
+    host_unknown = host_unknown is None or host_unknown == DEFAULT_REMOTE_URI_HOST
+    return not host_unknown
