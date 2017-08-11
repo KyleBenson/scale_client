@@ -12,7 +12,8 @@ class EventSink(Application):
 
     def send_event(self, event):
         """
-        Sends a SensedEvent object out on this sink.
+        Sends a SensedEvent object out on this sink.  You can override this method to inspect the event before
+        encoding it or perhaps change the way an event is sunk entirely e.g. store its fields in a database.
         :param event: SensedEvent
         :return:
         """
@@ -24,6 +25,7 @@ class EventSink(Application):
         over some connection.
         :param encoded_event: raw encoding of a SensedEvent
         :raises IOError: when there is an issue sending the event
+        :returns: True if event sent successfully; False otherwise
         """
         raise NotImplementedError()
 
