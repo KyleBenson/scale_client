@@ -1,20 +1,28 @@
 Testing
 =======
 
-This folder contains a few Python scripts that are intended as a rudimentary testing suite.  We use Python's unittest where possible, but since a lot of the scale client is multi-threaded and reliant on networking, we instead prefer to run the actual client with the `--test` argument to validate that dummy sensor data gets published internally to various applications and reported in a simple `EventSink`.
+This folder contains a few Python scripts that are intended as a rudimentary testing suite.  We use Python's `unittest` where possible for both quick simple API tests (e.g. default construction parameters work) as well as longer *integration-style testing*.
+Because a lot of the scale client is multi-threaded and reliant on networking, the integration-style tests (e.g. [test_coap.py](test_coap.py)) typically run several processes configured with statistics-gathering `EventSink`s and/or `Application`s.  The unit tests verify that the resulting stats gathered are as expected.  While this isn't a perfect solution, it does provide a more complete test framework for checking edge cases and preventing regressions than the older testing style.
 
-For more complicated tests, including networked apps / database connections / physical sensing hardware, testing tends to be more manual.  It usually takes the form of running a configuration that publishes data to a remote `EventSink` and verifying that sink receives it e.g. by subscribing to it in a different client process.
+The older style is simply to run the actual scale client with the `--test` argument and `--log-level debug` to visually and manually validate that sensor data gets published internally to various applications and reported in a simple `EventSink`.
+We might have this data published to the MQTT broker so we can see it by subscribing in a different client process (e.g. the dashboard).
+We still use this method for features that don't yet have unit tests as well as a first approximation of a functioning deployment (e.g. right packages installed, MQTT broker reachable).
+It's especially helpful for more manual/physical tests, including networked apps / database connections / physical sensing hardware.
 
 
 TODO list
 ---------
 
+If you look in existing test suites, you may find some TODO comments about test cases that will be added later. 
 The following are test suites that we plan to add eventually:
 
+* application - unit testing for default path and properly setting default values in make_event
 * virtual_sensors - unit testing some configuration parameters e.g. event_type changes the published event's type, sync vs. async mode work properly
-* uri - should test the URI path creation/parsing mechanisms as well as any eventual URI registry service
 * mysql - test that the database sink works properly
 * raspi_sensors - test that the various physical sensors we've implemented to run on the Raspberry Pi function properly (NOTE: this could perhaps be done 95% of the way using Python's *mock* package to patch the GPIO/Analog sensor classes in order to have them return actual values).
+* mqtt - verify that mqtt sink and sensor (not yet implemented) work properly, including recovery from disconnects
+* event_reporter - test its event sinking policies, in particular ensuring that remote events aren't forwarded to sinks (this is partially tested in coap suite)
+* internet_access - test the ability for the client to gracefully handle spotty internet access i.e. connection loss, re-established, lost again, etc.
 
 
 ### SCALE Client `core/client.py` unit tests
