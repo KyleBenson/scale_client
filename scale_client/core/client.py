@@ -10,6 +10,7 @@ from functools import reduce
 from event_reporter import EventReporter
 from application import Application
 from broker import Broker
+from scale_client.util.defaults import set_logging_config, DEFAULT_DISABLED_LOG_MODULES
 
 
 class ScaleClient(object):
@@ -462,9 +463,16 @@ class ScaleClient(object):
                             help='''manually specify network components (and their configurations) to run.
                             See --sensors help description for example.''')
 
-        # Misc config params
+        # Configure logging
         parser.add_argument('--log-level', type=str, default='WARNING', dest='log_level',
                             help='''one of debug, info, error, warning''')
+        parser.add_argument('--enable-log-modules', dest='enable_log_modules', nargs='+', default=(),
+                            help='''explicitly enable logging for the specified modules
+                            (by default all of %s are disabled)''' % DEFAULT_DISABLED_LOG_MODULES)
+        parser.add_argument('--disable-log-modules', dest='disable_log_modules', nargs='+', default=(),
+                            help='''explicitly disable logging for the specified modules''')
+
+        # Misc config params
         parser.add_argument('--quit-time', '-q', type=int, default=None, dest='quit_time',
                             help='''quit the client after specified number of seconds
                              (default is to never quit)''')
@@ -503,14 +511,22 @@ def _get_class_by_name(kls):
     return m
 
 
-def main():
-    args = ScaleClient.parse_args(sys.argv[1:])
-
+def configure_logging(args):
     # Set logging based on requested level
-    from scale_client.util.defaults import set_logging_config
     set_logging_config(level=getattr(logging, args.log_level.upper()))
     global log
     log = logging.getLogger(__name__)
+
+    # Unless explicitly enabled, disable the following (for log level < WARN):
+    disabled_log_modules = set(args.disable_log_modules).union(DEFAULT_DISABLED_LOG_MODULES)
+    enabled_log_modules = set(args.enable_log_modules)
+    for mod in disabled_log_modules - enabled_log_modules:
+        logging.getLogger(mod).setLevel(logging.WARNING)
+
+
+def main():
+    args = ScaleClient.parse_args(sys.argv[1:])
+    configure_logging(args)
 
     client = ScaleClient.build_from_configuration_parameters(args.config_filename, args)
     client.run()

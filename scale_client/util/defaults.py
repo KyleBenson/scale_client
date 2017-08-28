@@ -53,6 +53,7 @@ def set_logging_config(level=None,
     }
     logging.config.dictConfig(logging_config)
 
+DEFAULT_DISABLED_LOG_MODULES = {'coapthon', 'paho'}
 
 ### Networking-related configuration defaults
 
