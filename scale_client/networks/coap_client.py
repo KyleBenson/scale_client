@@ -1,4 +1,5 @@
 from coapthon.client.helperclient import HelperClient
+from coapthon import defines
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 
@@ -14,8 +15,29 @@ class CoapClient(HelperClient):
     responses going to the wrong callback as well as the client not
     quitting properly since only one of the threads properly exits
     and the others are left waiting on the Queue.
+
+    We also patch this class to allow sending NON-confirmable messages.
     """
 
+    def __init__(self, server, sock=None, cb_ignore_read_exception=None, cb_ignore_write_exception=None,
+                 confirmable_messages=True):
+        # Newer version accepts callbacks too
+        try:
+            super(CoapClient, self).__init__(server, sock=sock, cb_ignore_read_exception=cb_ignore_read_exception,
+                                             cb_ignore_write_exception=cb_ignore_write_exception)
+        except TypeError:
+            super(CoapClient, self).__init__(server, sock=sock)
+            assert cb_ignore_read_exception is None and cb_ignore_write_exception is None, "this coapthon version doesn't support callbacks in client constructor!"
+
+        self.confirmable_messages = confirmable_messages
+
+    def mk_request(self, method, path):
+        request = super(CoapClient, self).mk_request(method, path)
+        if not self.confirmable_messages:
+            request.type = defines.Types["NON"]
+        return request
+
+    # TODO: weili-jiang seems to have fixed this issue #88; may want to try latest version to see if we can safely do away with this hack...
     # TODO: fix the send_request function so that it does the same thing to get the response from the Queue
     # perhaps just write a coapthon Queue wrapper class?  or a .get_response() function that returns the response
     # and whether the transaction is completed?

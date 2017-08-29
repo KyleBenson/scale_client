@@ -54,8 +54,7 @@ Networks:
 
 Sensors:
     DummyThreadedSensor:
-      class: "dummy.dummy_threaded_physical_sensor.DummyThreadedSensor"
-      device: "dum0"
+      class: "dummy.dummy_threaded_sensor.DummyThreadedSensor"
       interval: 1
     DummyTempSensor:
       class: "dummy.dummy_temperature_physical_sensor.DummyTemperaturePhysicalSensor"
