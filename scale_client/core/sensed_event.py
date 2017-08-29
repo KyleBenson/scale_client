@@ -1,11 +1,15 @@
 import json
 import time
+# CIRCUITS-SPECIFIC:
 from circuits import Event
 import pprint
 
 from copy import deepcopy
 
 from scale_client.util import uri
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class SensedEvent(Event):
@@ -183,7 +187,14 @@ class SensedEvent(Event):
         assert isinstance(condition, dict), "dict-based conditions are the only ones currently supported!"
 
         if "event" in condition or "events" in condition:
-            raise NotImplementedError("encoding conditions referring to other events not yet supported!")
+            # TODO: we'll need to implement some sort of unique ID for each event to properly deserialize
+            # an event at the other end of the wire...
+            log.warning("encoding conditions referring to other events not yet fully supported! "
+                        "For now, we simply dump the event(s) to string(s)...")
+            if 'event' in condition:
+                condition['event'] = str(condition['event'])
+            else:
+                condition['events'] = [str(e) for e in condition['events']]
 
         return condition
 
@@ -229,7 +240,12 @@ class SensedEvent(Event):
         return cls(source=source, **map_data)
 
     def to_json(self):
-        return json.dumps(self.to_map())
+        as_map = self.to_map()
+        try:
+            return json.dumps(as_map)
+        except (TypeError, ValueError) as e:
+            log.error("Problem jsonifying SensedEvent map: %s" % as_map)
+            raise
 
     @classmethod
     def from_json(cls, json_data):
