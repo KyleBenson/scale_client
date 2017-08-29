@@ -10,7 +10,7 @@ from functools import reduce
 from event_reporter import EventReporter
 from application import Application
 from broker import Broker
-from scale_client.util.defaults import set_logging_config, DEFAULT_DISABLED_LOG_MODULES
+from scale_client.util.defaults import set_logging_config, DEFAULT_DISABLED_LOG_MODULES, DEFAULT_LOG_FORMAT
 
 
 class ScaleClient(object):
@@ -471,6 +471,9 @@ class ScaleClient(object):
                             (by default all of %s are disabled)''' % DEFAULT_DISABLED_LOG_MODULES)
         parser.add_argument('--disable-log-modules', dest='disable_log_modules', nargs='+', default=(),
                             help='''explicitly disable logging for the specified modules''')
+        parser.add_argument('--format-logging', type=str, default=DEFAULT_LOG_FORMAT, dest='log_format',
+                            help='''formats logging as per the given argument (default=%(default)s).
+                            NOTE: add timestamp by doing %%(asctime)s''')
 
         # Misc config params
         parser.add_argument('--quit-time', '-q', type=int, default=None, dest='quit_time',
@@ -512,8 +515,11 @@ def _get_class_by_name(kls):
 
 
 def configure_logging(args):
-    # Set logging based on requested level
-    set_logging_config(level=getattr(logging, args.log_level.upper()))
+    """
+    Configure logging facility based on requested parameters.
+    """
+
+    set_logging_config(level=getattr(logging, args.log_level.upper()), log_format=args.log_format)
     global log
     log = logging.getLogger(__name__)
 

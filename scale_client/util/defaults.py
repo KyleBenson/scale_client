@@ -2,9 +2,10 @@
 
 # HACK: to default to the last used level (e.g. when re-setting defaults)
 last_log_level = None
+DEFAULT_LOG_FORMAT = "%(levelname)-6s : %(name)-55s : %(message)s"
 
 def set_logging_config(level=None,
-                       log_format="%(levelname)-6s : %(name)-55s : %(message)s",
+                       log_format=DEFAULT_LOG_FORMAT,
                        loggers=('',)):
     """
     Sets the loggers to the specified format.  Use no args for defaults, which will
