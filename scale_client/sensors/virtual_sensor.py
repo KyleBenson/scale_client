@@ -47,10 +47,12 @@ class VirtualSensor(Application):
         """
         # XXX for backwards compatibility
         if 'interval' in kwargs:
-            if sample_interval is None:
-                sample_interval = kwargs.pop('interval')
-            else:
-                raise DeprecationWarning("sample_interval is now used for telling a VirtualSensor its period data reading interval, but you specified both sample_interval=%f and interval=%f!" % (sample_interval, kwargs['interval']))
+            if sample_interval is not None:
+                log.warning("sample_interval is now used for telling a VirtualSensor its period data reading interval,"
+                            " but you specified both sample_interval=%f and interval=%f!"
+                            "We'll use the 'interval' value since you likely specified it in a config file..." \
+                            % (sample_interval, kwargs['interval']))
+            sample_interval = kwargs.pop('interval')
 
         # We use the event_type as the default type for making SensedEvents by passing
         # it as the first (and likely only) publication advertisement.
