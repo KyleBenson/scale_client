@@ -83,6 +83,10 @@ class CoapServer(ThreadedApplication):
         _coap_server_instances[server_name] = self
         self._server_name = server_name
 
+    @staticmethod
+    def get_instance(name=_DEFAULT_COAP_SERVER_NAME):
+        return get_coap_server(name)
+
     def __run_server(self):
         log.debug("starting CoAP server at IP:port %s:%d" % (self._hostname, self._port))
 
