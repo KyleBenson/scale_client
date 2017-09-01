@@ -32,8 +32,8 @@ EventSinks:
     # will cause SCALE to start the LogEventSink:
     LogEventSink:
       class: "log_event_sink.LogEventSink"
-    # See coap_config.yml for CoAP-related event sink options
-    # See mqtt_test_config.yml for the MQTT event sink options
+    # See coap/example_config.yml for CoAP-related event sink options
+    # See mqtt_config.yml for the MQTT event sink options
 
 Applications:
     # Each entry here starts up an Application that may subscribe to and/or publish SensedEvents
@@ -70,4 +70,4 @@ Sensors:
 
 #Networks:
     # These options configure various networking-related components, such as the mesh relay that is currently unsupported.
-    # See coap_config.yml for details about running the CoapServer
+    # See coap/example_config.yml for details about running the CoapServer
