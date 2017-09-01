@@ -1,3 +1,4 @@
+from scale_client.sensors.dummy.dummy_virtual_sensor import DummyVirtualSensor
 from scale_client.sensors.physical_sensor import PhysicalSensor
 
 
@@ -5,7 +6,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class DummyPhysicalSensor(PhysicalSensor):
+class DummyPhysicalSensor(DummyVirtualSensor, PhysicalSensor):
     """
     A DummyPhysicalSensor is a special type of PhysicalSensor that aims to act just like a derived
     PhysicalSensor class but does not actually manage a physical sensor device.  It generates dummy
