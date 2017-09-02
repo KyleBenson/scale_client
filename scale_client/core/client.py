@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import json
 import sys
 import yaml
 import yaml.parser
@@ -528,6 +529,33 @@ def configure_logging(args):
     enabled_log_modules = set(args.enable_log_modules)
     for mod in disabled_log_modules - enabled_log_modules:
         logging.getLogger(mod).setLevel(logging.WARNING)
+
+
+def make_scale_config(applications=None, sensors=None, sinks=None, networks=None):
+    """
+    Builds a string to be used on the command line in order to run a scale client with the given configurations.
+    NOTE: make sure to properly space your arguments and wrap any newlines in quotes so they aren't interpreted
+    as the end of the command by the shell!
+    """
+    cfg = ""
+    if applications is not None:
+        cfg += ' --applications %s ' % applications
+    if sensors is not None:
+        cfg += ' --sensors %s ' % sensors
+    if networks is not None:
+        cfg += ' --networks %s ' % networks
+    if sinks is not None:
+        cfg += ' --event-sinks %s ' % sinks
+    return cfg
+
+
+def make_scale_config_entry(class_path, name, **kwargs):
+    """Builds an individual entry for a single SCALE client module that can be fed to the CLI.
+    NOTE: don't forget to add spaces around each entry if you use multiple!"""
+    d = dict(name=name, **kwargs)
+    # XXX: can't use 'class' as a kwarg in call to dict, so doing it this way...
+    d['class'] = class_path
+    return json.dumps(d)
 
 
 def main():

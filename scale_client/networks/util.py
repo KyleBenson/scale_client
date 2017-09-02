@@ -55,3 +55,6 @@ def coap_response_success(resp):
 
 def coap_code_to_name(code):
     return CoapCodes.LIST[code].name
+
+from coapthon.defines import COAP_DEFAULT_PORT
+DEFAULT_COAP_PORT = COAP_DEFAULT_PORT

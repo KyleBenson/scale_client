@@ -12,7 +12,9 @@ from coapthon.resources.resource import Resource as CoapResource
 
 # HACK: the version of CoAPthon that we're using has a bug where it overwrites our
 # logging configuration, so we just reformat it.
-from scale_client.util.defaults import set_logging_config, DEFAULT_COAP_PORT
+from scale_client.util.defaults import set_logging_config
+from scale_client.networks.util import DEFAULT_COAP_PORT
+
 set_logging_config()
 
 from scale_client.core.sensed_event import SensedEvent

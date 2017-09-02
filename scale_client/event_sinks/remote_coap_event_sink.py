@@ -3,14 +3,12 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 
 from coapthon.defines import Codes as CoapCodes
-from scale_client.networks.util import coap_response_success, coap_code_to_name
+from scale_client.networks.util import coap_response_success, coap_code_to_name, DEFAULT_COAP_PORT
 # this is basically replaceable by the coapthon HelperClient, but this version has a bugfix (see below)
 from scale_client.networks.coap_client import CoapClient
-from scale_client.util.defaults import DEFAULT_COAP_PORT
 from scale_client.util import uri
 
 from event_sink import ThreadedEventSink
-from scale_client.core.sensed_event import SensedEvent
 
 
 class RemoteCoapEventSink(ThreadedEventSink):
@@ -64,7 +62,7 @@ class RemoteCoapEventSink(ThreadedEventSink):
 
     def __run_client(self):
         """This runs the CoAP client in a separate thread."""
-        self._client = CoapClient(server=(self._hostname, self._port))
+        self._client = CoapClient(server_hostname=self._hostname, server_port=self._port)
         self._client_running = True
 
     def get_topic(self, event):

@@ -1,9 +1,10 @@
-import unittest
 import json
-import subprocess
 import os
+import subprocess
+import unittest
 
-from scale_client.util.defaults import DEFAULT_COAP_PORT
+from scale_client.core.client import make_scale_config
+from scale_client.networks.util import DEFAULT_COAP_PORT
 
 # quit all tests after this long in case they hang
 QUIT_TIME = 10
@@ -28,7 +29,6 @@ class TestCoapRemoteSink(unittest.TestCase):
         both gather statistics about the events seen, which the unit test uses to validate our expectations.
         Also verifies that events received from a remote source are published internally but not sent to an EventSink.
         """
-        ""
 
         self.server_output_file = "_server_stats.json"
         self.client_output_file = "_client_stats.json"
@@ -105,8 +105,7 @@ class TestCoapRemoteSink(unittest.TestCase):
 
     def run_procs(self, *configs):
         """
-        Runs the scale client processes for the configs, waits for them to complete,
-        and reads/returns the resulting statistics.
+        Runs the scale client processes for the configs and waits for them to complete
         :param configs: list of config strings for determining which components to run on the scale client processes
         :return:
         """
@@ -122,6 +121,7 @@ class TestCoapRemoteSink(unittest.TestCase):
 
 
     def read_output_files(self, *files):
+        """Read files output by the StatisticsApplication modules (JSON files)"""
         outputs = []
         for _file in files:
             with open(_file) as f:
@@ -224,27 +224,8 @@ StatisticsSink:
     output_file: %s
 '""" % (subscriptions, output_file)
 
-# TODO: refactor this into a helper function for use in mininet experiments!
-def make_scale_config(applications=None, sensors=None, sinks=None, networks=None):
-    """
-    Builds a string to be used on the command line in order to run a scale client with the given configurations.
-    NOTE: make sure to properly space your arguments and wrap any newlines in quotes so they aren't interpreted
-    as the end of the command by the shell!
-    :param applications:
-    :param sensors:
-    :param sinks:
-    :return:
-    """
-    cfg = ""
-    if applications is not None:
-        cfg += ' --applications %s ' % applications
-    if sensors is not None:
-        cfg += ' --sensors %s ' % sensors
-    if networks is not None:
-        cfg += ' --networks %s ' % networks
-    if sinks is not None:
-        cfg += ' --event-sinks %s ' % sinks
-    return cfg
+# TODO: refactor run_scale_client_process, and the self.run_procs/read_output/tearDown into either tests/util.py and/or a base class for unittests
+# the get_x_config functions were kind of silly: could mostly replace them with json.dumps(dict(name=StatsSink, **kwargs))
 
 # TODO: configurable quits, logs, etc.?
 def run_scale_client_process(config):

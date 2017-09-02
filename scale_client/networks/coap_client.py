@@ -3,7 +3,7 @@ from coapthon import defines
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 
-from scale_client.networks.util import coap_response_success
+from scale_client.networks.util import coap_response_success, DEFAULT_COAP_PORT
 
 class CoapClient(HelperClient):
     """
@@ -19,14 +19,14 @@ class CoapClient(HelperClient):
     We also patch this class to allow sending NON-confirmable messages.
     """
 
-    def __init__(self, server, sock=None, cb_ignore_read_exception=None, cb_ignore_write_exception=None,
+    def __init__(self, server_hostname, server_port=DEFAULT_COAP_PORT, sock=None, cb_ignore_read_exception=None, cb_ignore_write_exception=None,
                  confirmable_messages=True):
         # Newer version accepts callbacks too
         try:
-            super(CoapClient, self).__init__(server, sock=sock, cb_ignore_read_exception=cb_ignore_read_exception,
+            super(CoapClient, self).__init__((server_hostname, server_port), sock=sock, cb_ignore_read_exception=cb_ignore_read_exception,
                                              cb_ignore_write_exception=cb_ignore_write_exception)
         except TypeError:
-            super(CoapClient, self).__init__(server, sock=sock)
+            super(CoapClient, self).__init__((server_hostname, server_port), sock=sock)
             assert cb_ignore_read_exception is None and cb_ignore_write_exception is None, "this coapthon version doesn't support callbacks in client constructor!"
 
         self.confirmable_messages = confirmable_messages
