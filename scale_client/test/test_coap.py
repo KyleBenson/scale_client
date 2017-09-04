@@ -153,6 +153,7 @@ class TestCoap(unittest.TestCase):
 # TODO: verify that remote events aren't reported to sinks
 # TODO: test with multiple clients
 # TODO: simple unit tests on creating the coap components themselves
+# TODO: test REST API itself directly instead of indirectly through the events API
 # test these classes individually?
 # from scale_client.networks.coap_client import CoapClient
 # from scale_client.networks.coap_server import CoapServer
