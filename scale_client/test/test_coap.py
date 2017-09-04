@@ -15,7 +15,7 @@ DISPLAY_PROC_OUTPUT = False
 TOLERATED_EVENT_COUNT_DIFFERENCE = 4
 
 
-class TestCoapRemoteSink(unittest.TestCase):
+class TestCoap(unittest.TestCase):
     """
     Basic Coap integration testing by running multiple scale clients in different processes in order to verify
     their proper interactions via coap
@@ -52,10 +52,15 @@ class TestCoapRemoteSink(unittest.TestCase):
         # Check that results are correct
         print "counts:", server_count, "(server app)", zero_expected_sink_count, "(0-expected sink)", client_count, "(client)"
         self.assertGreaterEqual(client_count, server_count, "how can server have received more events than the client that made them???")
+        self.assertGreater(server_count, 0, "no events received remotely on server!")
+        self.assertGreater(client_count, 0, "no events received locally on client!")
         self.assertAlmostEqual(server_count, client_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
                                msg="difference between #events on server vs. client exceeded threshold of %d!"
                                    " why so many missing? may try running again as this happens sometimes..." %\
                                TOLERATED_EVENT_COUNT_DIFFERENCE)
+        expected_events = QUIT_TIME
+        self.assertAlmostEqual(expected_events, client_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
+                               msg="too few events were published on the client! regression?")
         self.assertEqual(zero_expected_sink_count, 0, "EventSink should not receive remote events!")
 
 
@@ -95,11 +100,16 @@ class TestCoapRemoteSink(unittest.TestCase):
 
         # Check that results are correct
         print "counts:", server_count, "(server app)", zero_expected_sink_count, "(0-expected sink)", client_count, "(client)"
+        self.assertGreater(server_count, 0, "no events received locally on server!")
+        self.assertGreater(client_count, 0, "no events received remotely on client!")
         self.assertGreaterEqual(server_count, client_count, "how can client have received more events than the server that made them???")
         self.assertAlmostEqual(server_count, client_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
                                msg="difference between #events on server vs. client exceeded threshold of %d!"
                                    " why so many missing? may try running again as this happens sometimes..." %\
                                TOLERATED_EVENT_COUNT_DIFFERENCE)
+        expected_events = QUIT_TIME
+        self.assertAlmostEqual(expected_events, server_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
+                               msg="too few events were published on the server! regression?")
         self.assertEqual(zero_expected_sink_count, 0, "EventSink should not receive remote events!")
 
 
@@ -206,6 +216,7 @@ def get_dummy_sensor_config(event_type=DEFAULT_EVENT_TYPE):
 DummySensor:
     class: "dummy.heartbeat_sensor.HeartbeatSensor"
     event_type: %s
+    sample_interval: 1
 '""" % event_type
 
 def get_stats_app_config(output_file, subscriptions=[DEFAULT_EVENT_TYPE]):
