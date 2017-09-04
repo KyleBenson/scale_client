@@ -1,3 +1,4 @@
+import copy
 import logging
 
 from scale_client.core.threaded_application import ThreadedApplication
@@ -13,7 +14,7 @@ from coapthon.resources.resource import Resource as CoapResource
 # HACK: the version of CoAPthon that we're using has a bug where it overwrites our
 # logging configuration, so we just reformat it.
 from scale_client.util.defaults import set_logging_config
-from scale_client.networks.util import DEFAULT_COAP_PORT
+from scale_client.networks.util import DEFAULT_COAP_PORT, coap_code_to_name
 
 set_logging_config()
 
@@ -155,8 +156,20 @@ class CoapServer(ThreadedApplication):
         # Create the resource since it didn't exist.
         # We add callbacks so modifications to the resource are published internally.
         except KeyError:
-            post_cb = None if disable_post else lambda req, res: self.publish(res.event)
-            put_cb = None if disable_put else lambda req, res: self.publish(res.event)
+            # post_cb = None if disable_post else lambda req, res: self.publish(res.event)
+            # put_cb = None if disable_put else lambda req, res: self.publish(res.event)
+            def __default_event_callback(request, resource):
+                """
+                Default callback to enable logging and internally publish new events.
+                :type request: coapthon.messages.request.Request
+                :return:
+                """
+                log.debug("new event received via %s: %s" % (coap_code_to_name(request.code), resource.event))
+                return self.publish(resource.event)
+
+            post_cb = None if disable_post else __default_event_callback
+            put_cb = None if disable_put else __default_event_callback
+
             new_resource = SensedEventCoapResource(event, name=event.event_type,
                                                    get_callback=lambda x, y: y,  # always enabled
                                                    post_callback=post_cb, put_callback=put_cb,
@@ -254,7 +267,12 @@ class ScaleCoapResource(CoapResource):
         try:
             self._get_cb(request, self)
         except Exception as e:
-            self._err_cb(request, self, e)
+            if self._err_cb is not None:
+                self._err_cb(request, self, e)
+            else:
+                log.error("unhandled error: %s" % e)
+                raise e
+
         return self
 
     # TODO: how to do access control for these???
@@ -271,7 +289,11 @@ class ScaleCoapResource(CoapResource):
             self.edit_resource(request)
             self._put_cb(request, self)
         except Exception as e:
-            self._err_cb(request, self, e)
+            if self._err_cb is not None:
+                self._err_cb(request, self, e)
+            else:
+                log.error("unhandled error: %s" % e)
+                raise e
         return self
 
     def render_POST(self, request):
@@ -283,13 +305,17 @@ class ScaleCoapResource(CoapResource):
         if self._post_cb is None:
             raise NotImplementedError
         try:
-            import copy
             res = copy.deepcopy(self)
             res = self.init_resource(request, res)
             self._post_cb(request, res)
             return res
         except Exception as e:
-            self._err_cb(request, self, e)
+            if self._err_cb is not None:
+                self._err_cb(request, self, e)
+            else:
+                log.error("unhandled error: %s" % e)
+                raise e
+
 
     def render_DELETE(self, request):
         """
@@ -302,7 +328,10 @@ class ScaleCoapResource(CoapResource):
         try:
             self._del_cb(request, self)
         except Exception as e:
-            self._err_cb(request, self, e)
+            if self._err_cb is not None:
+                self._err_cb(request, self, e)
+            else:
+                log.error("unhandled error: %s" % e)
         return True
 
 
