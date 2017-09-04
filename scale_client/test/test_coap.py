@@ -11,6 +11,9 @@ QUIT_TIME = 10
 LOG_LEVEL = 'debug'
 # optionally ignore the processes' output (stderr since most output is logging; stdout still prints for quick hacking)
 DISPLAY_PROC_OUTPUT = False
+# extra arguments to be passed to the scale_client via CLI params go here
+SCALE_EXTRA_ARGS = ''
+# SCALE_EXTRA_ARGS = '--enable-log-module coapthon'
 # ideally this would only be 1-2, but it does seem like it can go up to 4 fairly often...
 TOLERATED_EVENT_COUNT_DIFFERENCE = 4
 
@@ -245,11 +248,11 @@ def run_scale_client_process(config):
     # NOTE: to keep output from showing in console and possibly retrieve it later, use:
     #  and then do self.server_client.stderr.read()
     if DISPLAY_PROC_OUTPUT:
-        return subprocess.Popen("python -m scale_client --raise-errors --quit-time %d --log-level %s %s" %\
-                                (QUIT_TIME, LOG_LEVEL, config), shell=True)
+        return subprocess.Popen("python -m scale_client --raise-errors --quit-time %d --log-level %s %s %s" %\
+                                (QUIT_TIME, LOG_LEVEL, SCALE_EXTRA_ARGS, config), shell=True)
     else:
-        return subprocess.Popen("python -m scale_client --raise-errors --quit-time %d --log-level %s %s" %\
-                                (QUIT_TIME, LOG_LEVEL, config), shell=True, stderr=subprocess.PIPE)
+        return subprocess.Popen("python -m scale_client --raise-errors --quit-time %d --log-level %s %s %s" %\
+                                (QUIT_TIME, LOG_LEVEL, SCALE_EXTRA_ARGS, config), shell=True, stderr=subprocess.PIPE)
 
 
 if __name__ == '__main__':
