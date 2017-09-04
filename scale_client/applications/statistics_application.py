@@ -75,4 +75,5 @@ class StatisticsApplication(Application):
     def on_stop(self):
         if self._out_file:
             self.write_stats(self._out_file)
+        log.warning("Stats gathered: %s" % self.stats)
         super(StatisticsApplication, self).on_stop()
