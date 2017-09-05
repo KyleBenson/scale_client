@@ -149,11 +149,14 @@ class AbstractApplication(object):
         Publishes the given Event to the given Topic; then calls on_publish
         :param event: Event to publish
         :type event: scale_client.core.sensed_event.SensedEvent
-        :param topic: Topic to publish to
+        :param topic: Topic to publish to (optional; default=event.__class__.__name__)
         :return: a True-ish object if successful
         """
         if topic is None:
-            topic = event.topic
+            try:
+                topic = event.topic
+            except AttributeError:
+                topic = event.__class__.__name__
         ret = self._publish(event, topic)
         self.on_publish(event, topic)
 
@@ -284,7 +287,7 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
         # TODO: test said support!
         timer_class_name = timer_expired_event.__name__
         timer_channel = "%s/%s/%s" % (self._get_channel_name(), timer_class_name, id(function))
-        self.subscribe(timer_channel, names=[timer_class_name], callback=function)
+        self.subscribe(timer_channel, data_spaces=[timer_class_name], callback=function)
 
         # Then set the timer.  Note how the args are passed via the timer_expired_event object.
         t = Timer(time, timer_expired_event(*args, **kwargs), timer_channel, persist=repeat)
@@ -298,19 +301,37 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
     # just get that class's __name__ if None specified
     # Could make use of SensedEvent's .topic property to get the actual class name and have that get
     # passed around to subscribe calls, etc.
-    def subscribe(self, topic, callback=None, names=(scale_client.core.sensed_event.SensedEvent.__name__,)):
+    def subscribe(self, topic, callback=None, data_spaces=None):
         """
         Subscribe to the given topic such that the specified callback is called when an event matching that topic
         is published.
-        :param topic: topic string subscribe to
+        :param topic: topic string to subscribe to or an Event instance that we'll extract a topic from
         :param callback: an unbound method of the subscribing class that accepts just self and the Event
              being published (default=self.on_event(event, event.event_type))
-        :param names: circuits-specific hack: the actual class name of the Event type must be specified here
-        (default=SensedEvent.__name__ so you can typically ignore this parameter unless you subclass SensedEvent)
+        :param data_spaces: a string representing the 'data space' you're interested in e.g. for SensedEvents.
+          This is used to separate different event types from each other.
+        circuits-specific note: these must be the actual class name of the Event type
+        (default=SensedEvent.__name__ when topic is a string, topic.__class__.__name__ when it's a class:
+        so you can typically ignore this parameter unless you subclass SensedEvent)
         :raises ValueError: when callback is an instancemethod rather than an unbound one;
                  instead use self.__class__.fun not self.fun
         :return:
         """
+
+        # Handle possibility of topic being an Event instance rather than string
+        if isinstance(topic, Event):
+            # First get data space if needed
+            if data_spaces is None:
+                data_spaces = (topic.__class__.__name__,)
+            # Now extract actual topic or just use the class name as default one
+            try:
+                topic = topic.topic
+            except AttributeError:
+                topic = topic.__class__.__name__
+
+        # Set 'data_spaces' param default
+        if data_spaces is None:
+            data_spaces = (scale_client.core.sensed_event.SensedEvent.__name__,)
 
         # XXX: In order to call on_event(), we need to pass it the event_type (topic) too!
         if callback is None:
@@ -336,7 +357,7 @@ class CircuitsApplication(AbstractApplication, BaseComponent):
 
         # override=True ensures if a base class redefines an event handler it will be
         # called separately instead of as an additional handler for the event
-        f = handler(*names, channel=topic, override=True)(f)
+        f = handler(*data_spaces, channel=topic, override=True)(f)
         self.addHandler(f)
 
         self.on_subscribe(topic)
