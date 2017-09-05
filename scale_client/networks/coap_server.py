@@ -98,14 +98,28 @@ class CoapServer(ThreadedApplication):
         except TypeError:
             # coapthon 4.0.2 has a different constructor API
             self._server = CoapthonServer((self._hostname, self._port), self._multicast)
-        self._server_running = True
 
         if self._events_root is not None:
             root_event = self.make_event(source=self._events_root, data='root of SCALE events resources', priority=1)
             self.store_event(root_event, self._events_root)
 
+        self._server_running = True
+        self._notify_running()
+
         # Listen for remote connections GETting data, etc.
         self._server.listen()
+
+    # CIRCUITS-SPECIFIC: not entirely, but may be broker by switch to another runtime...
+    # TODO: document this!
+    from scale_client.core.sensed_event import Event
+    class CoapServerRunning(Event):
+        pass
+
+    def _notify_running(self):
+        """Publishes an event to let other apps know that this server is now up and running.
+        They should be careful to not use this server until this notification!"""
+        event = self.CoapServerRunning(self)
+        self.publish(event)
 
     def on_stop(self):
         self._server.close()

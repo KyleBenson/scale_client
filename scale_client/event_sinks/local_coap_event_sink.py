@@ -1,12 +1,9 @@
 import logging
-
-from scale_client.core.sensed_event import SensedEvent
-
 logging.basicConfig()
 log = logging.getLogger(__name__)
 
 from event_sink import ThreadedEventSink
-from scale_client.networks.coap_server import get_coap_server
+from scale_client.networks.coap_server import CoapServer
 
 
 class LocalCoapEventSink(ThreadedEventSink):
@@ -31,14 +28,15 @@ class LocalCoapEventSink(ThreadedEventSink):
         self._server = None
         self._server_name = server_name
 
-    def on_start(self):
-        """
-        Once we've started, the CoapServer instance should be available so this is where we look it up.
-        """
-        if self._server_name is None:
-            self._server = get_coap_server()
-        else:
-            self._server = get_coap_server(self._server_name)
+        # If we need to do anything with the server right away or expect some logic to be called
+        # that will not directly check whether the server is running currently, we should wait
+        # for a CoapServerRunning event before accessing the actual server.
+        ev = CoapServer.CoapServerRunning(None)
+        self.subscribe(ev, callback=self.__class__.__on_coap_ready)
+
+    def __on_coap_ready(self, server):
+        if self._server_name is None or self._server_name == server.name:
+            self._server = server
 
     def get_topic(self, event):
         """
