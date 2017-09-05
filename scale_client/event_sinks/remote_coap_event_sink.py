@@ -73,8 +73,13 @@ class RemoteCoapEventSink(ThreadedEventSink):
         :type event: scale_client.core.sensed_event.SensedEvent
         :return:
         """
-        # Resource paths must end with /
-        return self._topic % event.event_type + '/'
+        # Resource paths must start and end with /
+        topic = self._topic % event.event_type
+        if not topic.startswith('/'):
+            topic = '/' + topic
+        if not topic.endswith('/'):
+            topic += '/'
+        return topic
 
     def __put_event_callback(self, event, response):
         """
@@ -128,7 +133,7 @@ class RemoteCoapEventSink(ThreadedEventSink):
         """
 
         topic = self.get_topic(event)
-        log.debug("Forwarding event as CoAP remote resource: %s:%d/%s" % (self._hostname, self._port, topic))
+        log.debug("Forwarding event as CoAP remote resource: %s:%d%s" % (self._hostname, self._port, topic))
 
         # WARNING: you cannot mix the blocking and callback-based method calls!  We could probably fix the
         # blocking one too, but we've had to extend the coapthon HelperClient to fix some threading problems
