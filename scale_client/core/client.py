@@ -74,6 +74,10 @@ class ScaleClient(object):
                 log.info("Stopping client...")
                 self._broker.stop()
 
+                # TODO: put this in a thread? that comes back and finishes quitting in case it hangs?
+                # if you REALLY can't get the client to quit, do this:
+                # os._exit(0)
+
         quit_app = QuitApp(self.__broker)
         quit_app.timed_call(quit_time, QuitApp._quitter)
 
