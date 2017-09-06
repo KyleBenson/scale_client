@@ -5,6 +5,10 @@ from coapthon.messages.response import Response
 
 from scale_client.networks.util import coap_response_success, DEFAULT_COAP_PORT
 
+import logging
+log = logging.getLogger(__name__)
+
+
 class CoapClient(HelperClient):
     """
     This helper class performs CoAP requests in a simplified way.
@@ -21,16 +25,24 @@ class CoapClient(HelperClient):
 
     def __init__(self, server_hostname, server_port=DEFAULT_COAP_PORT, sock=None, cb_ignore_read_exception=None, cb_ignore_write_exception=None,
                  confirmable_messages=True):
+
+        # TODO: make some @properties to keep these variables in sync with self.server
+        self.server_hostname = server_hostname
+        self.server_port = server_port
+
+        # convert args for multiple versions of HelperClient
+        coapthon_server_arg = (self.server_hostname, self.server_port)
         # Newer version accepts callbacks too
         try:
-            super(CoapClient, self).__init__((server_hostname, server_port), sock=sock, cb_ignore_read_exception=cb_ignore_read_exception,
+            super(CoapClient, self).__init__(coapthon_server_arg, sock=sock, cb_ignore_read_exception=cb_ignore_read_exception,
                                              cb_ignore_write_exception=cb_ignore_write_exception)
         except TypeError:
-            super(CoapClient, self).__init__((server_hostname, server_port), sock=sock)
+            super(CoapClient, self).__init__(coapthon_server_arg, sock=sock)
             assert cb_ignore_read_exception is None and cb_ignore_write_exception is None, "this coapthon version doesn't support callbacks in client constructor!"
 
         self.confirmable_messages = confirmable_messages
 
+    ##### XXX: to allow sending non-confirmable messages, we hack/patch HelperClient
     def mk_request(self, method, path):
         request = super(CoapClient, self).mk_request(method, path)
         if not self.confirmable_messages:
@@ -86,3 +98,14 @@ class CoapClient(HelperClient):
             # Not our response, so pass it along to the next
             else:
                 self.queue.put(response)
+
+    def stop(self):
+        # XXX: closing a client that hasn't send any datagrams causes an error
+        # due to joining an unstarted thread (receiver).  At this time, this may
+        # skip over socket.close, but that probably doesn't matter
+        # as it'll be reclaimed when the process exits.
+        try:
+            super(CoapClient, self).stop()
+        except RuntimeError:
+            log.debug("ignoring RuntimeError while closing CoapClient:"
+                      " you probably just didn't send any datagrams...")
