@@ -319,7 +319,10 @@ class ScaleCoapResource(CoapResource):
         if self._post_cb is None:
             raise NotImplementedError
         try:
-            res = copy.deepcopy(self)
+            # XXX: rather than creating a new resource and passing in all our
+            # callbacks, attributes, etc. as args to it, we just do a shallow copy instead.
+            # NOTE: can't do deepcopy as it can cause an error due to copying thread locks.
+            res = copy.copy(self)
             res = self.init_resource(request, res)
             self._post_cb(request, res)
             return res
