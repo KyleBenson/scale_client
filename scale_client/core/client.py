@@ -2,7 +2,9 @@
 import json
 import sys
 import yaml
+# These two are just for Errors
 import yaml.parser
+import yaml.scanner
 import logging
 import argparse
 import os
@@ -306,7 +308,7 @@ class ScaleClient(object):
         for arg in args:
             try:
                 arg = yaml.load(arg)
-            except yaml.parser.ParserError as e:
+            except (yaml.parser.ParserError, yaml.scanner.ScannerError) as e:
                 raise ValueError("error parsing manual configuration: %s\nError:%s" % (arg, e))
 
             # If this config is anonymous, give it a unique name and add it to configs
