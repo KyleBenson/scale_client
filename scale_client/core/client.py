@@ -154,9 +154,9 @@ class ScaleClient(object):
                     cls = _get_class_by_name(other_cls_name)
                 except ImportError as e2:
                     log.error("ImportErrors while creating %s class: %s\n"
-                              "Did you remember to put the repository in your PYTHONPATH???"
+                              "Did you remember to put the repository in your PYTHONPATH??? "
                               "skipping import..." % (other_cls_name, cfg))
-                    log.debug("Errors were: %s\n%s" % (e, e2))
+                    log.debug("Errors were: %s (import %s)\n%s (import %s)" % (e, cls_name, e2, other_cls_name))
                     continue
             try: # building the class
                 # copy config s so we can tweak it as necessary to expose only correct kwargs
