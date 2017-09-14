@@ -21,17 +21,16 @@ class DummyVirtualSensor(VirtualSensor):
         :param start_delay: on_start will be delayed by this many seconds
         :param output_events_file: when specified, save each created SensedEvent to the requested file,
         which will be a JSON-encoded list of events
-        :param static_event_data:
-        :param dynamic_event_data:
+        :param static_event_data: every sensor read will return this exact data
+        :param dynamic_event_data: configure sending dynamic data, which will override static_event_data;
+         see _get_dynamic_data() for details
         :param kwargs:
         """
         super(DummyVirtualSensor, self).__init__(broker, sample_interval=sample_interval, **kwargs)
 
-        if dynamic_event_data is not None:
-            raise NotImplementedError("currently no support for dynamic_event_data")
-
         self.start_delay = start_delay
         self.static_event_data = static_event_data
+        self.dynamic_event_data = dynamic_event_data
 
         # If we enabled event logging to file, start a list we'll append each new one in
         self.output_events_file = output_events_file
@@ -41,8 +40,30 @@ class DummyVirtualSensor(VirtualSensor):
             self.__output_events = None
 
     def read_raw(self):
-        # TODO: handle dynamic_event_data
+        if self.dynamic_event_data is not None:
+            return self._get_dynamic_data(self.dynamic_event_data)
         return self.static_event_data
+
+    def _get_dynamic_data(self, dynamic_data):
+        """
+        Based on the input dynamic_data configuration dict, return the next piece of dynamic data.
+        Possible options are:
+           -  {'seq': start} (increasing sequence # starting at start)
+
+        :param dynamic_data:
+        :type dynamic_data: dict
+        :return:
+        """
+
+        # ENHANCE: actually use an object for getting each new piece of data rather than this hacky field storage?
+        if 'seq' in dynamic_data:
+            if not hasattr(self, '_dyn_seq'):
+                self._dyn_seq = dynamic_data['seq']
+            val = self._dyn_seq
+            self._dyn_seq += 1
+            return val
+        else:
+            raise ValueError("unrecognized dynamic data configuration: %s" % dynamic_data)
 
     def read(self):
         event = super(DummyVirtualSensor, self).read()
