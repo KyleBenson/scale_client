@@ -33,7 +33,7 @@ class UdpEchoServer(ThreadedApplication, asyncore.dispatcher):
     def handle_read(self):
         """Receives the echo request and responds back with the same payload."""
         data, addr = self.recvfrom(self.buffer_size)
-        log.debug("EchoServer read data: %s" % data)
+        log.debug("UdpEchoServer read data from %s: %s" % (addr, data))
         self.sendto(data, addr)
 
     def writable(self):
