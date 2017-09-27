@@ -1,6 +1,7 @@
 import json
 import logging
 log = logging.getLogger(__name__)
+import time
 
 from scale_client.sensors.virtual_sensor import VirtualSensor
 
@@ -13,12 +14,14 @@ class DummyVirtualSensor(VirtualSensor):
 
     def __init__(self, broker, sample_interval=1,
                  # new parameters
-                 start_delay=0, output_events_file=None,
+                 start_delay=0, start_time=None, output_events_file=None,
                  static_event_data="dummy_data", dynamic_event_data=None, **kwargs):
         """
         :param broker:
         :param sample_interval: set to 1 second by default for generating basic dummy data; set to None to disable synchronous mode
         :param start_delay: on_start will be delayed by this many seconds
+        :param start_time: on_start will be delayed until the specified time (in Unix Epoch timestamp format).
+          NOTE: you cannot use both start_delay and start_time!
         :param output_events_file: when specified, save each created SensedEvent to the requested file,
         which will be a JSON-encoded list of events
         :param static_event_data: every sensor read will return this exact data
@@ -29,6 +32,10 @@ class DummyVirtualSensor(VirtualSensor):
         super(DummyVirtualSensor, self).__init__(broker, sample_interval=sample_interval, **kwargs)
 
         self.start_delay = start_delay
+        self.start_time = start_time
+        if start_delay != 0 and start_time is not None:
+            raise ValueError("cannot specify both start_delay and start_time!")
+
         self.static_event_data = static_event_data
         self.dynamic_event_data = dynamic_event_data
 
@@ -88,5 +95,12 @@ class DummyVirtualSensor(VirtualSensor):
         if self.start_delay > 0:
             log.debug("delaying on_start by %d seconds" % self.start_delay)
             self.timed_call(self.start_delay, VirtualSensor.on_start)
+        elif self.start_time is not None:
+            delay = self.start_time - time.time()
+            if delay > 0:
+                log.debug("delaying on_start by %d seconds" % delay)
+                self.timed_call(delay, VirtualSensor.on_start)
+            else:
+                log.error("cannot delay on_start as start_time is before the current time!")
         else:
             super(DummyVirtualSensor, self).on_start()
