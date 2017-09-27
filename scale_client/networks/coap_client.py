@@ -23,7 +23,8 @@ class CoapClient(HelperClient):
     We also patch this class to allow sending NON-confirmable messages.
     """
 
-    def __init__(self, server_hostname, server_port=DEFAULT_COAP_PORT, sock=None, cb_ignore_read_exception=None, cb_ignore_write_exception=None,
+    def __init__(self, server_hostname, server_port=DEFAULT_COAP_PORT, sock=None, src_port=None,
+                 cb_ignore_read_exception=None, cb_ignore_write_exception=None,
                  confirmable_messages=True):
 
         # TODO: make some @properties to keep these variables in sync with self.server
@@ -41,6 +42,10 @@ class CoapClient(HelperClient):
             assert cb_ignore_read_exception is None and cb_ignore_write_exception is None, "this coapthon version doesn't support callbacks in client constructor!"
 
         self.confirmable_messages = confirmable_messages
+
+        # XXX: to request a specific source port, we can do this:
+        if src_port is not None:
+            self.protocol._socket.bind(('', src_port))
 
     ##### XXX: to allow sending non-confirmable messages, we hack/patch HelperClient
     def mk_request(self, method, path):

@@ -20,6 +20,7 @@ class RemoteCoapEventSink(ThreadedEventSink):
                  topic="/events/%s",
                  hostname="127.0.0.1",
                  port=DEFAULT_COAP_PORT,
+                 src_port=None,
                  username=None,
                  password=None,
                  timeout=60,
@@ -30,6 +31,7 @@ class RemoteCoapEventSink(ThreadedEventSink):
           should include a '%s' in it to be filled with the event topic!
         :param hostname:
         :param port:
+        :param src_port: optional source port number to bind our CoapClient's socket to
         :param username:
         :param password:
         :param timeout:
@@ -44,6 +46,7 @@ class RemoteCoapEventSink(ThreadedEventSink):
 
         self._hostname = hostname
         self._port = port
+        self._src_port = src_port
         if username is not None or password is not None:
             log.warning("SECURITY authentication using username & password not yet supported!")
         self._username = username
@@ -62,7 +65,7 @@ class RemoteCoapEventSink(ThreadedEventSink):
 
     def __run_client(self):
         """This runs the CoAP client in a separate thread."""
-        self._client = CoapClient(server_hostname=self._hostname, server_port=self._port)
+        self._client = CoapClient(server_hostname=self._hostname, server_port=self._port, src_port=self._src_port)
         self._client_running = True
 
     def get_topic(self, event):
