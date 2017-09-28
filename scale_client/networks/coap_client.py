@@ -66,7 +66,15 @@ class CoapClient(HelperClient):
         :param callback: the callback function
         :type request: Request
         """
-        self.protocol.send_message(request)
+        # XXX: sending multiple messages asynchronously at the same time can result in an exception being generated
+        # when the multiple sending threads try to start the receiver thread at once. We should be able to just safely
+        # ignore this exception...
+        try:
+            self.protocol.send_message(request)
+        except RuntimeError as e:
+            log.warning("ignoring RuntimeError (should be safe if it's about only starting a thread once) raised during"
+                        " Coap.send_message() : %s" % e)
+
         # TODO: should probably have some other condition for quitting so that if a request or response was lost forever
         # this thread will eventually quit...
         while not self.protocol.stopped.isSet():
