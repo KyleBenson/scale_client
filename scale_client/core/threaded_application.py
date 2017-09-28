@@ -44,6 +44,11 @@ class ThreadedApplication(Application):
                               channel=self._get_channel_name())
         self._worker.register(self)
 
+        # XXX: name the worker threads so that if we're debugging we know where they came from
+        if not process:
+            for tid, thread in enumerate(self._worker.pool._pool):
+                thread.name = '%s-Worker%d' % (self.name, tid)
+
     def run_in_background(self, f, *args, **kwargs):
         """
         Runs the given function f in the background thread/process.
