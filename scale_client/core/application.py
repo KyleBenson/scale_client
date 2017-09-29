@@ -121,7 +121,7 @@ class AbstractApplication(object):
         """
         pass
 
-    def make_event(self, **kwargs):
+    def make_event(self, source=None, event_type=None, **kwargs):
         """
         Creates a SensedEvent passing kwargs directly to the constructor but filling it in with missing details
         based on this Application's logic/state.  See its implementation for the default values it sets.
@@ -129,18 +129,20 @@ class AbstractApplication(object):
         (e.g. call super with additional default kwargs set or even use a Factory).
 
         :param kwargs:
+        :param source: defaults to self.path
+        :param event_type: defaults to the first of our topic advertisements or else to self.name if we have none
         :return: SensedEvent
         """
-        if 'source' not in kwargs:
-            kwargs['source'] = self.path
-        if 'event_type' not in kwargs:
+        if source is None:
+            source = self.path
+        if event_type is None:
             # First advertised topic is assumed the default for making events
             if self._topic_advertisements:
-                kwargs['event_type'] = self._topic_advertisements[0]
+                event_type = self._topic_advertisements[0]
             # Otherwise we can at least have SOMETHING set...
             else:
-                kwargs['event_type'] = self.name
-        return scale_client.core.sensed_event.SensedEvent(**kwargs)
+                event_type = self.name
+        return scale_client.core.sensed_event.SensedEvent(source=source, event_type=event_type, **kwargs)
 
     #TODO: unsubscribe?
 
