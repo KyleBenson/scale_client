@@ -251,15 +251,16 @@ class SensedEvent(Event):
         # TODO: handle timestamps in formats other than double/float
         return cls(source=source, **map_data)
 
-    def to_json(self, exclude_fields=tuple()):
+    def to_json(self, exclude_fields=tuple(), no_whitespace=False):
         """
         Encodes the SensedEvent as a JSON string, excluding the specified fields if any.
         :param exclude_fields:
+        :param no_whitespace: if specified as True, will eliminate whitespace in the encoding
         :return:
         """
         as_map = self.to_map(exclude_fields=exclude_fields)
         try:
-            return json.dumps(as_map)
+            return json.dumps(as_map, separators=(',',':') if no_whitespace else None)
         except (TypeError, ValueError) as e:
             log.error("Problem jsonifying SensedEvent map: %s" % as_map)
             raise
