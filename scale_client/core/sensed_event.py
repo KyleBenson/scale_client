@@ -131,7 +131,12 @@ class SensedEvent(Event):
     #### Below this is all related to encoding/decoding
     # This should probably be moved to an encoder class in the future...
 
-    def to_map(self):
+    def to_map(self, exclude_fields=tuple()):
+        """
+        Converts the SensedEvent to a dict representation, excluding the specified fields if any.
+        :param exclude_fields:
+        :return:
+        """
         ret = dict(timestamp=self.timestamp, schema=self.schema)
         # FUTURE: SCALE 3.0 schema
         # ENHANCE: would be great to have each field of the event get registered e.g. with a decorator so they can
@@ -169,6 +174,10 @@ class SensedEvent(Event):
             old_schema_dict["misc"] = deepcopy(self.metadata)
 
         ret.update(old_schema_dict)
+
+        # now exclude the requested fields
+        ret = {k: v for k,v in ret.items() if k not in exclude_fields}
+
         ret = {'d': ret}
 
         return ret
@@ -234,13 +243,21 @@ class SensedEvent(Event):
         # XXX: backwards compatibility
         _scale_schemas_1_to_3 = dict(event="event_type", value="data", prio_value="priority")
         for k,v in _scale_schemas_1_to_3.items():
-            map_data[v] = map_data.pop(k)
+            try:
+                map_data[v] = map_data.pop(k)
+            except KeyError:
+                pass
 
         # TODO: handle timestamps in formats other than double/float
         return cls(source=source, **map_data)
 
-    def to_json(self):
-        as_map = self.to_map()
+    def to_json(self, exclude_fields=tuple()):
+        """
+        Encodes the SensedEvent as a JSON string, excluding the specified fields if any.
+        :param exclude_fields:
+        :return:
+        """
+        as_map = self.to_map(exclude_fields=exclude_fields)
         try:
             return json.dumps(as_map)
         except (TypeError, ValueError) as e:

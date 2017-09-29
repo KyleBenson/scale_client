@@ -13,7 +13,7 @@ class TestSensedEvent(unittest.TestCase):
         self.event = SensedEvent(data=10, source="temp0", event_type="temperature")
         self.minimal_event = SensedEvent(data=10, source="temp0")
 
-    def test_encoding(self):
+    def test_basic_json_encoding(self):
         """
         Tests whether SensedEvent encoding/decoding works as expected.
         :return:
@@ -21,6 +21,30 @@ class TestSensedEvent(unittest.TestCase):
         encoded = self.event.to_json()
         decoded = SensedEvent.from_json(encoded)
         self.assertEqual(self.event, decoded, "encoding then decoding an event should give an essentially identical one back! have: %s and %s" % (self.event, decoded))
+
+    def test_json_encoding_excluded_fields(self):
+        """
+        Tests whether we can correctly encode a SensedEvent with the exclude_fields option and then correctly decode
+        it back.
+        :return:
+        """
+
+        encoded = self.event.to_json(exclude_fields=('schema', 'condition', 'misc', 'prio_value', 'prio_class'))
+        decoded = SensedEvent.from_json(encoded)
+        self.assertEqual(self.event, decoded, "encoding then decoding an event should give an essentially identical one back! have: %s and %s" % (self.event, decoded))
+
+        # Now verify that excluding these fields at least allows us to decode the resulting encoded event, even though
+        # we KNOW that they will not be truly equal.
+        encoded = self.event.to_json(exclude_fields=('timestamp', 'event_type'))
+        decoded = SensedEvent.from_json(encoded)  # should not raise error
+
+        # Last, verify that excluding these fields DOES cause an error!
+        encoded = self.event.to_json(exclude_fields=('device',))
+        with self.assertRaises(NotImplementedError):
+            SensedEvent.from_json(encoded)
+        encoded = self.event.to_json(exclude_fields=('value',))
+        with self.assertRaises(TypeError):
+            SensedEvent.from_json(encoded)
 
     def test_schema_versions(self):
         """
