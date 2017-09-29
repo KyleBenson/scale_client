@@ -47,6 +47,11 @@ class CoapClient(HelperClient):
         if src_port is not None:
             self.protocol._socket.bind(('', src_port))
 
+        # BUGFIX XXX: we seem to get some strange errors when the first time we send any messages we're doing multiple
+        # asynchronously (possibly due to Coap._receiver_thread being started multiple times simultaneously), so we just
+        # go ahead and start it now to prevent that issue.... Hopefully this doesn't cause problems!
+        self.protocol._receiver_thread.start()
+
     ##### XXX: to allow sending non-confirmable messages, we hack/patch HelperClient
     def mk_request(self, method, path):
         request = super(CoapClient, self).mk_request(method, path)
