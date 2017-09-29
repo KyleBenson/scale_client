@@ -3,7 +3,7 @@ from coapthon import defines
 from coapthon.messages.request import Request
 from coapthon.messages.response import Response
 
-from scale_client.networks.util import coap_response_success, DEFAULT_COAP_PORT
+from scale_client.networks.util import coap_response_success, DEFAULT_COAP_PORT, msg_fits_one_coap_packet
 
 import logging
 log = logging.getLogger(__name__)
@@ -127,3 +127,9 @@ class CoapClient(HelperClient):
         except RuntimeError:
             log.debug("ignoring RuntimeError while closing CoapClient:"
                       " you probably just didn't send any datagrams...")
+
+    def put(self, path, payload, callback=None, timeout=None):
+        if not msg_fits_one_coap_packet(payload):
+            log.error("requested payload size of %d is too large to fit in a single CoAP packet!"
+                      " Sending anyway but expect errors from the receiver...")
+        super(CoapClient, self).put(path, payload=payload, callback=callback, timeout=timeout)

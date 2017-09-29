@@ -58,3 +58,9 @@ def coap_code_to_name(code):
 
 from coapthon.defines import COAP_DEFAULT_PORT
 DEFAULT_COAP_PORT = COAP_DEFAULT_PORT
+# XXX: this value taken from the RFC's recommendations.  coapthon has a hard-coded receiving packet size, hence this...
+COAP_MAX_PAYLOAD_SIZE = 1024
+
+def msg_fits_one_coap_packet(msg):
+    """Returns True if msg is small enough to fit in a single CoAP packet, False if it's probably too big."""
+    return len(msg) <= COAP_MAX_PAYLOAD_SIZE
