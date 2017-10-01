@@ -83,7 +83,7 @@ class DummyVirtualSensor(VirtualSensor):
         if self.output_events_file:
             with open(self.output_events_file, 'w') as f:
                 # since we don't have an actual SensedEvent encoder, just convert each to a map first
-                f.write(json.dumps([e.to_map() for e in self.__output_events]))
+                f.write(json.dumps([e.to_map() for e in self.__output_events], indent=2))
 
     def on_start(self):
         """
