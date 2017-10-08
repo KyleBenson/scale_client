@@ -99,7 +99,7 @@ class MySQLEventSink(EventSink):
 			#log.debug("not available")
 			return self._try_connect()
 		#log.debug("available")
-		return True
+		return super(MySQLEventSink, self).check_available(event)
 
 	def send_raw(self, encoded_event):
 		try:

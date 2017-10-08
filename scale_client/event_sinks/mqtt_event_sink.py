@@ -105,4 +105,4 @@ class MQTTEventSink(EventSink):
             if not self._try_connect():
                 log.error("MQTT publisher failure: Cannot connect")
                 return False
-        return self._is_connected
+        return self._is_connected and super(MQTTEventSink, self).check_available(event)

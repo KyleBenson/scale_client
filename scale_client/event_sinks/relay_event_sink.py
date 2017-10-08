@@ -151,9 +151,6 @@ class RelayEventSink(EventSink, ScaleNetworkManager):
                     self._neighbor_connections[neighbor_ip_address].buffer += encoded_relay_event
                     log.info("Forwarded sensed event to neighbor at ip address: " + neighbor_ip_address)
 
-    def check_available(self, event):
-        return True
-
     def on_event(self, event, topic):
         et = event.event_type
         ed = event.data

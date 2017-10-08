@@ -72,7 +72,7 @@ class SigfoxEventSink(EventSink):
         return True
 
     def check_available(self, event):
-        if not event.event_type in self._type_info:
+        if not event.event_type in self._type_info or not super(SigfoxEventSink, self).check_available(event):
             return False
         if self._ser is None or not self._ser.isOpen():
             if self._reconnect_timer is None or self._reconnect_timer + self._reconnect_timeout < time.time():

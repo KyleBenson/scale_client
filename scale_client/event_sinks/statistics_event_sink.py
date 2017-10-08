@@ -27,6 +27,10 @@ class StatisticsEventSink(StatisticsApplication, EventSink):
         :param event:
         :return:
         """
+        log.warning("the StatisticsEventSink class should probably include a super.check_available() call; "
+                    "it could also use its 'topics_to_sink' parameter as its 'subscriptions'. "
+                    "If you use this class, you should probably fix these implementations,"
+                    " but we don't use it for much right now...")
         return event.topic in self.stats
 
     def send_event(self, event):

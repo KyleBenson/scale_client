@@ -19,7 +19,7 @@ class RelayScannerEventSink(EventSink):
     # self._scan_interval = scan_interval
 
     def check_available(self, event):
-        return self.__is_available
+        return self.__is_available and super(RelayScannerEventSink, self).check_available()
 
     def on_start(self):
         print('starting relay scanner');

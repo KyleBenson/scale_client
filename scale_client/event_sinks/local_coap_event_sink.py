@@ -68,4 +68,4 @@ class LocalCoapEventSink(ThreadedEventSink):
             return False
 
     def check_available(self, event):
-        return self._server is not None and self._server.is_running()
+        return self._server is not None and self._server.is_running() and super(LocalCoapEventSink, self).check_available(event)

@@ -105,7 +105,7 @@ class RemoteCoapEventSink(ThreadedEventSink):
         if response is None:
             return
         elif coap_response_success(response):
-            log.debug("successfully added resource to remote path!")
+            log.debug("successfully added event to remote path: %s" % event)
         # Seems as though we haven't created this resource yet and the server doesn't want to
         # do it for us given just a PUT request.
         elif response.code == CoapCodes.NOT_FOUND.number:
@@ -171,4 +171,5 @@ class RemoteCoapEventSink(ThreadedEventSink):
 
 
     def check_available(self, event):
-        return self._client_running
+        """The client must be running to sink events."""
+        return self._client_running and super(RemoteCoapEventSink, self).check_available(event)
