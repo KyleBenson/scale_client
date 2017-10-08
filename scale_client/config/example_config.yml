@@ -32,6 +32,8 @@ EventSinks:
     # will cause SCALE to start the LogEventSink:
     LogEventSink:
       class: "log_event_sink.LogEventSink"
+      # This optional parameter allows you to filter only certain event types that will be sunk
+      topics_to_sink: ["temperature", "heartbeat"]
     # See coap/example_config.yml for CoAP-related event sink options
     # See mqtt_config.yml for the MQTT event sink options
 

@@ -7,8 +7,14 @@ class EventSink(Application):
     create a new one, make use of the Application on_start() function to setup any connections or other resources
     needed."""
 
-    def __init__(self, broker=None, **kwargs):
+    def __init__(self, broker=None, topics_to_sink=None, **kwargs):
+        """
+        :param broker:
+        :param topics_to_sink: if None (default), sinks all topics; otherwise, only sink those in the specified list/tuple
+        :param kwargs:
+        """
         super(EventSink, self).__init__(broker, **kwargs)
+        self.topics_to_sink = set(topics_to_sink) if topics_to_sink is not None else None
 
     def send_event(self, event):
         """
@@ -32,8 +38,9 @@ class EventSink(Application):
     def check_available(self, event):
         """This function is a primitive attempt at allowing EventSinks to create backpressure when too many events
         are in the system.  Expect it to disappear eventually, but for now it should return True when the EventSink is
-        able to immediately send() an event over whatever connection it uses.  By default it always returns True."""
-        return True
+        able to immediately send() an event over whatever connection it uses.  By default it returns True when the
+        event's topic was in our specified topics_to_sink parameter or always True if that was unspecified."""
+        return self.topics_to_sink is None or event.topic in self.topics_to_sink
 
     def encode_event(self, event):
         """
