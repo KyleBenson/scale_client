@@ -1,13 +1,13 @@
-import asyncore
 import logging
-import socket
-
 log = logging.getLogger(__name__)
+# CIRCUITS-SPECIFIC: we need to use the circuits library here as we encountered occasional errors when starting an asyncio server
+from circuits.net.sockets import UDPServer
+from circuits import handler
 
-from scale_client.core.threaded_application import ThreadedApplication
+from scale_client.core.application import Application
 
 
-class UdpEchoServer(ThreadedApplication, asyncore.dispatcher):
+class UdpEchoServer(Application, UDPServer):
     """
     A basic echo server that listens on the specified UDP port and immediately responds to the client with a packet
     containing the same payload its request came with.  This is essentially just intended for basic testing/experiments.
@@ -20,30 +20,12 @@ class UdpEchoServer(ThreadedApplication, asyncore.dispatcher):
         :param buffer_size: for receiving UDP datagrams
         :param kwargs:
         """
-        # Old-style class 'super' call... THIS MUST COME FIRST!
-        asyncore.dispatcher.__init__(self)
-        super(UdpEchoServer, self).__init__(broker, **kwargs)
+        super(UdpEchoServer, self).__init__(broker=broker, bind=('', port), bufsize=buffer_size, **kwargs)
 
-        self.port = port
-        self.buffer_size = buffer_size
-        self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.set_reuse_addr()
-        self.bind(('', port))
-
-    def handle_read(self):
+    # CIRCUITS-SPECIFIC: circuits fires a 'read' event whenever we receive a datagram
+    @handler("read")
+    def handle_read(self, address, data):
         """Receives the echo request and responds back with the same payload."""
-        data, addr = self.recvfrom(self.buffer_size)
-        log.debug("UdpEchoServer read data from %s: %s" % (addr, data))
-        self.sendto(data, addr)
-
-    def writable(self):
-        return False
-
-    def on_start(self):
-        """Starts the asyncore server to listen for incoming packets."""
-        super(UdpEchoServer, self).on_start()
-        self.run_in_background(asyncore.loop)
-
-    def on_stop(self):
-        self.close()
-        super(UdpEchoServer, self).on_stop()
+        log.debug("UdpEchoServer read data from %s: %s" % (address, data))
+        # circuits magic lets us just return the data that will be echoed back
+        return data
