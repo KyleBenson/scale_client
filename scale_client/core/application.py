@@ -39,11 +39,15 @@ class AbstractApplication(object):
         :param name: unique human-readable name for this Application
         :param kwargs: used for passing args to other constructors when doing multiple inheritance
         """
-        super(AbstractApplication, self).__init__()
+        # XXX: passing kwargs lets us multiply inherit from other circuits components
+        super(AbstractApplication, self).__init__(**kwargs)
         # HACK: BUGFIX: circuits-specific: it never actually 'pops' the channel kwargs in its __init__
-        kwargs.pop('channel')
-        assert len(kwargs) == 0, "kwargs should be empty by this point since" \
-                                 " AbstractApplication is just an object! It has: %s" % kwargs
+        if __debug__:
+            kwargs.pop('channel')
+            if len(kwargs) != 0:
+                log.debug("kwargs should be empty by this point since AbstractApplication is just an object! "
+                          "This may be due to circuits kwargs propagating all the way here, but double-check "
+                          "you didn't miss-spell a parameter! Remaining kwargs are: %s" % kwargs)
 
         self._broker = None  # for auto completion
         self._register_broker(broker)
