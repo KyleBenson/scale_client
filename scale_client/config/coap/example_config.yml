@@ -25,14 +25,22 @@
 EventSinks:
     CoapEventSink:
       class: "local_coap_event_sink.LocalCoapEventSink"
-#      class: "remote_coap_event_sink.RemoteCoapEventSink"
       # NOTE: we currently don't support longer hierarchical paths such as 'scale/events/temp'
       # We'll probably need to add each layer one at a time to do that...
       topic: "/events/%s"
+      ### All remote version params below here
+#      class: "remote_coap_event_sink.RemoteCoapEventSink"
+      ## Can specify the source port we use in the client; note that we seem to be able to have multiple clients use the
+      ## same src_port, which is useful for configuring them to treat different topics differently e.g. NON vs. CON
+      # src_port: 9999
+      # set this parameter to false for best-effort messages (CoAP non-CONfirmable messages)
+      # confirmable_messages: False
+      ## Name of CoapServer for local version to store events in
 #      server_name: "default"
       # Use defaults for the REMOTE event sink testing if you run the server locally
       # e.g. by running the coapthon coapservery.py in which case use the following topic:
       # topic: "/storage/%s"
+      ## Remote server params
       # hostname: "127.0.0.1"
       # port: DEFAULT_COAP_PORT
       # username: None
