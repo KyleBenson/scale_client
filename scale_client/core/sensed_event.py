@@ -241,7 +241,7 @@ class SensedEvent(Event):
             raise NotImplementedError("can't parse SensedEvent with no source/device: %s" % map_data)
 
         # XXX: backwards compatibility
-        _scale_schemas_1_to_3 = dict(event="event_type", value="data", prio_value="priority")
+        _scale_schemas_1_to_3 = dict(event="event_type", value="data", prio_value="priority", misc="metadata")
         for k,v in _scale_schemas_1_to_3.items():
             try:
                 map_data[v] = map_data.pop(k)
