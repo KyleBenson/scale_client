@@ -3,6 +3,8 @@
 import os, errno
 from setuptools import setup, find_packages
 
+print "WARNING: the latest version uses a customized fork of CoAPthon that you'll need to separately install manually! see README.md..."
+
 # Generic info about package
 NAME = "scale_client"
 VERSION = "0.2"

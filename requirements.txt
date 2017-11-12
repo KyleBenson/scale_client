@@ -2,7 +2,7 @@
 circuits==3.2
 paho-mqtt==1.2.3
 PyYAML==3.12
-CoAPthon==4.0.2
+# CoAPthon==4.0.2  # NOTE: I use a modified fork with some changes to fix bug #88: https://github.com/KyleBenson/CoAPthon.git
 uritools==2.0.0
 
 # These were required for virtualenv-based pip installation.

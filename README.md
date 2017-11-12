@@ -25,6 +25,8 @@ Installation
 
 For easy installation, simply run `sudo python setup.py install` from inside the main directory. Assuming you have `setuptools` installed via `pip`, this should handle installing all of the dependencies. Note that the codebase should run fine on any machine supporting Python 2.7+, but that it is tested on a Raspberry Pi running Raspbian and on Linux/Mac OSX machines (note that the latter won't support most physical sensor devices!). You don't **need** to run with `sudo`; doing so will install the daemon file.
 
+**WARNING**: you'll also need to install our [custom fork of CoAPthon](https://github.com/KyleBenson/CoAPthon.git) if you wish to use CoAP!  You can do this by cloning the repository and simply putting the `coapthon` Python package folder inside of it on your `PYTHONPATH`.
+
 If you don't wish to install the package and instead run it straight from the repository (as shown above in the Quickstart section), you can do so as long as the directory containing `scale_client` is in your `PYTHONPATH` or in the current directory.
 
 The `scripts` directory contains some useful scripts for e.g. setting up the devices, running a daemon, etc.
