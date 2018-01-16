@@ -555,13 +555,19 @@ def make_scale_config(applications=None, sensors=None, sinks=None, networks=None
     return cfg
 
 
-def make_scale_config_entry(class_path, name, **kwargs):
+def make_scale_config_entry(class_path, name, cmd_line_format=True, **kwargs):
     """Builds an individual entry for a single SCALE client module that can be fed to the CLI.
+    :param cmd_line_format: if True (default), formats the resulting string for use on command line:
+        it wraps raw JSON in single quotes as json.dumps wraps strings in double quotes;
+        it escapes these double quotes so that 'eval' (su -c) actually sees them in the args it passes to the final command
     NOTE: don't forget to add spaces around each entry if you use multiple!"""
-    d = dict(name=name, **kwargs)
+    d = dict(**kwargs)
     # XXX: can't use 'class' as a kwarg in call to dict, so doing it this way...
     d['class'] = class_path
-    return json.dumps(d)
+    if cmd_line_format:
+        return "'%s' " % json.dumps({name: d}).replace('"', r'\"')
+    else:
+        return json.dumps({name: d})
 
 
 def main():
