@@ -161,7 +161,9 @@ class RemoteCoapEventSink(ThreadedEventSink):
         local_event = event.is_local
         if local_event:
             old_source = event.source
-            event.source = uri.get_remote_uri(event.source)
+            # TODO: fix this to be more definitive like CoapVirtualSensor.remote_path
+            # maybe it'll be another helper function in util.py so we can re-use it for MQTT publisher?
+            event.source = uri.get_remote_uri(event.source, protocol='coaps' if self._username else 'coap')
 
         encoding = super(RemoteCoapEventSink, self).encode_event(event)
 

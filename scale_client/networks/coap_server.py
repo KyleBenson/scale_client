@@ -1,6 +1,7 @@
 import copy
 import logging
 
+from scale_client import networks
 from scale_client.core.threaded_application import ThreadedApplication
 from scale_client.util import uri
 
@@ -381,19 +382,15 @@ class SensedEventCoapResource(ScaleCoapResource):
         :rtype: SensedEvent
         """
         event = SensedEvent.from_json(request.payload)
-
-        # If this event came directly from its source node and it forgot to convert the source to a remote one
-        # or it didn't set the host address, we should do the conversion to avoid misinterpreting it as a local event.
-        is_host_known = uri.is_host_known(event.source)
-        if event.is_local or not is_host_known:
-            try:
-                # TODO: perhaps we want to allow remote to specify a different protocol without knowing its IP address?
-                # TODO: perhaps we should do some validation as some networks could make this a problem e.g. a NAT
-                host, port = request.source
-                event.source = uri.get_remote_uri(event.source, protocol='coap', host=host, port=port)
-            except BaseException as e:
-                log.error("error during converting local source to remote source in event extracted from CoAP request: %s" % e)
-
+        host, port = request.source
+        try:
+            # TODO: specify coaps if this event came through an encrypted channel?
+            networks.util.process_remote_event(event, hostname=host, port=port, protocol='coap')
+            # save the local resource URI so we know where exactly it entered our local client
+            event.metadata['local_resource_uri'] = uri.build_uri(relative_path=request.uri_path)
+            # QUESTION: should we do something with uri_query?  probably not used in a PUT/POST request...
+        except BaseException as e:
+            log.error("error during converting local source to remote source in event extracted from CoAP request: %s" % e)
         return event
 
     @property

@@ -12,8 +12,6 @@ DEFAULT_SCALE_URI_NAMESPACE = 'scale'
 DEFAULT_SCALE_URI_PATH_BASE = DEFAULT_SCALE_URI_NAMESPACE
 
 DEFAULT_REMOTE_URI_HOST = "0.0.0.0"
-DEFAULT_REMOTE_URI_PROTOCOL = "coap"
-from scale_client.networks.util import DEFAULT_COAP_PORT as DEFAULT_REMOTE_URI_PORT
 
 
 def build_uri(scheme=DEFAULT_SCALE_URI_SCHEME, namespace=DEFAULT_SCALE_URI_NAMESPACE,
@@ -75,8 +73,7 @@ def parse_uri(uri):
     return uritools.urisplit(uri)
 
 
-def get_remote_uri(local_uri, protocol=DEFAULT_REMOTE_URI_PROTOCOL,
-                   host=DEFAULT_REMOTE_URI_HOST, port=DEFAULT_REMOTE_URI_PORT):
+def get_remote_uri(local_uri, protocol=None, host=DEFAULT_REMOTE_URI_HOST, port=None):
     """
     Converts the specified local_uri into a remote one such that remote entities can contact the entity referenced
     by local_uri.  The IP address component, if any, should be publicly accessible.  If the component is not
@@ -88,13 +85,27 @@ def get_remote_uri(local_uri, protocol=DEFAULT_REMOTE_URI_PROTOCOL,
     no attempt to verify that host is publicly-routable!  Expect the implementation to change significantly at a
     later date in order to address these issues, look up the component in the URI registry, etc.
 
+    NOTE: you must specify either the protocol or port!  Otherwise, the resulting URI cannot identify the protocol
+
     :param local_uri: of the component we're building a remote URI for
     :param protocol: default protocol to use if none found for the specified component
     :param host: default host address to use if none found for the specified component
     :param port: default port number to use if none found for the specified component
     :return:
     """
+
+    # extract the required fields from the specified URI when possible
     local_uri = parse_uri(local_uri)
+    if local_uri.port:
+        port = local_uri.port
+    if local_uri.scheme and local_uri.scheme != DEFAULT_SCALE_URI_SCHEME:
+        protocol = local_uri.scheme
+    if local_uri.host:
+        host = local_uri.host
+
+    if not protocol and not port:
+        raise ValueError("must specify at least either the protocol or port to build a remote URI!"
+                         " only got protocol=%s and port=%s" % (protocol, port))
     return build_uri(scheme=protocol, namespace='', path=local_uri.path, host=host, port=port)
 
 

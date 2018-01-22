@@ -1,3 +1,4 @@
+from scale_client import networks
 from scale_client.sensors.threaded_virtual_sensor import ThreadedVirtualSensor
 from scale_client.core.sensed_event import SensedEvent
 
@@ -103,10 +104,7 @@ class CoapSensor(ThreadedVirtualSensor):
         # TODO: use priority? or log warning if someone tries to use it?
         try:
             ev = SensedEvent.from_json(raw_data)
-            # if necessary, tag the event as coming from a remote CoAP resource so we don't send it back there.
-            if ev.is_local or not uri.is_host_known(ev.source):
-                ev.source = uri.get_remote_uri(ev.source, host=self._hostname, port=self._port, protocol='coap')
-                # TODO: use self.remote_path or this coap sensor itself if the source isn't good
+            networks.util.process_remote_event(ev, relay_uri=self.remote_path)
             return ev
         except ValueError as e:
             log.error("Failed to decode SensedEvent from: %s" % raw_data)
