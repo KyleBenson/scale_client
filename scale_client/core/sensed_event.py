@@ -75,9 +75,15 @@ class SensedEvent(Event):
 
         # timestamp defaults to right now
         if timestamp is None:
-            self.timestamp = time.time()
+            self.timestamp = self.get_timestamp()
         else:
             self.timestamp = timestamp
+
+    @staticmethod
+    def get_timestamp():
+        """Returns the timestamp of right now in the format universally expected for SensedEvents."""
+        # TODO: accept an argument for converting from other time types?
+        return time.time()
 
     @property
     def is_local(self):
