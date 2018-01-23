@@ -47,5 +47,6 @@ class MqttSensor(MqttApplication, VirtualSensor):
 
         event.metadata['mqtt_topic'] = topic
         event.metadata['mqtt_broker'] = uri.build_uri(scheme='mqtt', path='broker', host=self._hostname, port=self._hostport)
+        event.metadata['time_rcvd'] = SensedEvent.get_timestamp()
         self.publish(event)
-        super(MqttSensor, self)._on_message(mqtt_client, payload, topic, qos, retain)
+        log.debug("MqttSensor received SensedEvent from topics %s: %s" % (topic, event))
