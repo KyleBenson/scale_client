@@ -96,14 +96,6 @@ class TestUri(unittest.TestCase):
         self.assertTrue(uri.is_remote_uri('http://www.google.com'))
         self.assertFalse(uri.is_remote_uri('file:///home/my/stuff'))
 
-        # test defaults
-        remote_uri = uri.get_remote_uri('dummy_uri/blah')
-        self.assertTrue(remote_uri.startswith(uri.DEFAULT_REMOTE_URI_PROTOCOL + '://'))
-        self.assertTrue(':%d/' % uri.DEFAULT_REMOTE_URI_PORT in remote_uri)
-        self.assertTrue('://%s' % uri.DEFAULT_REMOTE_URI_HOST in remote_uri)
-        self.assertTrue(remote_uri.endswith('/dummy_uri/blah'))
-        self.assertTrue(uri.is_remote_uri(remote_uri))
-
         # test custom
         remote_uri = uri.get_remote_uri(local_uri, protocol='mqtt', host='www.google.com', port=1884)
         self.assertEqual(remote_uri, 'mqtt://www.google.com:1884/%s' % local_path)
