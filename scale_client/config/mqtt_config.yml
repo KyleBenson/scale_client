@@ -13,3 +13,15 @@ EventSinks:
       username: null
       password: null
       keepalive: 60
+
+# This VirtualSensor will subscribe to ALL event topics; hence you should receive back all events that are
+# created locally and sunk via the above MqttSink
+Sensors:
+    MqttSensor:
+      class: "network.mqtt_sensor.MqttSensor"
+      hostname: "iqueue.ics.uci.edu"
+      hostport: 1883
+      username: null
+      password: null
+      keepalive: 60
+      mqtt_subscriptions: ["#"]

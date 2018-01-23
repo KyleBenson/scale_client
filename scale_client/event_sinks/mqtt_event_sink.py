@@ -1,71 +1,32 @@
-import socket
-import json
-
-import paho.mqtt.client
-from paho.mqtt.client import Client as Paho
-
 import logging
+
+from scale_client.util import uri
+
 log = logging.getLogger(__name__)
+import socket
 
 from event_sink import EventSink
 from uuid import getnode as get_mac
 
+from scale_client.networks.mqtt_application import MqttApplication, MQTT_ERR_CODE_NO_CONN, MQTT_RET_CODE_SUCCESS
 
-class MQTTEventSink(EventSink):
+
+class MQTTEventSink(MqttApplication, EventSink):
     def __init__(self, broker,
                 topic="iot-1/d/%012x/evt/%s/json",
-                hostname=None,
-                hostport=1883,
-                username=None,
-                password=None,
-                keepalive=60,
                 **kwargs):
         super(MQTTEventSink, self).__init__(broker=broker, **kwargs)
-        self._client = Paho()
-        self._client.on_connect = \
-                lambda mosq, obj, rc: self._on_connect(mosq, obj, rc)
-        self._client.on_disconnect = \
-                lambda mosq, obj, rc: self._on_disconnect(mosq, obj, rc)
-        self._client.on_publish = \
-                lambda mosq, obj, mid: self._on_publish(mosq, obj, mid)
+
         self._topic_format = topic
         self._topic = self._topic_format % (0, "%s")
 
-        self._hostname = hostname
-        self._hostport = hostport
-        self._username = username
-        self._password = password
-        self._keepalive = keepalive
-
-        self._is_connected = False
-
-    def _on_connect(self, mosq, obj, rc):
+    def _on_connect(self, mqtt_client, obj, rc):
         self._topic = self._topic_format % (get_mac(), "%s")
-        log.debug("MQTT publisher connected: " + str(rc))
-        self._is_connected = True
+        super(MQTTEventSink, self)._on_connect(mqtt_client, obj, rc)
 
-    def _on_disconnect(self, mosq, obj, rc):
-        # sink will try reconnecting once EventReporter queries if it's available.
-        self._is_connected = False
-        log.debug("MQTT publisher disconnected: " + str(rc))
-
-    def _on_publish(self, mosq, obj, mid):
+    def _on_publish(self, mqtt_client, obj, mid):
         #log.debug("MQTT publisher published: " + str(mid))
         pass
-
-    def _try_connect(self):
-        if self._username is not None and self._password is not None:
-            self._client.username_pw_set(self._username, self._password)
-        try:
-            self._client.connect(self._hostname, self._hostport, self._keepalive)
-        except socket.gaierror:
-            return False
-        self._client.loop_start()
-        return True
-
-    def on_start(self):
-        super(MQTTEventSink, self).on_start()
-        return self._try_connect()
 
     def send_event(self, event):
         encoded_event = self.encode_event(event)
@@ -88,10 +49,10 @@ class MQTTEventSink(EventSink):
             log.error("event encoding not as expected for original scale client mesh networking!\n%s" % e.message)
 
         # Publish message
-        res, mid = self._client.publish(topic, encoded_event)
-        if res == paho.mqtt.client.MQTT_ERR_SUCCESS:
+        res, mid = self.mqtt_publish(encoded_event, topic)
+        if res == MQTT_RET_CODE_SUCCESS:
             log.info("MQTT message published to " + topic)
-        elif res == paho.mqtt.client.MQTT_ERR_NO_CONN:
+        elif res == MQTT_ERR_CODE_NO_CONN:
             log.error("MQTT publisher failure: No connection")
             return False
         else:
@@ -101,8 +62,18 @@ class MQTTEventSink(EventSink):
 
     def check_available(self, event):
         # If we aren't currently running, try connecting.
-        if not self._is_connected:
+        if not self.is_connected:
             if not self._try_connect():
                 log.error("MQTT publisher failure: Cannot connect")
                 return False
-        return self._is_connected and super(MQTTEventSink, self).check_available(event)
+        return self.is_connected and super(MQTTEventSink, self).check_available(event)
+
+    def encode_event(self, event):
+        """Sets the source to include our host IP address so that a subscriber can find it.  Doesn't permanently change
+        the event as it resets the source afterwards."""
+        old_source = event.source
+        hostname = socket.gethostbyname(socket.gethostname())
+        event.source = uri.get_remote_uri(self.path, protocol='mqtt', host=hostname, port=self._client._port)
+        res = super(MQTTEventSink, self).encode_event(event)
+        event.source = old_source
+        return res
