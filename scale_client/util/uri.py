@@ -1,5 +1,6 @@
 # This file intended to hold various helper functions, constants, and eventually a
 # registration system for URIs within the scale client.
+import socket
 
 import uritools
 
@@ -11,7 +12,7 @@ DEFAULT_SCALE_URI_SCHEME = 'scale-local'
 DEFAULT_SCALE_URI_NAMESPACE = 'scale'
 DEFAULT_SCALE_URI_PATH_BASE = DEFAULT_SCALE_URI_NAMESPACE
 
-DEFAULT_REMOTE_URI_HOST = "0.0.0.0"
+NULL_REMOTE_URI_HOST = "0.0.0.0"
 
 
 def build_uri(scheme=DEFAULT_SCALE_URI_SCHEME, namespace=DEFAULT_SCALE_URI_NAMESPACE,
@@ -73,7 +74,7 @@ def parse_uri(uri):
     return uritools.urisplit(uri)
 
 
-def get_remote_uri(local_uri, protocol=None, host=DEFAULT_REMOTE_URI_HOST, port=None):
+def get_remote_uri(local_uri, protocol=None, host=None, port=None):
     """
     Converts the specified local_uri into a remote one such that remote entities can contact the entity referenced
     by local_uri.  The IP address component, if any, should be publicly accessible.  If the component is not
@@ -102,6 +103,8 @@ def get_remote_uri(local_uri, protocol=None, host=DEFAULT_REMOTE_URI_HOST, port=
         protocol = local_uri.scheme
     if local_uri.host:
         host = local_uri.host
+    elif host is None:
+        host = socket.gethostbyname(socket.gethostname())
 
     if not protocol and not port:
         raise ValueError("must specify at least either the protocol or port to build a remote URI!"
@@ -123,5 +126,5 @@ def is_host_known(_uri):
     """Returns true if the specified URI's host has been specified i.e. is included in the URI and isn't
     a non-addressable value e.g. nonsense string, null route, etc."""
     host_unknown = parse_uri(_uri).host
-    host_unknown = host_unknown is None or host_unknown == DEFAULT_REMOTE_URI_HOST
+    host_unknown = host_unknown is None or host_unknown == NULL_REMOTE_URI_HOST
     return not host_unknown
