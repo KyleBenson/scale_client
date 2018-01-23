@@ -1,6 +1,8 @@
 # This file intended to hold various helper functions, constants, and eventually a
 # registration system for URIs within the scale client.
 import socket
+import logging
+log = logging.getLogger(__name__)
 
 import uritools
 
@@ -101,10 +103,14 @@ def get_remote_uri(local_uri, protocol=None, host=None, port=None):
         port = local_uri.port
     if local_uri.scheme and local_uri.scheme != DEFAULT_SCALE_URI_SCHEME:
         protocol = local_uri.scheme
-    if local_uri.host:
+    if local_uri.host and is_host_known(_host=local_uri.host):
         host = local_uri.host
     elif host is None:
-        host = socket.gethostbyname(socket.gethostname())
+        hostname = socket.gethostname()
+        if is_host_known(_host=hostname):
+            host = socket.gethostbyname(hostname)
+        else:
+            host = NULL_REMOTE_URI_HOST
 
     if not protocol and not port:
         raise ValueError("must specify at least either the protocol or port to build a remote URI!"
@@ -121,10 +127,15 @@ def is_remote_uri(_uri):
         return False
     return True
 
+UNKNOWN_HOST_VALUES = (None, NULL_REMOTE_URI_HOST, 'localhost', '127.0.0.1')
 
-def is_host_known(_uri):
+def is_host_known(_uri=None, _host=None):
     """Returns true if the specified URI's host has been specified i.e. is included in the URI and isn't
-    a non-addressable value e.g. nonsense string, null route, etc."""
-    host_unknown = parse_uri(_uri).host
-    host_unknown = host_unknown is None or host_unknown == NULL_REMOTE_URI_HOST
+    a non-addressable value e.g. nonsense string, null route, etc.
+    :param _uri: the URI to be inspected
+    :param _host: the already-parsed hostname if you do not specify _uri
+    """
+    if _uri is not None:
+        _host = parse_uri(_uri).host
+    host_unknown = _host in UNKNOWN_HOST_VALUES
     return not host_unknown
