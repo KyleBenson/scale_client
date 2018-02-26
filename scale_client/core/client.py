@@ -13,6 +13,7 @@ from functools import reduce
 from event_reporter import EventReporter
 from application import Application
 from broker import Broker
+from scale_client.util.common import _get_class_by_name
 from scale_client.util.defaults import set_logging_config, DEFAULT_DISABLED_LOG_MODULES, DEFAULT_LOG_FORMAT
 
 
@@ -507,18 +508,6 @@ class ScaleClient(object):
             parsed_args.quit_time = test_default_quit_time
 
         return parsed_args
-
-
-def _get_class_by_name(kls):
-    """Imports and returns a class reference for the full module name specified in regular Python import format"""
-
-    # The following code taken from http://stackoverflow.com/questions/452969/does-python-have-an-equivalent-to-java-class-forname
-    parts = kls.split('.')
-    module = ".".join(parts[:-1])
-    m = __import__(module)
-    for comp in parts[1:]:
-        m = getattr(m, comp)
-    return m
 
 
 def configure_logging(args):
