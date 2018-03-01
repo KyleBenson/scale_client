@@ -32,7 +32,7 @@ class ScaleStatistics(object):
         self.config = config
 
         log_level = logging.getLevelName(config.debug.upper())
-        log.setLevel(log_level)
+        logging.basicConfig(format='%(levelname)s:%(module)s:%(message)s', level=log_level)
 
         # the actual parsed stats
         self.stats = None  # type: pd.DataFrame
@@ -273,8 +273,6 @@ class ScaleStatistics(object):
 
     @classmethod
     def main(cls):
-        logging.basicConfig(format='%(levelname)s:%(message)s')  # if running stand-alone
-
         if len(sys.argv) > 1 and sys.argv[1] == 'test':
             run_tests()
             exit()
