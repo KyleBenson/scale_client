@@ -190,7 +190,21 @@ class ScaleStatistics(object):
         log.debug("parsing all files: %s" % self.files)
         stats = []
         for fname in self.files:
-            stats.append(self.parse_file(fname))
+            results = self.parse_file(fname)
+
+            # determine if we actually parsed anything before saving it
+            try:
+                # XXX: DataFrame throws error due to ambiguity of truth value
+                is_results = bool(results)
+            except ValueError:
+                is_results = not results.empty  # hopefully a DataFrame
+
+            if is_results:
+                stats.append(results)
+
+        if not stats:
+            log.error("parse_all failed to generate any stats!")
+            return None
 
         log.debug("done parsing files!  collating results...")
         self.stats = self.collate_results(*stats)
@@ -228,7 +242,11 @@ class ScaleStatistics(object):
         """
         log.debug("parsing file: %s" % fname)
         results = self.read_file(fname)
-        results = self.parse_results(results, fname)
+        try:
+            results = self.parse_results(results, fname)
+        except BaseException as e:
+            log.error("parse_results skipping file %s that caused error: %s" % (fname, e))
+            return None
         return results
 
     @staticmethod
