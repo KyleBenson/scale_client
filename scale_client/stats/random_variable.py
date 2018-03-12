@@ -108,17 +108,31 @@ class RandomVariable(object):
     @classmethod
     def build(cls, config):
         """
-        Builds a RandomVariable instance from the specified configuration, which may be a dictionary or constant value.
+        Builds a RandomVariable instance from the specified configuration, which may be a constant value, string name
+        of the distribution to use, or a configuration dict e.g. {'dist': 'uniform', 'args': [0, 10]}
         :param config:
         :return:
         """
-        try:
-            return cls(**config)
-        except TypeError as e:
-            if isinstance(config, numbers.Number):
-                return cls(dist='const', args=(config,))
-            else:
-                raise TypeError("unrecognized RandomVariable configuration type: not a dict of params or constant numeric! params: %s\nError: %s" % (config, e))
+        config = cls.expand_config(config)
+        return cls(**config)
+
+    @classmethod
+    def expand_config(cls, config):
+        """
+        Expands the configuration parameter from possibly a constant numeric or just the name of the distribution into
+        a complete dict that can be passed to the build function.
+        :param config:
+        :return:
+        :rtype: dict
+        """
+        if isinstance(config, basestring):
+            config = dict(dist=config)
+        elif isinstance(config, numbers.Number):
+            config = dict(dist='const', args=(config,))
+        elif not isinstance(config, dict):
+            raise TypeError("unrecognized RandomVariable configuration type: not a distribution name (str), dict of"
+                            " params or constant numeric! params: %s" % config)
+        return config
 
     def sample(self, population, nselections):
         """
