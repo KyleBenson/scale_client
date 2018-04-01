@@ -492,7 +492,7 @@ class ScaleClient(object):
                             help='''when constructing a component, raise the (non-import) errors to allow printing
                             a stack trace rather than trying to gracefully skip it and logging the error''')
 
-        parsed_args = parser.parse_args(args)
+        parsed_args = parser.parse_args(args if args is not None else '')
 
         # Correct configuration filename
         if parsed_args.test:
