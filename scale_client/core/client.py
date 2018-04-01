@@ -55,6 +55,7 @@ class ScaleClient(object):
         :return:
         """
         self.__broker = Broker()
+        return self.broker
 
     @property
     def broker(self):
