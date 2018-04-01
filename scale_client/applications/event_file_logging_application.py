@@ -27,6 +27,13 @@ class EventFileLoggingApplication(Application):
         self.__output_events.append(event)
         super(EventFileLoggingApplication, self).on_event(event, topic)
 
+    @property
+    def events(self):
+        """
+        :rtype: list[SensedEvent]
+        """
+        return self.__output_events
+
     def on_stop(self):
         """Records the received picks for consumption by another script
         that will analyze the resulting performance."""

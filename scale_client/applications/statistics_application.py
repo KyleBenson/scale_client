@@ -61,6 +61,18 @@ class StatisticsApplication(Application):
     def stats(self):
         return self._stats
 
+    def get_stats(self, topic, which_stats=None):
+        """
+        Returns the stats for the requested topic and (optional) statistic (default is a dict with all of them).
+        :param topic:
+        :param which_stats:
+        :return:
+        """
+        ret = self._stats[topic]
+        if which_stats is not None:
+            return ret[which_stats]
+        return ret
+
     def write_stats(self, filename):
         """
         Writes the stats (in JSON-serialized dict representation) to the specified file.
