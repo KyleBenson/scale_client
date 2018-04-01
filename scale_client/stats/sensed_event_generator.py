@@ -1,6 +1,10 @@
 from scale_client.core.sensed_event import SensedEvent
 from scale_client.stats.random_variable import RandomVariable
 
+# This makes publications easier to work with in external modules
+from collections import namedtuple
+Publication = namedtuple("Publication", ['topic', 'time', 'data'])
+
 
 class SensedEventGenerator(object):
     """
@@ -32,6 +36,7 @@ class SensedEventGenerator(object):
         :param data_size_bounds: 2-tuple of (lower, upper) bounds for the data size
         :param nevents: the number of total events to generate before stopping (use this if you're making a list!)
         :param total_time: generation stops after the total publication times reach this value (use this for making lists!)
+        :rtype: generator[Publication]
         :return:
         """
 
@@ -40,6 +45,7 @@ class SensedEventGenerator(object):
 
         rand_period = False
         if isinstance(publication_period, dict):
+            # bound it to 1ms minimum
             publication_period.setdefault("lbound", 0.001)
             publication_period.setdefault("ubound", total_time)
             rand_period = RandomVariable(**publication_period)
@@ -53,7 +59,6 @@ class SensedEventGenerator(object):
         td = publication_period
         while (nevents is None or nevents > total_events) and (total_time is None or total_time > timespan_covered):
             if rand_period:
-                # bound it to 1ms minimum
                 td = rand_period.get()
 
             timespan_covered += td
@@ -65,7 +70,7 @@ class SensedEventGenerator(object):
                 data_size = rand_size.get_int()
             data = 'a' * data_size
 
-            yield (topic, td, data)
+            yield Publication(topic, td, data)
             total_events += 1
 
     def generate_sensed_events(self, *args, **kwargs):
@@ -89,15 +94,16 @@ class SensedEventGenerator(object):
         :param init_time: the time until event publication is added to this to create a complete timestamp (default is now)
         :param source: optional source to set in the SensedEvent
         :param metadata: optional metadata to set
+        :rtype: generator[SensedEvent]
         :return:
         """
 
         if init_time is None:
             init_time = SensedEvent.get_timestamp()
 
-        for topic, pub_time, data in publications:
-            init_time += pub_time
-            yield SensedEvent(data, source=source, event_type=topic, timestamp=init_time, metadata=metadata)
+        for pub in publications:
+            init_time += pub.time
+            yield SensedEvent(pub.data, source=source, event_type=pub.topic, timestamp=init_time, metadata=metadata)
 
 
     # ENHANCE:
