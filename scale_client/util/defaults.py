@@ -13,6 +13,7 @@ def set_logging_config(level=None,
     useful if a 3rd-party library does logging incorrectly and overwrites our
     configuration: you can just run this function again to correct it.
     :param level: logging level (if unspecified defaults to the last requested level else logging.INFO)
+         NOTE: you can request the level using a string e.g. 'info' or 'error'
     :param log_format: the format to use (our default pads the names to make it more legible)
     :param loggers: which logger names to set (default sets root a.k.a. all of them)
     :return:
@@ -21,6 +22,8 @@ def set_logging_config(level=None,
 
     # HACK: default to the last used level if possible, else set a default
     global last_log_level
+    if isinstance(level, basestring):
+        level = getattr(logging, level.upper())
     if level is None:
         if last_log_level is None:
             level = logging.WARNING
