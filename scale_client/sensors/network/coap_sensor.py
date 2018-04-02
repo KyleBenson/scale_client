@@ -27,6 +27,7 @@ class CoapSensor(ThreadedVirtualSensor):
                  event_type="coap_sensor",
                  hostname="127.0.0.1",
                  port=DEFAULT_COAP_PORT,
+                 src_port=None,
                  username=None,
                  password=None,
                  timeout=300,
@@ -39,6 +40,7 @@ class CoapSensor(ThreadedVirtualSensor):
         :param event_type: used as the default event type for events we publish (if none already specified in retrieved event)
         :param hostname: hostname of remote server this 'sensor' monitors
         :param port: port of remote server
+        :param src_port: source port of client (default=None=automatically assigned by OS net stack)
         :param username:
         :param password:
         :param timeout: timeout (in seconds) for a request (also used to periodically send observe requests
@@ -52,6 +54,7 @@ class CoapSensor(ThreadedVirtualSensor):
 
         self._hostname = hostname
         self._port = port
+        self._src_port = src_port
         if username is not None or password is not None:
             log.warning("SECURITY authentication using username & password not yet supported!")
         self._username = username
@@ -165,7 +168,7 @@ class CoapSensor(ThreadedVirtualSensor):
     def __run_client(self):
         """This runs the CoAP client in a separate thread."""
 
-        self._client = CoapClient(server_hostname=self._hostname, server_port=self._port)
+        self._client = CoapClient(server_hostname=self._hostname, server_port=self._port, src_port=self._src_port)
         self._client_running = True
 
         if self.use_polling:
