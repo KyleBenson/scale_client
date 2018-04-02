@@ -39,6 +39,7 @@ class TestRandomVirtualSensor(unittest.TestCase):
 
         # verify # events generated
         self.assertEqual(stats_sub.get_stats('fire', 'count'), 10)
+        self.assertGreater(len(events_sub.events), 0)
 
         for ev in events_sub.events:
             self.assertLess(start_time, ev.timestamp)
