@@ -22,23 +22,6 @@ set_logging_config()
 from scale_client.core.sensed_event import SensedEvent
 
 
-# Users need to access the server in their other CoAP-based modules,
-# so we keep a registry of them indexed by the user-assigned name.
-# TODO: use Application.name and a registration service for this
-_coap_server_instances = dict()
-_DEFAULT_COAP_SERVER_NAME = '__default_scale_coap_server__'
-def get_coap_server(name=_DEFAULT_COAP_SERVER_NAME):
-    """
-    Returns the instantiated server matching the requested name.
-    :param name: the name assigned to the requested CoapServer (if unspecified it returns the default server instance)
-    :raises ValueError: if the requested server wasn't found
-    :return:
-    """
-    try:
-        return _coap_server_instances[name]
-    except KeyError:
-        raise ValueError("Requested CoapServer %s not found! Did you remember to configure it to run?" % name)
-
 class CoapServer(ThreadedApplication):
     """
     This special Application runs a CoAP server so that other modules may use it to store CoAP resources
@@ -49,6 +32,9 @@ class CoapServer(ThreadedApplication):
     They actually handle exposing APIs, calling callbacks when they're activated, and managing SensedEvents from
     remote sources.
     """
+
+    _DEFAULT_COAP_SERVER_NAME = '__default_scale_coap_server__'
+
     def __init__(self, broker,
                  events_root=None,
                  server_name=_DEFAULT_COAP_SERVER_NAME,
@@ -81,15 +67,20 @@ class CoapServer(ThreadedApplication):
         self._server_running = False
         self._is_connected = False
 
-        # Register this server as a currently-running instance
-        if server_name in _coap_server_instances:
-            raise ValueError("A CoapServer with server_name %s already exists!  Aborting creation of the second one..." % server_name)
-        _coap_server_instances[server_name] = self
-        self._server_name = server_name
+        # Users need to access the server in their other CoAP-based modules,
+        # so we keep a registry of them indexed by the user-assigned name.
+        # XXX: we just set this as an object on the broker instance so it doesn't persist across ScaleClients (mostly for testing)
+        # TODO: use Application.name and a registration service for this
+        try:
+            instances = broker._coap_server_instances
+        except AttributeError:
+            instances = broker._coap_server_instances = dict()
 
-    @staticmethod
-    def get_instance(name=_DEFAULT_COAP_SERVER_NAME):
-        return get_coap_server(name)
+        # Register this server as a currently-running instance
+        if server_name in instances:
+            raise ValueError("A CoapServer with server_name %s already exists!  Aborting creation of the second one..." % server_name)
+        instances[server_name] = self
+        self._server_name = server_name
 
     def __run_server(self):
         log.debug("starting CoAP server at IP:port %s:%d" % (self._hostname, self._port))
