@@ -12,7 +12,7 @@ class LocalCoapEventSink(ThreadedEventSink):
     (e.g. those running a CoapSensor) can GET them as CoAP resources.
     """
     def __init__(self, broker,
-                 topic="scale/events/%s",
+                 topic="events/%s",
                  server_name=None,
                  **kwargs):
         """
