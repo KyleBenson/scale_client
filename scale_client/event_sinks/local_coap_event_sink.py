@@ -35,7 +35,7 @@ class LocalCoapEventSink(ThreadedEventSink):
         self.subscribe(ev, callback=self.__class__.__on_coap_ready)
 
     def __on_coap_ready(self, server):
-        if self._server_name is None or self._server_name == server.name:
+        if self._server_name is None or self._server_name == server._server_name:
             self._server = server
 
     def get_topic(self, event):
@@ -58,7 +58,7 @@ class LocalCoapEventSink(ThreadedEventSink):
         """
 
         topic = self.get_topic(event)
-        log.debug('%s(name=%s) sending event with topic: %s' % (self.__class__.__name__, self._server_name, topic))
+        log.info('%s(name=%s) sending event with topic: %s' % (self.__class__.__name__, self._server_name, topic))
 
         try:
             self._server.store_event(event, topic)
