@@ -72,11 +72,10 @@ class DummyVirtualSensor(VirtualSensor):
         else:
             raise ValueError("unrecognized dynamic data configuration: %s" % dynamic_data)
 
-    def read(self):
-        event = super(DummyVirtualSensor, self).read()
+    def on_publish(self, event, topic):
+        super(DummyVirtualSensor, self).on_publish(event, topic)
         if self.__output_events is not None:
             self.__output_events.append(event)
-        return event
 
     def on_stop(self):
         super(DummyVirtualSensor, self).on_stop()
