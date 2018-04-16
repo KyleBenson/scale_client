@@ -66,6 +66,9 @@ class ScaleStatistics(object):
                             help='''if specified, output the resulting DataFrame to a CSV file''')
         parser.add_argument('--debug', '--verbose', '-v', type=str, default='info', nargs='?', const='debug',
                             help='''set verbosity level for logging facility (default=%(default)s, %(const)s when specified with no arg)''')
+        parser.add_argument('--raise-errors', '-e', action='store_true',
+                            help='''instead of silently skipping output files that generate errors, raise them.
+                            This is mostly for debugging while adding new features / parsing new results types.''')
 
         return parser
 
@@ -193,13 +196,7 @@ class ScaleStatistics(object):
             results = self.parse_file(fname)
 
             # determine if we actually parsed anything before saving it
-            try:
-                # XXX: DataFrame throws error due to ambiguity of truth value
-                is_results = bool(results)
-            except ValueError:
-                is_results = not results.empty  # hopefully a DataFrame
-
-            if is_results:
+            if self.is_results_good(results):
                 stats.append(results)
 
         if not stats:
@@ -245,22 +242,27 @@ class ScaleStatistics(object):
         try:
             results = self.parse_results(results, fname)
         except BaseException as e:
-            log.error("parse_results skipping file %s that caused error: %s" % (fname, e))
+            if self.config.raise_errors:
+                raise
+            else:
+                log.error("parse_results skipping file %s that caused error: %s" % (fname, e))
             return None
         return results
 
-    @staticmethod
-    def read_file(fname):
+    def read_file(self, fname):
         """Reads the file (likely JSON-encoded) and returns the raw string contents.
          Returns None if it fails and logs the error."""
         with open(fname) as f:
             # this try statement was added because the -d <dir> option didn't work with .progress files
             try:
                 data = f.read()
+                return data
             except (ValueError, IOError) as e:
-                log.debug("Skipping file %s that raised error: %s" % (fname, e))
-                return None
-        return data
+                if self.config.raise_errors:
+                    raise e
+                else:
+                    log.debug("Skipping file %s that raised error: %s" % (fname, e))
+                    return None
 
     def output_stats(self, stats=None, filename=None):
         """Outputs the specified stats object (self.stats by default) to the
@@ -292,6 +294,20 @@ class ScaleStatistics(object):
         stats.parse_all()
 
         return stats
+
+    def is_results_good(self, results):
+        """
+        Returns True if the results are non-empty (successfully parsed) and False otherwise.  This helps with the
+        ambiguous truth values of Pandas DataFrames.
+        :param results:
+        :return:
+        """
+        try:
+            # XXX: DataFrame throws error due to ambiguity of truth value
+            is_results = bool(results)
+        except ValueError:
+            is_results = not results.empty  # hopefully a DataFrame
+        return is_results
 
 
 def run_tests():
