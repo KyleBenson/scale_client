@@ -3,3 +3,4 @@ parse
 argparse
 scipy>=1.0.0
 numpy
+pytz
