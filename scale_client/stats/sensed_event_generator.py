@@ -26,7 +26,7 @@ class SensedEventGenerator(object):
         This generator yields raw publication data in the form of a tuple containing:
           - topic
           - time (in seconds as a float) until this event should be published
-          - data
+          - data (a sequence # formatted as a string of the length drawn from the data_size distribution)
 
         NOTE: generation goes on indefinitely until the first of the optional parameters nevents or total_time are reached.
 
@@ -68,7 +68,18 @@ class SensedEventGenerator(object):
             # TODO: how to accept a param for generating the actual data?  maybe do a self.get_random_data(size)?
             if rand_size:
                 data_size = rand_size.get_int()
-            data = 'a' * data_size
+            # value of event should end up being a sequence number by default
+            # XXX: requesting too large of a formatted integer causes an OverflowError, however,
+            #   so start smaller and add 0's if needed:
+            if data_size > 100:
+                fmt_data_size = 100
+            else:
+                fmt_data_size = data_size
+
+            data = ("%%.%dd" % fmt_data_size) % total_events
+
+            if data_size != fmt_data_size:
+                data = ('0' * (data_size - fmt_data_size)) + data
 
             yield Publication(topic, td, data)
             total_events += 1

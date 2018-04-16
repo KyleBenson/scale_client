@@ -29,6 +29,15 @@ class TestSensedEventGenerator(unittest.TestCase):
                                                   data_size_bounds=(5, 10), nevents=1000 if THOROUGH_TESTING else 100))
         self.assertTrue(all(5 <= len(d) <= 10 for topic, t, d in evs))
 
+        # validate that the data is sequence #s once converted from string to integer:
+        self.assertTrue(all(int(data) == seq for seq, (topic, t, data) in enumerate(evs)))
+
+        # we request MUCH larger data sizes
+        evs = list(self.gen.generate_publications('blah', 2, data_size=500, nevents=1000 if THOROUGH_TESTING else 100))
+        self.assertTrue(all(len(d) == 500 for topic, t, d in evs))
+
+        # validate that the data is sequence #s once converted from string to integer:
+        self.assertTrue(all(int(data) == seq for seq, (topic, t, data) in enumerate(evs)))
 
     def test_random_seeds(self):
         """Verifies that specifying the same seed for two rounds of publication generation gives the same results;
