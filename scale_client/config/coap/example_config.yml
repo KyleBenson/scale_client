@@ -74,7 +74,7 @@ Sensors:
     # in place, but if it changes you could create a loop!
     CoapSensor:
       class: "network.coap_sensor.CoapSensor"
-      topic: "/events/temperature"
+      subscriptions: ["/events/temperature"]
       # For testing, we set a shorter timeout since that's used for
       # re-trying an observe if the resource doesn't exist initially.
       timeout: 4

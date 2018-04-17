@@ -17,6 +17,13 @@ SCALE_EXTRA_ARGS = ''
 # ideally this would only be 1-2, but it does seem like it can go up to 4 fairly often...
 TOLERATED_EVENT_COUNT_DIFFERENCE = 4
 
+# used with configurations at bottom, but need to appear before class definition
+DEFAULT_EVENT_ROOT = "/events/"
+DEFAULT_EVENT_PATH = DEFAULT_EVENT_ROOT + '%s'
+DEFAULT_EVENT_TYPE = "dummy_event"
+DEFAULT_EVENT_TOPICS = [DEFAULT_EVENT_TYPE]
+DEFAULT_OBSERVED_PATHS = [DEFAULT_EVENT_PATH % topic for topic in DEFAULT_EVENT_TOPICS]
+
 
 class TestCoap(unittest.TestCase):
     """
@@ -67,7 +74,7 @@ class TestCoap(unittest.TestCase):
         self.assertEqual(zero_expected_sink_count, 0, "EventSink should not receive remote events!")
 
 
-    def test_local_sink_remote_observer(self):
+    def test_local_sink_remote_observer(self, observed_paths=DEFAULT_OBSERVED_PATHS, event_topics=DEFAULT_EVENT_TOPICS):
         """
         Run two clients as separate processes:
         'server' will generate dummy events and sink them to its CoapServer via a LocalCoapEventSink;
@@ -85,36 +92,46 @@ class TestCoap(unittest.TestCase):
 
         # these will be cleaned up in tearDown
         self.output_files = (self.server_output_file, self.client_output_file, self.zero_expected_sink_output_file)
-        self.server_config = make_scale_config(sensors=get_dummy_sensor_config(),
-                                               applications=get_stats_app_config(self.server_output_file),
+
+        sensor_config = ' '.join(get_dummy_sensor_config(event_type=top) for top in event_topics)
+
+        self.server_config = make_scale_config(sensors=sensor_config,
+                                               applications=get_stats_app_config(self.server_output_file, subscriptions=event_topics),
                                                networks=get_coap_server_config(),
                                                sinks=get_local_sink_config())
-        self.client_config = make_scale_config(sensors=get_coap_sensor_config(),
-                                               applications=get_stats_app_config(self.client_output_file),
-                                               sinks=get_stats_sink_config(self.zero_expected_sink_output_file))
+        self.client_config = make_scale_config(sensors=get_coap_sensor_config(subscriptions=observed_paths),
+                                               applications=get_stats_app_config(self.client_output_file, subscriptions=event_topics),
+                                               sinks=get_stats_sink_config(self.zero_expected_sink_output_file, subscriptions=event_topics))
 
         self.run_procs(self.server_config, self.client_config)
         server_stats, client_stats, zero_expected_sink_stats = self.read_output_files(self.server_output_file,
                                                                                       self.client_output_file,
                                                                                       self.zero_expected_sink_output_file)
-        server_count = server_stats[DEFAULT_EVENT_TYPE]['count']
-        client_count = client_stats[DEFAULT_EVENT_TYPE]['count']
-        zero_expected_sink_count = zero_expected_sink_stats[DEFAULT_EVENT_TYPE]['count']
 
-        # Check that results are correct
-        print "counts:", server_count, "(server app)", zero_expected_sink_count, "(0-expected sink)", client_count, "(client)"
-        self.assertGreater(server_count, 0, "no events received locally on server!")
-        self.assertGreater(client_count, 0, "no events received remotely on client!")
-        self.assertGreaterEqual(server_count, client_count, "how can client have received more events than the server that made them???")
-        self.assertAlmostEqual(server_count, client_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
-                               msg="difference between #events on server vs. client exceeded threshold of %d!"
-                                   " why so many missing? may try running again as this happens sometimes..." %\
-                               TOLERATED_EVENT_COUNT_DIFFERENCE)
-        expected_events = QUIT_TIME
-        self.assertAlmostEqual(expected_events, server_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
-                               msg="too few events were published on the server! regression?")
-        self.assertEqual(zero_expected_sink_count, 0, "EventSink should not receive remote events!")
+        for this_topic in event_topics:
+            server_count = server_stats[this_topic]['count']
+            client_count = client_stats[this_topic]['count']
+            zero_expected_sink_count = zero_expected_sink_stats[this_topic]['count']
 
+            # Check that results are correct
+            print this_topic, "counts:", server_count, "(server app)", zero_expected_sink_count, "(0-expected sink)", client_count, "(client)"
+            self.assertGreater(server_count, 0, "no events received locally on server!")
+            self.assertGreater(client_count, 0, "no events received remotely on client!")
+            self.assertGreaterEqual(server_count, client_count, "how can client have received more events than the server that made them???")
+            self.assertAlmostEqual(server_count, client_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
+                                   msg="difference between #events on server vs. client exceeded threshold of %d!"
+                                       " why so many missing? may try running again as this happens sometimes..." %\
+                                   TOLERATED_EVENT_COUNT_DIFFERENCE)
+            expected_events = QUIT_TIME
+            self.assertAlmostEqual(expected_events, server_count, delta=TOLERATED_EVENT_COUNT_DIFFERENCE,
+                                   msg="too few events were published on the server! regression?")
+            self.assertEqual(zero_expected_sink_count, 0, "EventSink should not receive remote events!")
+
+    def test_local_sink_remote_observer_multiple_topics(self):
+        topics = ["smarty_event", "dummy_event", "genius_event"]
+        # topics = ["smarty_event"]
+        paths = [DEFAULT_EVENT_PATH % top for top in topics]
+        self.test_local_sink_remote_observer(paths, topics)
 
     def run_procs(self, *configs):
         """
@@ -167,9 +184,6 @@ class TestCoap(unittest.TestCase):
 
 # combine these raw YAML configs as needed for the various test cases
 # NOTE: we wrap them in single quotes to keep newlines from ending the commands
-DEFAULT_EVENT_ROOT = "/events/"
-DEFAULT_EVENT_TOPIC = DEFAULT_EVENT_ROOT + '%s'
-DEFAULT_EVENT_TYPE = "dummy_event"
 
 def get_coap_server_config(port=DEFAULT_COAP_PORT, event_root=DEFAULT_EVENT_ROOT):
     return """'
@@ -179,49 +193,51 @@ CoapServer:
     port: %d
 '""" % (event_root, port)
 
-def get_remote_sink_config(topic=DEFAULT_EVENT_TOPIC):
+def get_remote_sink_config(topic=DEFAULT_EVENT_PATH):
     return """'
 RemoteCoapEventSink:
     class: "remote_coap_event_sink.RemoteCoapEventSink"
     topic: %s
 '""" % topic
 
-def get_local_sink_config(topic=DEFAULT_EVENT_TOPIC):
+def get_local_sink_config(topic=DEFAULT_EVENT_PATH):
     return """'
 LocalCoapEventSink:
     class: "local_coap_event_sink.LocalCoapEventSink"
     topic: %s
 '""" % topic
 
+# XXX: default args must be lists, NOT tuples, or they won't be filled into the strings properly!
+
 def get_coap_sensor_config(port=DEFAULT_COAP_PORT, timeout=4, polling_interval=None,
-                           topic=DEFAULT_EVENT_TOPIC % DEFAULT_EVENT_TYPE):
+                           subscriptions=DEFAULT_OBSERVED_PATHS):
     """
     Configures a CoapSensor with the given parameters: it will use observe if polling_interval not set.
     :param port:
     :param timeout: NOTE: we use a short timeout since we're starting it at the same time as the other client's server.
     This ensures that we'll retry an observe quickly since the first time the data usually isn't available yet.
     :param polling_interval: if specified, sets the sample_interval to the given number of seconds
-    :param topic: topic to observe
+    :param subscriptions: topics to observe
     :return:
     """
     cfg = """'
 CoapSensor:
     class: "network.coap_sensor.CoapSensor"
-    topic: %s
+    subscriptions: %s
     timeout: %d
     port: %d
-'""" % (topic, timeout, port)
+'""" % (subscriptions, timeout, port)
     if polling_interval:
         cfg += "'use_polling: True\nsample_interval: %d'" % polling_interval
     return cfg
 
 def get_dummy_sensor_config(event_type=DEFAULT_EVENT_TYPE):
     return """'
-DummySensor:
+DummySensor_%s:
     class: "dummy.heartbeat_sensor.HeartbeatSensor"
     event_type: %s
     sample_interval: 1
-'""" % event_type
+'""" % (event_type, event_type)
 
 def get_stats_app_config(output_file, subscriptions=[DEFAULT_EVENT_TYPE]):
     return """'

@@ -52,8 +52,29 @@ class CoapClient(HelperClient):
             request.type = defines.Types["NON"]
         return request
 
-    def put(self, path, payload, callback=None, timeout=None):
+    def put(self, path, payload, callback=None, timeout=None, **kwargs):
         if not msg_fits_one_coap_packet(payload):
             log.error("requested payload size of %d is too large to fit in a single CoAP packet!"
                       " Sending anyway but expect errors from the receiver...")
-        super(CoapClient, self).put(path, payload=payload, callback=callback, timeout=timeout)
+        super(CoapClient, self).put(path, payload=payload, callback=callback, timeout=timeout, **kwargs)
+
+
+# some basic integration testing to verify this works...
+if __name__ == '__main__':
+
+    from coapthon.messages.response import Response
+    def cb(response):
+        """
+
+        :param response:
+        :type response: Response
+        :return:
+        """
+
+        print "RESPONSE:", response.payload, "from", response.source, response.location_path
+
+    client = CoapClient('127.0.0.1', confirmable_messages=False)
+
+    client.observe('storage/blah', cb)
+    client.observe('storage/blah2', cb)
+    client.observe('storage/blah3', cb)
