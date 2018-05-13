@@ -238,6 +238,11 @@ class ScaleStatistics(object):
         :rtype: pd.DataFrame
         """
         log.debug("parsing file: %s" % fname)
+
+        if fname.endswith('.csv'):
+            log.debug("directly reading .csv file into DataFrame...")
+            return pd.read_csv(fname)
+
         results = self.read_file(fname)
         try:
             results = self.parse_results(results, fname)
@@ -274,8 +279,10 @@ class ScaleStatistics(object):
         stats.to_csv(filename, index=False)
 
     @classmethod
-    def main(cls):
-        if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    def main(cls, args=None):
+        if args is None:
+            args = sys.argv[1:]
+        if len(args) > 0 and args[0] == 'test':
             run_tests()
             exit()
 
@@ -283,7 +290,6 @@ class ScaleStatistics(object):
         pd.set_option('display.max_columns', 25)
         pd.set_option('display.width', 2500)
 
-        args = sys.argv[1:]
         args = cls.parse_args(args)
 
         ## Manually set arguments, esp. if using an IDE rather than command line
