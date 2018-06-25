@@ -199,6 +199,7 @@ class ScaleStatistics(object):
             if self.is_results_good(results):
                 stats.append(results)
 
+        # TODO: consider case where the child parser manually set self.stats: this error message threw me off!
         if not stats:
             log.error("parse_all failed to generate any stats!")
             return None
