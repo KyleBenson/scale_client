@@ -14,16 +14,20 @@ For ease of reference, run all the following:
 cd ~
 git clone https://github.com/KyleBenson/scale_client.git
 pip install -r requirements.txt
-python -m scale_client --config ~/scale_client/scale_client/core/test_config.yml \
+python -m scale_client --config ~/scale_client/scale_client/config/test_config.yml \
 --log-level info
 ```
 
 If you wish to run SCALE on a Raspberry Pi device, you can follow the [quickstart instructions](quickstart_raspi_scale_box.md) or [more detailed directions](#building-a-scale-box).
 
+You can view the data stream using the web-based dashboard found at the [SCALE project's website](http://scale.ics.uci.edu/).  Alternatively, you can use the `mqtt_subscriber.py` script for a command-line alternative.
+
 Installation
 ------------
 
 For easy installation, simply run `sudo python setup.py install` from inside the main directory. Assuming you have `setuptools` installed via `pip`, this should handle installing all of the dependencies. Note that the codebase should run fine on any machine supporting Python 2.7+, but that it is tested on a Raspberry Pi running Raspbian and on Linux/Mac OSX machines (note that the latter won't support most physical sensor devices!). You don't **need** to run with `sudo`; doing so will install the daemon file.
+
+**NOTE**: the `setup.py` script is no longer supported and may not install everything properly.  Make sure you look at the various `requirements.txt` files for additional needed dependencies that may be commented out since we have so many different configuration possibilities!
 
 **WARNING**: you'll also need to install our [custom fork of CoAPthon](https://github.com/KyleBenson/CoAPthon.git) if you wish to use CoAP!  You can do this by cloning the repository and simply putting the `coapthon` Python package folder inside of it on your `PYTHONPATH`.
 
