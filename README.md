@@ -13,10 +13,13 @@ For ease of reference, run all the following:
 ```bash
 cd ~
 git clone https://github.com/KyleBenson/scale_client.git
+cd scale_client
 pip install -r requirements.txt
 python -m scale_client --config ~/scale_client/scale_client/config/test_config.yml \
 --log-level info
 ```
+
+Note that you may also install the requirements in the file `scale_client/stats/requirements.txt` if you plan to use the statistics package for parsing results and/or generating random sensor data from statistical distributions.
 
 If you wish to run SCALE on a Raspberry Pi device, you can follow the [quickstart instructions](quickstart_raspi_scale_box.md) or [more detailed directions](#building-a-scale-box).
 
