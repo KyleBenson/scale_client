@@ -11,12 +11,22 @@ class EventStoringApplication(Application):
     cause memory problems
     """
 
-    def __init__(self, broker, **kwargs):
+    def __init__(self, broker, remote_only=False, **kwargs):
         super(EventStoringApplication, self).__init__(broker, **kwargs)
         self.__events = []
 
+        self._remote_only = remote_only
+
     def on_event(self, event, topic):
-        self.__events.append(event)
+        """
+        :param event:
+        :type event: scale_client.core.sensed_event.SensedEvent
+        :param topic:
+        :return:
+        """
+
+        if not self._remote_only or not event.is_local:
+            self.__events.append(event)
         super(EventStoringApplication, self).on_event(event, topic)
 
     @property
