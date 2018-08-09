@@ -87,7 +87,8 @@ def process_remote_event(event, protocol=None, hostname=None, port=None, relay_u
         event.source = uri.get_remote_uri(event.source, protocol=protocol, host=hostname, port=port)
 
     # Assume the receive time is right now:
-    event.metadata.setdefault('time_rcvd', SensedEvent.get_timestamp())
+    # NOTE: in case the event was relayed to us from an intermediary, we should overwrite the time_rcvd!!
+    event.metadata['time_rcvd'] = SensedEvent.get_timestamp()
 
     # In case the remote's original URI is different than how we got it from the CoAP resource:
     if relay_uri and relay_uri != event.source:
